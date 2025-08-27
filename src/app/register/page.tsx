@@ -78,8 +78,6 @@ export default function RegisterPage() {
             let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
-            } else if (error.code === 'permission-denied' || error.message.includes('firestore')) {
-                 errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore telah diaktifkan dan security rules memperbolehkan write.';
             }
             
             toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
@@ -90,46 +88,46 @@ export default function RegisterPage() {
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center bg-background px-4 py-12">
             <Card className="w-full max-w-2xl">
                  <CardHeader>
-                    <CardTitle className="text-2xl">No account? Sign up</CardTitle>
+                    <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
                     <CardDescription>
-                        Registration takes less than a minute but gives you full control over your orders.
+                        Daftar untuk mendapatkan kontrol penuh atas pesanan Anda.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <FormField control={form.control} name="firstName" render={({ field }) => (
-                                <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} placeholder="John" /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Nama Depan</FormLabel><FormControl><Input {...field} placeholder="John" /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="lastName" render={({ field }) => (
-                                <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} placeholder="Doe" /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Nama Belakang</FormLabel><FormControl><Input {...field} placeholder="Doe" /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="email" render={({ field }) => (
-                                <FormItem><FormLabel>E-mail Address</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Alamat E-mail</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="phone" render={({ field }) => (
-                                <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input {...field} type="tel" placeholder="+62 812 3456 7890" /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Nomor Telepon</FormLabel><FormControl><Input {...field} type="tel" placeholder="+62 812 3456 7890" /></FormControl><FormMessage /></FormItem>
                             )} />
                              <FormField control={form.control} name="password" render={({ field }) => (
                                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-                                <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Konfirmasi Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
                             )} />
 
                             <div className="md:col-span-2 flex justify-end">
                                  <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
                                     {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Sign Up
+                                    Daftar
                                 </Button>
                             </div>
                         </form>
                     </Form>
                 </CardContent>
                  <CardFooter className="flex justify-center text-sm">
-                    <p>Already have an account?</p>
+                    <p>Sudah punya akun?</p>
                     <Link href="/login" className="ml-1 font-semibold text-primary hover:underline">
-                        Log in
+                        Login
                     </Link>
                 </CardFooter>
             </Card>

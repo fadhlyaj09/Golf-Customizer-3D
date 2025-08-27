@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 
@@ -29,13 +29,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logIn = () => {
-    router.push('/login');
+    // Redirect to the login page, optionally preserving the original destination
+    const currentPath = window.location.pathname;
+    const from = currentPath !== '/login' ? `?from=${currentPath}` : '';
+    router.push(`/login${from}`);
   };
 
   const logOut = async () => {
     try {
       await signOut(auth);
-      router.push('/');
+      // Redirect to home and reload to ensure all state is cleared
+      window.location.href = '/';
     } catch (error) {
       console.error("Logout Error", error);
     }

@@ -2,14 +2,27 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FcGoogle } from 'react-icons/fc';
+import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { auth, googleProvider } from '@/lib/firebase';
-import { signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
+
+
+const loginSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(1, 'Password is required'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 
 export default function LoginPage() {
@@ -18,8 +31,12 @@ export default function LoginPage() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     
+    const form = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: { email: '', password: '' }
+    });
+
     useEffect(() => {
-        // If user is already logged in, redirect them from the login page
         if(user) {
             const from = searchParams.get('from') || '/';
             router.replace(from);
@@ -27,15 +44,15 @@ export default function LoginPage() {
     }, [user, router, searchParams]);
 
 
-    const handleGoogleSignIn = async () => {
+    const handleLogin = async (data: LoginFormValues) => {
         try {
-            await signInWithPopup(auth, googleProvider);
+            await signInWithEmailAndPassword(auth, data.email, data.password);
             toast({ title: 'Login Berhasil', description: 'Selamat datang kembali!' });
             const from = searchParams.get('from') || '/';
             router.push(from);
         } catch (error) {
-            console.error("Google Sign-In Error", error);
-            toast({ title: 'Login Gagal', description: 'Terjadi kesalahan saat login dengan Google.', variant: 'destructive' });
+            console.error("Login Error", error);
+            toast({ title: 'Login Gagal', description: 'Email atau kata sandi salah.', variant: 'destructive' });
         }
     }
 
@@ -44,19 +61,45 @@ export default function LoginPage() {
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>Pilih metode untuk masuk ke akun Anda.</CardDescription>
+                    <CardDescription>Masuk ke akun Anda untuk melanjutkan.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
-                        <FcGoogle className="mr-2 h-5 w-5" />
+                <CardContent>
+                     <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleLogin)} className="grid gap-4">
+                             <FormField control={form.control} name="email" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl><Input {...field} placeholder="example@email.com" type="email" /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="password" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl><Input {...field} type="password" /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Login
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                    <div className="text-center text-sm text-muted-foreground">
+                        Atau lanjutkan dengan
+                    </div>
+                     <Button onClick={() => toast({ title: 'Segera Hadir', description: 'Login dengan Google akan segera tersedia.'})} variant="outline" className="w-full">
                         Lanjutkan dengan Google
                     </Button>
-                </CardContent>
-                <CardFooter className="flex justify-center text-sm">
-                    <p>Belum punya akun?</p>
-                    <Link href="/register" className="ml-1 font-semibold text-primary hover:underline">
-                        Daftar
-                    </Link>
+                    <div className="mt-4 text-center text-sm">
+                        Belum punya akun?{' '}
+                        <Link href="/register" className="font-semibold text-primary hover:underline">
+                            Daftar
+                        </Link>
+                    </div>
                 </CardFooter>
             </Card>
         </div>
