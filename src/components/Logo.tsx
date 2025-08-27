@@ -13,24 +13,11 @@ export function Logo({ className }: { className?: string }) {
         y="24"
         fontFamily="sans-serif"
         fontSize="24"
-        fill="currentColor"
-        className="font-bold"
-      >
-        Artico
-      </text>
-      <text
-        x="70"
-        y="26"
-        fontFamily="sans-serif"
-        fontSize="28"
         fontWeight="bold"
-        fill="hsl(var(--primary))"
-        className="fill-primary"
+        fill="currentColor"
+        className="tracking-tighter"
       >
-        <tspan>G</tspan>
-        <tspan dx="-2">o</tspan>
-        <tspan dx="-2">l</tspan>
-        <tspan dx="-2">f</tspan>
+        Articogolf
       </text>
     </svg>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { LogOut, ShoppingCart, User as UserIcon, X, Menu, Sun, Moon } from 'lucide-react';
+import { LogOut, ShoppingCart, User as UserIcon, X, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './Logo';
@@ -45,10 +45,10 @@ export function Header() {
   const renderNavLinks = (isMobile: boolean = false) => (
      <nav className={cn(
         "items-center gap-6 text-sm font-medium",
-        isMobile ? "flex flex-col gap-4 mt-8" : "hidden md:flex"
+        isMobile ? "flex flex-col gap-4 mt-8 text-lg" : "hidden md:flex"
       )}>
         {navLinks.map(link => (
-             <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground">
+             <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground" onClick={() => isMobile && setMobileMenuOpen(false)}>
               {link.label}
              </Link>
         ))}
@@ -56,9 +56,9 @@ export function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-20 max-w-7xl items-center justify-between">
+        <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
               <Logo />
             </Link>
@@ -71,8 +71,7 @@ export function Header() {
                 <Link href="/cart">
                     <ShoppingCart className="h-5 w-5" />
                     {totalCartItems > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                            {totalCartItems}
+                        <span className="absolute top-2 right-2 flex h-2 w-2 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                         </span>
                     )}
                     <span className="sr-only">Shopping Cart</span>
@@ -80,12 +79,12 @@ export function Header() {
             </Button>
 
           {loading ? (
-             <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+             <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
                     <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
                     <AvatarFallback>{userInitial}</AvatarFallback>
                   </Avatar>
@@ -114,22 +113,35 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/login">Login</Link>
-            </Button>
+             <div className='hidden md:flex'>
+               <Button asChild variant="ghost" size="sm">
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild variant="default" size="sm">
+                  <Link href="/register">Sign Up</Link>
+                </Button>
+             </div>
           )}
           
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon"><Menu /></Button>
+                  <Button variant="ghost" size="icon"><Menu className="h-5 w-5"/></Button>
               </SheetTrigger>
               <SheetContent side="left">
                 <div className='flex justify-between items-center mb-8'>
-                    <Logo />
-                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}><X /></Button>
+                    <Link href="/" onClick={() => setMobileMenuOpen(false)}><Logo /></Link>
+                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}><X className="h-5 w-5"/></Button>
                 </div>
                  {renderNavLinks(true)}
+                 <div className='flex flex-col gap-2 mt-8 border-t pt-6'>
+                    <Button asChild variant="outline" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                      <Link href="/login">Login</Link>
+                    </Button>
+                    <Button asChild variant="default" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                      <Link href="/register">Sign Up</Link>
+                    </Button>
+                 </div>
               </SheetContent>
             </Sheet>
           </div>
