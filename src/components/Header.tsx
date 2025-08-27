@@ -2,10 +2,11 @@
 
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-import { Club, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
+import { Logo } from './Logo';
 
 export function Header() {
   const { cart } = useCart();
@@ -22,8 +23,7 @@ export function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-              <Club className="h-7 w-7 text-primary" />
-              <span className="font-bold text-lg sm:inline-block">ARTICOGOLF</span>
+              <Logo />
             </Link>
 
             <nav className="hidden items-center gap-6 text-sm font-medium md:flex">

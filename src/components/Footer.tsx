@@ -1,13 +1,12 @@
-import { Club } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from './Logo';
 
 export function Footer() {
   return (
     <footer className="w-full border-t border-border/40 bg-background">
       <div className="container mx-auto flex flex-col sm:flex-row h-auto sm:h-24 items-center justify-between py-6 sm:py-0 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
-          <Club className="h-6 w-6 text-primary" />
-          <span className="font-semibold">ARTICOGOLF</span>
+          <Logo />
         </Link>
         <nav className="flex gap-4 sm:gap-6 mt-4 sm:mt-0 text-sm">
             <Link href="/product/articogolf-1-standard" className="text-muted-foreground hover:text-foreground">Produk</Link>
