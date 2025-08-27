@@ -37,7 +37,7 @@ interface ProductCustomizerProps {
   startWithCustom: boolean;
 }
 
-const fonts = ["Roboto", "Montserrat", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Pirulen", "Arial", "Cream Cake", "MV Boli"];
+const fonts = ["Roboto", "Montserrat", "Poppins", "Merriweather", "Orbitron", "Pirulen", "Arial", "Cream Cake"];
 const textColors = [
     { name: 'Hitam', value: '#000000'},
     { name: 'Biru', value: '#0000FF'},
@@ -443,5 +443,3 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     </div>
   );
 }
-
-    
