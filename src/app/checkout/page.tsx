@@ -48,13 +48,12 @@ export default function CheckoutPage() {
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [shippingCosts, setShippingCosts] = useState<ShippingCost[] | null>(null);
+  const [shippingCosts, setShippingCosts] = useState<ShippingCost[] | null>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingShipping, setIsLoadingShipping] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -67,6 +66,7 @@ export default function CheckoutPage() {
   // Redirect if not logged in or cart is empty
   useEffect(() => {
     if (!userLoading && !user) {
+      toast({title: "Harap Login", description: "Anda harus login untuk melanjutkan ke checkout.", variant: "destructive"});
       router.push('/login?from=/checkout');
     }
     if (!userLoading && cart.length > 0 && selectedItems.length === 0) {
@@ -77,7 +77,6 @@ export default function CheckoutPage() {
 
   const loadSavedAddresses = useCallback(async () => {
     if (!user) return;
-    setIsLoadingAddresses(true);
     try {
       const addressesCol = collection(db, 'users', user.uid, 'addresses');
       const addressSnapshot = await getDocs(addressesCol);
@@ -99,8 +98,6 @@ export default function CheckoutPage() {
     } catch (error) {
       console.error("Failed to load addresses:", error);
       toast({ title: 'Error', description: 'Gagal memuat alamat tersimpan.', variant: 'destructive' });
-    } finally {
-      setIsLoadingAddresses(false);
     }
   }, [user, form, toast]);
 
@@ -121,6 +118,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchProvinces = async () => {
+      setIsLoadingProvinces(true);
       try {
         const provinceData = await getProvinces();
         setProvinces(provinceData);
@@ -172,9 +170,11 @@ export default function CheckoutPage() {
                       weight: totalWeight,
                       courier: selectedCourier.value,
                   });
-                  setShippingCosts(shippingData[0].costs);
+                  // Check if the API returns costs, sometimes it might be empty
+                  setShippingCosts(shippingData[0]?.costs || []);
               } catch(error) {
                   toast({ title: 'Error', description: 'Gagal memuat opsi pengiriman.', variant: 'destructive' });
+                  setShippingCosts([]);
               } finally {
                   setIsLoadingShipping(false);
               }
@@ -184,7 +184,8 @@ export default function CheckoutPage() {
           }
       }
       fetchShipping();
-  }, [selectedCity?.value, selectedCourier?.value, totalWeight, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity?.value, selectedCourier?.value, totalWeight]);
 
 
   const onSubmit = async (data: CheckoutFormValues) => {
@@ -224,7 +225,7 @@ export default function CheckoutPage() {
     router.push('/');
   };
 
-  if (userLoading || isLoadingAddresses) {
+  if (userLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
 
@@ -313,6 +314,26 @@ export default function CheckoutPage() {
                     />
                 </div>
                 
+                 <FormField
+                    control={form.control}
+                    name="saveAddress"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Simpan alamat ini untuk digunakan nanti
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                
                 <h3 className="text-lg font-semibold pt-4 border-t">Opsi Pengiriman</h3>
                  <FormField control={form.control} name="courier" render={({ field }) => (
                     <FormItem>
@@ -329,7 +350,7 @@ export default function CheckoutPage() {
                         <span>Mencari opsi pengiriman...</span>
                     </div>
                  )}
-                 {shippingCosts && (
+                 {shippingCosts && shippingCosts.length > 0 && (
                     <div className="flex flex-col gap-2">
                         {shippingCosts.map(cost => (
                             <label key={cost.service} className={cn(
@@ -344,6 +365,9 @@ export default function CheckoutPage() {
                             </label>
                         ))}
                     </div>
+                 )}
+                 {shippingCosts?.length === 0 && selectedCourier && !isLoadingShipping && (
+                    <p className="text-sm text-muted-foreground">Kurir tidak tersedia untuk tujuan ini.</p>
                  )}
             </CardContent>
           </Card>
@@ -400,5 +424,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
