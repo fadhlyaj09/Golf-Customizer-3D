@@ -11,22 +11,22 @@ export default function Home() {
       <section className="relative h-[60vh] w-full text-white">
         <Image
           src="https://picsum.photos/1920/1080"
-          alt="Aesthetic golf ball"
-          data-ai-hint="golf ball"
+          alt="Aesthetic golf course"
+          data-ai-hint="golf course"
           fill
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
           <h1 className="text-4xl font-bold tracking-tight text-background sm:text-5xl md:text-6xl">
-            Golf Customizer 3D
+            Articogolf
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-background/90">
-            Desain bola golf unik Anda dengan preview 3D interaktif.
+            Kualitas premium dan performa tak tertandingi di setiap ayunan.
           </p>
           <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90">
             <Link href="#products">
-              Buat Bola Golf Custom Kamu
+              Lihat Koleksi Kami
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
@@ -61,7 +61,7 @@ export default function Home() {
                         ${product.basePrice.toFixed(2)}
                       </p>
                       <Button variant="ghost" size="sm">
-                        Customize
+                        {product.customizable ? 'Customize' : 'View Details'}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>

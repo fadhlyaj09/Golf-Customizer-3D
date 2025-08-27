@@ -11,8 +11,8 @@ import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
-import { DollarSign, Minus, Plus, Upload, Wand2 } from 'lucide-react';
-import { Card, CardContent } from './ui/card';
+import { Minus, Plus, Upload, Wand2 } from 'lucide-react';
+import { Card } from './ui/card';
 
 interface ProductCustomizerProps {
   product: Product;
@@ -30,20 +30,26 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [totalPrice, setTotalPrice] = useState(product.basePrice);
 
   const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined);
+  
+  const isCustomizable = product.customizable;
 
   useEffect(() => {
-    const pricePerSide = 5;
-    const textPrice = customization.text ? 3 : 0;
-    const sidePrice = (customization.printSides - 1) * pricePerSide;
-    const logoPrice = customization.logo ? pricePerSide : 0;
-    
-    let optionsPrice = 0;
-    if (customization.logo || customization.text) {
-        optionsPrice = textPrice + sidePrice + logoPrice;
+    let finalPrice = product.basePrice;
+    if (isCustomizable) {
+        const pricePerSide = 5;
+        const textPrice = customization.text ? 3 : 0;
+        const sidePrice = (customization.printSides - 1) * pricePerSide;
+        const logoPrice = customization.logo ? pricePerSide : 0;
+        
+        let optionsPrice = 0;
+        if (customization.logo || customization.text) {
+            optionsPrice = textPrice + sidePrice + logoPrice;
+        }
+        finalPrice += optionsPrice;
     }
 
-    setTotalPrice((product.basePrice + optionsPrice) * quantity);
-  }, [customization, quantity, product.basePrice]);
+    setTotalPrice(finalPrice * quantity);
+  }, [customization, quantity, product.basePrice, isCustomizable]);
 
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
@@ -64,12 +70,11 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, customization, quantity, totalPrice / quantity);
+    const finalCustomization = isCustomizable ? customization : {};
+    addToCart(product, finalCustomization, quantity, totalPrice / quantity);
   };
   
   const ballDesignDataUri = useMemo(() => {
-    // This is a simplified representation. A real implementation would use canvas to create a composite image.
-    // For now, we'll just use the product image URL if no logo, or the logo if uploaded.
     return customization.logo || product.imageUrl;
   }, [customization.logo, product.imageUrl]);
 
@@ -84,15 +89,15 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 data-ai-hint="golf ball"
                 className="object-cover"
                 style={{
-                  backgroundColor: customization.color?.hex || 'white'
+                  backgroundColor: isCustomizable ? customization.color?.hex || 'white' : 'white'
                 }}
             />
-            {logoPreview && (
+            {isCustomizable && logoPreview && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
                     <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
                 </div>
             )}
-            {customization.text && (
+            {isCustomizable && customization.text && (
                 <div className="absolute bottom-1/4 left-1/2 w-full -translate-x-1/2 transform text-center">
                     <p className="font-bold text-xl text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
                         {customization.text}
@@ -108,7 +113,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
           <p className="mt-2 text-muted-foreground">{product.description}</p>
         </div>
 
-        {product.colors && (
+        {isCustomizable && product.colors && (
           <div className="flex flex-col gap-3">
             <Label className="text-base font-medium">Color</Label>
             <RadioGroup
@@ -134,42 +139,46 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             </RadioGroup>
           </div>
         )}
-
-        <div className="flex flex-col gap-3">
-            <Label className="text-base font-medium">Custom Print</Label>
-            <div className="flex items-center space-x-2 rounded-lg border p-4">
-                <Switch 
-                    id="print-sides" 
-                    checked={customization.printSides === 2}
-                    onCheckedChange={(checked) => setCustomization(prev => ({...prev, printSides: checked ? 2 : 1}))}
-                />
-                <Label htmlFor="print-sides" className='flex-grow'>{customization.printSides} Sisi</Label>
-                <p className="text-sm text-muted-foreground">Harga per sisi: $5.00</p>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        
+        {isCustomizable && (
+          <>
             <div className="flex flex-col gap-3">
-                <Label htmlFor="logo-upload" className="text-base font-medium">Upload Logo</Label>
-                <Button asChild variant="outline" className='h-auto'>
-                    <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4">
-                        <Upload className="h-6 w-6 text-muted-foreground" />
-                        <span className="mt-2 text-sm">{logoPreview ? 'Change Logo' : 'Upload Logo'}</span>
-                    </label>
-                </Button>
-                <Input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                <Label className="text-base font-medium">Custom Print</Label>
+                <div className="flex items-center space-x-2 rounded-lg border p-4">
+                    <Switch 
+                        id="print-sides" 
+                        checked={customization.printSides === 2}
+                        onCheckedChange={(checked) => setCustomization(prev => ({...prev, printSides: checked ? 2 : 1}))}
+                    />
+                    <Label htmlFor="print-sides" className='flex-grow'>{customization.printSides} Sisi</Label>
+                    <p className="text-sm text-muted-foreground">Harga per sisi: $5.00</p>
+                </div>
             </div>
-            <div className="flex flex-col gap-3">
-                <Label htmlFor="custom-text" className="text-base font-medium">Tambah Teks</Label>
-                <Input 
-                    id="custom-text" 
-                    placeholder="e.g. Your Name"
-                    value={customization.text}
-                    onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
-                />
-                 <p className="text-xs text-muted-foreground">Biaya tambahan teks: $3.00</p>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-3">
+                    <Label htmlFor="logo-upload" className="text-base font-medium">Upload Logo</Label>
+                    <Button asChild variant="outline" className='h-auto'>
+                        <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4">
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                            <span className="mt-2 text-sm">{logoPreview ? 'Change Logo' : 'Upload Logo'}</span>
+                        </label>
+                    </Button>
+                    <Input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                </div>
+                <div className="flex flex-col gap-3">
+                    <Label htmlFor="custom-text" className="text-base font-medium">Tambah Teks</Label>
+                    <Input 
+                        id="custom-text" 
+                        placeholder="e.g. Your Name"
+                        value={customization.text}
+                        onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
+                    />
+                     <p className="text-xs text-muted-foreground">Biaya tambahan teks: $3.00</p>
+                </div>
             </div>
-        </div>
+          </>
+        )}
         
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -183,16 +192,19 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <RealisticPreview 
-              ballDesignDataUri={ballDesignDataUri}
-              customText={customization.text}
-            >
-              <Button size="lg" variant="outline">
-                <Wand2 className="mr-2 h-5 w-5" />
-                Realistic Preview
-              </Button>
-            </RealisticPreview>
-            <Button size="lg" onClick={handleAddToCart}>
+            {isCustomizable ? (
+              <RealisticPreview 
+                ballDesignDataUri={ballDesignDataUri}
+                customText={customization.text}
+              >
+                <Button size="lg" variant="outline" className="w-full">
+                  <Wand2 className="mr-2 h-5 w-5" />
+                  Realistic Preview
+                </Button>
+              </RealisticPreview>
+            ) : <div/>}
+
+            <Button size="lg" onClick={handleAddToCart} className={cn(!isCustomizable && "col-span-2")}>
                 Add to Cart
             </Button>
         </div>

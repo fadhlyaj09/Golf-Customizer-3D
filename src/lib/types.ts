@@ -4,12 +4,13 @@ export interface Product {
   description: string;
   basePrice: number;
   imageUrl: string;
+  customizable: boolean;
   colors?: { name: string; hex: string }[];
 }
 
 export interface Customization {
   color?: { name: string; hex: string };
-  printSides: 1 | 2;
+  printSides?: 1 | 2;
   logo?: string; // data URL of the logo
   text?: string;
 }

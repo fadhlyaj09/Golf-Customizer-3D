@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Golf Customizer 3D',
-  description: 'Customize your own golf balls with 3D previews.',
+  title: 'Articogolf',
+  description: 'Premium golf balls for every player.',
 };
 
 export default function RootLayout({

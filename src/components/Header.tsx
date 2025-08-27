@@ -14,7 +14,7 @@ export function Header() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/product/ag-1', label: 'Products' },
+    { href: '/product/articogolf-1-standard', label: 'Products' },
     { href: '/cart', label: 'Cart' },
   ];
 
@@ -23,7 +23,7 @@ export function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Club className="h-7 w-7 text-primary" />
-          <span className="hidden font-bold sm:inline-block">Golf Customizer 3D</span>
+          <span className="hidden font-bold sm:inline-block">Articogolf</span>
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm md:flex">
@@ -33,6 +33,7 @@ export function Header() {
               href={link.href}
               className={cn(
                 'transition-colors hover:text-foreground/80',
+                pathname.startsWith('/product') && link.href.startsWith('/product') ? 'text-foreground' :
                 pathname === link.href ? 'text-foreground' : 'text-foreground/60'
               )}
             >
