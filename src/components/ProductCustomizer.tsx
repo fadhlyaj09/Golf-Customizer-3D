@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, ChangeEvent } from 'react';
+import { useState, useEffect, useMemo, ChangeEvent, useCallback } from 'react';
 import type { Product, Customization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,89 @@ const textColors = [
     { name: 'Biru', value: '#0000FF'},
     { name: 'Merah', value: '#FF0000'},
 ];
+
+interface SideCustomizerProps {
+    side: 'side1' | 'side2';
+    customization: Customization;
+    onSideTypeChange: (side: 'side1' | 'side2', type: 'logo' | 'text' | 'none') => void;
+    onSideContentChange: (side: 'side1' | 'side2', content: string) => void;
+    onSideFileUpload: (side: 'side1' | 'side2', e: ChangeEvent<HTMLInputElement>) => void;
+    onSideFontChange: (side: 'side1' | 'side2', font: string) => void;
+    onSideColorChange: (side: 'side1' | 'side2', color: string) => void;
+}
+
+const RenderSideCustomizer = ({ side, customization, onSideTypeChange, onSideContentChange, onSideFileUpload, onSideFontChange, onSideColorChange }: SideCustomizerProps) => {
+    const sideData = customization[side];
+
+    return (
+        <div className="flex flex-col gap-4 p-4 border rounded-lg">
+             {customization.printSides === 2 && <h4 className="font-semibold text-center">Sisi {side === 'side1' ? 'Depan' : 'Belakang'}</h4>}
+            <RadioGroup
+                value={sideData.type}
+                onValueChange={(v) => onSideTypeChange(side, v as 'logo' | 'text' | 'none')}
+                className="flex gap-2 justify-center"
+            >
+                <div className="flex items-center">
+                    <RadioGroupItem value="logo" id={`${side}-logo`} className="peer sr-only" />
+                    <Label htmlFor={`${side}-logo`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
+                       <ImageIcon className="h-6 w-6"/>
+                       Logo
+                    </Label>
+                </div>
+                 <div className="flex items-center">
+                    <RadioGroupItem value="text" id={`${side}-text`} className="peer sr-only" />
+                    <Label htmlFor={`${side}-text`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
+                        <Type className="h-6 w-6"/>
+                        Teks
+                    </Label>
+                </div>
+            </RadioGroup>
+
+            {sideData.type === 'logo' && (
+                 <div className="flex flex-col gap-3">
+                    <div className="relative">
+                        <Button asChild variant="outline" className='h-auto w-full'>
+                            <label htmlFor={`${side}-upload`} className="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <span className="mt-2 text-sm text-center">{sideData.content ? 'Ganti Logo' : 'Klik untuk upload (JPG/PNG)'}</span>
+                            </label>
+                        </Button>
+                        {sideData.content && (
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onSideContentChange(side, '')}>
+                                <X className="h-4 w-4"/>
+                            </Button>
+                        )}
+                    </div>
+                    <Input id={`${side}-upload`} type="file" className="hidden" accept="image/jpeg,image/png" onChange={(e) => onSideFileUpload(side, e)} />
+                </div>
+            )}
+            {sideData.type === 'text' && (
+                 <div className="flex flex-col gap-3">
+                    <Input 
+                        placeholder="e.g. Inisial atau Nama Anda"
+                        value={sideData.content}
+                        onChange={(e) => onSideContentChange(side, e.target.value)}
+                    />
+                     <div className="grid grid-cols-2 gap-4">
+                         <Select value={sideData.font} onValueChange={(v) => onSideFontChange(side, v)}>
+                             <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
+                             <SelectContent>
+                                 {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                             </SelectContent>
+                         </Select>
+                         <Select value={sideData.color} onValueChange={(v) => onSideColorChange(side, v)}>
+                             <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
+                             <SelectContent>
+                                 {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
+                             </SelectContent>
+                         </Select>
+                     </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
 
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
   const { addToCart } = useCart();
@@ -92,21 +175,21 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     });
   }
 
-  const handleSideTypeChange = (side: 'side1' | 'side2', type: 'logo' | 'text' | 'none') => {
+  const handleSideTypeChange = useCallback((side: 'side1' | 'side2', type: 'logo' | 'text' | 'none') => {
       setCustomization(prev => ({
           ...prev,
           [side]: { ...prev[side], type: type, content: '' }
       }));
-  }
+  }, []);
 
-  const handleSideContentChange = (side: 'side1' | 'side2', content: string) => {
+  const handleSideContentChange = useCallback((side: 'side1' | 'side2', content: string) => {
        setCustomization(prev => ({
           ...prev,
           [side]: { ...prev[side], content: content }
       }));
-  }
+  }, []);
 
-  const handleSideFileUpload = (side: 'side1' | 'side2', e: ChangeEvent<HTMLInputElement>) => {
+  const handleSideFileUpload = useCallback((side: 'side1' | 'side2', e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -116,21 +199,21 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
       };
       reader.readAsDataURL(file);
     }
-  };
+  }, [handleSideContentChange]);
 
-  const handleSideFontChange = (side: 'side1' | 'side2', font: string) => {
+  const handleSideFontChange = useCallback((side: 'side1' | 'side2', font: string) => {
        setCustomization(prev => ({
           ...prev,
           [side]: { ...prev[side], font: font }
       }));
-  }
+  }, []);
 
-  const handleSideColorChange = (side: 'side1' | 'side2', color: string) => {
+  const handleSideColorChange = useCallback((side: 'side1' | 'side2', color: string) => {
        setCustomization(prev => ({
           ...prev,
           [side]: { ...prev[side], color: color }
       }));
-  }
+  }, []);
 
 
   const handleAddToCart = () => {
@@ -147,77 +230,15 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     return customization.side1.type === 'logo' ? customization.side1.content : product.imageUrl;
   }, [customization.side1, product.imageUrl]);
 
-  const RenderSideCustomizer = ({ side }: { side: 'side1' | 'side2' }) => {
-    const sideData = customization[side];
+  const renderSideCustomizerProps = {
+      customization,
+      onSideTypeChange: handleSideTypeChange,
+      onSideContentChange: handleSideContentChange,
+      onSideFileUpload: handleSideFileUpload,
+      onSideFontChange: handleSideFontChange,
+      onSideColorChange: handleSideColorChange,
+  };
 
-    return (
-        <div className="flex flex-col gap-4 p-4 border rounded-lg">
-             {customization.printSides === 2 && <h4 className="font-semibold text-center">Sisi {side === 'side1' ? 'Depan' : 'Belakang'}</h4>}
-            <RadioGroup
-                value={sideData.type}
-                onValueChange={(v) => handleSideTypeChange(side, v as 'logo' | 'text' | 'none')}
-                className="flex gap-2 justify-center"
-            >
-                <div className="flex items-center">
-                    <RadioGroupItem value="logo" id={`${side}-logo`} className="peer sr-only" />
-                    <Label htmlFor={`${side}-logo`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
-                       <ImageIcon className="h-6 w-6"/>
-                       Logo
-                    </Label>
-                </div>
-                 <div className="flex items-center">
-                    <RadioGroupItem value="text" id={`${side}-text`} className="peer sr-only" />
-                    <Label htmlFor={`${side}-text`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
-                        <Type className="h-6 w-6"/>
-                        Teks
-                    </Label>
-                </div>
-            </RadioGroup>
-
-            {sideData.type === 'logo' && (
-                 <div className="flex flex-col gap-3">
-                    <div className="relative">
-                        <Button asChild variant="outline" className='h-auto w-full'>
-                            <label htmlFor={`${side}-upload`} className="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
-                                <Upload className="h-6 w-6 text-muted-foreground" />
-                                <span className="mt-2 text-sm text-center">{sideData.content ? 'Ganti Logo' : 'Klik untuk upload (JPG/PNG)'}</span>
-                            </label>
-                        </Button>
-                        {sideData.content && (
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => handleSideContentChange(side, '')}>
-                                <X className="h-4 w-4"/>
-                            </Button>
-                        )}
-                    </div>
-                    <Input id={`${side}-upload`} type="file" className="hidden" accept="image/jpeg,image/png" onChange={(e) => handleSideFileUpload(side, e)} />
-                </div>
-            )}
-            {sideData.type === 'text' && (
-                 <div className="flex flex-col gap-3">
-                    <Input 
-                        placeholder="e.g. Inisial atau Nama Anda"
-                        value={sideData.content}
-                        onChange={(e) => handleSideContentChange(side, e.target.value)}
-                    />
-                     <div className="grid grid-cols-2 gap-4">
-                         <Select value={sideData.font} onValueChange={(v) => handleSideFontChange(side, v)}>
-                             <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
-                             <SelectContent>
-                                 {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                             </SelectContent>
-                         </Select>
-                         <Select value={sideData.color} onValueChange={(v) => handleSideColorChange(side, v)}>
-                             <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
-                             <SelectContent>
-                                 {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
-                             </SelectContent>
-                         </Select>
-                     </div>
-                </div>
-            )}
-        </div>
-    )
-  }
 
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
@@ -338,11 +359,11 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 </Select>
             </div>
 
-            {customization.printSides === 1 && <RenderSideCustomizer side="side1" />}
+            {customization.printSides === 1 && <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />}
             {customization.printSides === 2 && (
                 <div className="grid grid-cols-1 gap-4">
-                    <RenderSideCustomizer side="side1" />
-                    <RenderSideCustomizer side="side2" />
+                    <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />
+                    <RenderSideCustomizer side="side2" {...renderSideCustomizerProps} />
                 </div>
             )}
         </div>
