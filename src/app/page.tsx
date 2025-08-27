@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/lib/products';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -21,9 +21,9 @@ export default async function Home() {
 
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-background">
         {/* Hero Section */}
-      <section className="relative h-[70vh] w-full text-white">
+      <section className="relative h-[60vh] w-full text-foreground">
           <Image
               src={imageUrl || "https://picsum.photos/1920/1080?random=10"}
               alt="Aesthetic golf course"
@@ -32,21 +32,21 @@ export default async function Home() {
               className="object-cover"
               priority
             />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 flex h-full flex-col items-start justify-center text-left container mx-auto px-4 md:px-6">
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center container mx-auto px-4 md:px-6">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl max-w-2xl">
-              {title || 'ARTICOGOLF AG-1 – New 2025 Design'}
+              {title || 'Articogolf: Precision & Style'}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-white/90">
-                {subtitle || 'Extreme Distance & Soft Feel'}
+                {subtitle || 'Discover golf balls engineered for performance and designed for elegance.'}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className='bg-primary hover:bg-primary/90 text-primary-foreground'>
-                   <Link href="#products">Lihat Produk</Link>
+                   <Link href="#products">Explore Collection</Link>
                 </Button>
                 <Button asChild size="lg" variant="secondary">
                   <Link href="/product/ag-1-standard?custom=true">
-                    Buat Custom Bola
+                    Customize Your Own
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -57,7 +57,7 @@ export default async function Home() {
       {/* Products Section */}
       <section id="products" className="w-full bg-background py-16 md:py-24">
          <div className="container mx-auto px-4 md:px-6">
-            <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-4xl">Koleksi Produk Kami</h2>
+            <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-4xl">Our Curated Collection</h2>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
                <Link key={product.id} href={`/product/${product.id}`} className="block group">
@@ -75,14 +75,14 @@ export default async function Home() {
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col p-4">
                        <h3 className="text-lg font-semibold">{product.name}</h3>
-                       <p className="mt-1 text-base font-bold text-primary">
-                          {product.isFloater ? "Hubungi untuk harga" : formatRupiah(product.basePrice)}
+                       <p className="mt-1 text-base font-bold text-primary-foreground/80">
+                          {product.isFloater ? "Contact for price" : formatRupiah(product.basePrice)}
                        </p>
                        <p className="mt-2 text-sm text-muted-foreground flex-grow">
                           {truncate(product.description, 80)}
                        </p>
                        <Button variant="outline" className="mt-4 w-full">
-                           {product.isFloater ? "Konsultasi" : "Detail Produk"}
+                           {product.isFloater ? "Consultation" : "View Details"}
                        </Button>
                     </CardContent>
                 </Card>

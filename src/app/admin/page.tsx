@@ -34,15 +34,15 @@ export default async function AdminPage() {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                    <p className="text-muted-foreground">Kelola produk dan konten website Anda.</p>
+                    <p className="text-muted-foreground">Manage your website's products and content.</p>
                 </div>
             </div>
 
             <div className="grid gap-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Manajemen Banner</CardTitle>
-                        <CardDescription>Ubah gambar, judul, dan sub-judul pada banner utama halaman depan.</CardDescription>
+                        <CardTitle>Banner Management</CardTitle>
+                        <CardDescription>Change the image, title, and subtitle of the main banner.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <BannerEditor />
@@ -53,13 +53,13 @@ export default async function AdminPage() {
                     <CardHeader>
                         <div className='flex justify-between items-start'>
                             <div>
-                                <CardTitle>Manajemen Produk</CardTitle>
-                                <CardDescription>Tambah, edit, atau hapus produk Anda.</CardDescription>
+                                <CardTitle>Product Management</CardTitle>
+                                <CardDescription>Add, edit, or delete your products.</CardDescription>
                             </div>
                             <Button asChild>
                                 <Link href="/admin/product-form">
                                     <PlusCircle className="mr-2 h-4 w-4" />
-                                    Tambah Produk
+                                    Add Product
                                 </Link>
                             </Button>
                         </div>
@@ -68,10 +68,10 @@ export default async function AdminPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="hidden w-[100px] sm:table-cell">Gambar</TableHead>
-                                    <TableHead>Nama Produk</TableHead>
-                                    <TableHead>Harga</TableHead>
-                                    <TableHead className="text-right">Aksi</TableHead>
+                                    <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
+                                    <TableHead>Product Name</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -87,7 +87,7 @@ export default async function AdminPage() {
                                             />
                                         </TableCell>
                                         <TableCell className="font-medium">{product.name}</TableCell>
-                                        <TableCell>{product.isFloater ? "Hubungi" : formatRupiah(product.basePrice)}</TableCell>
+                                        <TableCell>{product.isFloater ? "Contact for Price" : formatRupiah(product.basePrice)}</TableCell>
                                         <TableCell className="text-right">
                                         <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

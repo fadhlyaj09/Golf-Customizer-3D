@@ -37,9 +37,9 @@ export function Header() {
   const userInitial = user?.displayName?.charAt(0).toUpperCase() || '?';
 
   const navLinks = [
-    { href: "/product/ag-1-standard", label: "Produk" },
-    { href: "/product/ag-1-standard?custom=true", label: "Custom" },
-    { href: "#", label: "Tentang" },
+    { href: "/product/ag-1-standard", label: "Products" },
+    { href: "/product/ag-1-standard?custom=true", label: "Customize" },
+    { href: "#", label: "About" },
   ]
   
   const renderNavLinks = (isMobile: boolean = false) => (
@@ -48,7 +48,7 @@ export function Header() {
         isMobile ? "flex flex-col gap-4 mt-8" : "hidden md:flex"
       )}>
         {navLinks.map(link => (
-             <Link key={link.href} href={link.href} className="text-foreground/60 transition-colors hover:text-foreground/80">
+             <Link key={link.href} href={link.href} className="text-foreground/80 transition-colors hover:text-foreground">
               {link.label}
              </Link>
         ))}
@@ -75,7 +75,7 @@ export function Header() {
                             {totalCartItems}
                         </span>
                     )}
-                    <span className="sr-only">Keranjang Belanja</span>
+                    <span className="sr-only">Shopping Cart</span>
                 </Link>
             </Button>
 
