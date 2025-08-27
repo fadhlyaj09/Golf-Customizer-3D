@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -168,6 +168,14 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
           {!product.isFloater && <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / box (12 bola)</p>}
         </div>
         
+        <Alert className="bg-muted/50 border-dashed">
+            <Truck className="h-4 w-4" />
+            <AlertTitle className="font-semibold">Same Day Shipping</AlertTitle>
+            <AlertDescription className="text-xs">
+                Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan &gt;5 box diproses 1-2 hari kerja.
+            </AlertDescription>
+        </Alert>
+
         {product.isFloater ? (
             <Alert>
                 <MessageCircle className="h-4 w-4" />

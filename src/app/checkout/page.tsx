@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles, Truck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,6 +23,8 @@ import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Address } from '@/lib/types';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 const checkoutSchema = z.object({
@@ -38,6 +40,16 @@ const checkoutSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+function isSameDayEligible(quantity: number) {
+    if (quantity > 5) return false;
+    const now = new Date();
+    // WIB is UTC+7, so 15:00 WIB is 8:00 UTC
+    const cutoff = new Date();
+    cutoff.setUTCHours(8, 0, 0, 0);
+    // Not on Sunday (0)
+    return now.getDay() !== 0 && now.getTime() < cutoff.getTime();
+}
+
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
   const { user, loading: userLoading } = useAuth();
@@ -45,6 +57,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   
   const selectedItems = cart.filter(item => item.selected);
+  const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -107,7 +120,7 @@ export default function CheckoutPage() {
     }
   }, [user, loadSavedAddresses]);
 
-  const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+
   const totalWeight = totalQuantity * 600; // 600g per box
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + (selectedShipping?.cost[0].value || 0);
@@ -378,11 +391,19 @@ export default function CheckoutPage() {
                 <CardTitle>Ringkasan Pesanan</CardTitle>
               </CardHeader>
               <CardContent>
+                {isSameDayEligible(totalQuantity) && (
+                    <Badge variant="secondary" className="mb-4 bg-green-100 text-green-800 border-green-300">
+                        <Sparkles className="mr-1 h-3 w-3"/>
+                        Berpotensi dikirim hari ini!
+                    </Badge>
+                )}
                 <div className="space-y-4">
                   {selectedItems.map(item => (
                     <div key={item.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <Image src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl} alt={item.product.name} width={64} height={64} className="rounded-md object-cover" />
+                        <div className='relative w-16 h-16 rounded-md bg-muted overflow-hidden'>
+                           <Image src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl} alt={item.product.name} fill unoptimized className="object-cover" />
+                        </div>
                         <div>
                           <p className="font-medium">{item.product.name} x {item.quantity}</p>
                           <p className="text-sm text-muted-foreground">
@@ -414,6 +435,12 @@ export default function CheckoutPage() {
                 </div>
               </CardContent>
             </Card>
+            <Alert className="bg-muted/50 border-dashed text-xs">
+                <Truck className="h-4 w-4" />
+                <AlertDescription>
+                    <b>Same Day Shipping:</b> Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan &gt;5 box diproses 1-2 hari kerja.
+                </AlertDescription>
+            </Alert>
              <Button type="submit" size="lg" className="w-full" disabled={!selectedShipping || form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Bayar Sekarang

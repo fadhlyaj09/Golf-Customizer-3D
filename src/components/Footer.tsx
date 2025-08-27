@@ -16,14 +16,13 @@ export function Footer() {
             </div>
             <div className="flex flex-col gap-3">
                 <h4 className="font-semibold">Shop</h4>
-                <Link href="/product/ag-1-standard" className="text-sm text-muted-foreground hover:text-foreground">Products</Link>
+                <Link href="/#products" className="text-sm text-muted-foreground hover:text-foreground">Products</Link>
                 <Link href="/product/ag-1-standard?custom=true" className="text-sm text-muted-foreground hover:text-foreground">Customize</Link>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Best Sellers</Link>
             </div>
             <div className="flex flex-col gap-3">
                 <h4 className="font-semibold">Support</h4>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">FAQ</Link>
+                <Link href="/shipping-policy" className="text-sm text-muted-foreground hover:text-foreground">Shipping Policy</Link>
                 <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">Admin</Link>
             </div>
             <div className="flex flex-col gap-3">

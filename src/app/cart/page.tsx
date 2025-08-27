@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Minus, Plus, Trash2, XCircle } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, XCircle, Truck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Customization } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, toggleItemSelected, clearCartSelection } = useCart();
@@ -100,6 +101,7 @@ export default function CartPage() {
                                     src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl}
                                     alt={item.product.name}
                                     fill
+                                    unoptimized
                                     className="object-cover"
                                 />
                                 </div>
@@ -138,9 +140,16 @@ export default function CartPage() {
                     </Table>
                 </CardContent>
             </Card>
+            <Alert className="mt-8 bg-muted/50 border-dashed">
+                <Truck className="h-4 w-4" />
+                <AlertTitle className="font-semibold">Kebijakan Pengiriman</AlertTitle>
+                <AlertDescription className="text-xs">
+                    <b>Same Day Shipping:</b> Pesanan 1–5 box dengan Custom Print yang dibayar & dikonfirmasi sebelum 15:00 WIB akan dikirim hari ini. Pesanan masuk setelah 15:00 WIB akan dikirim hari kerja berikutnya. Pesanan &gt;5 box: estimasi proses dan kirim 1–2 hari kerja. Berlaku Senin–Sabtu, Libur nasional tidak ada pengiriman.
+                </AlertDescription>
+            </Alert>
         </div>
         <div className="lg:col-span-4">
-          <Card className="sticky top-24 shadow-lg rounded-xl">
+          <Card className="sticky top-24 shadow-sm rounded-xl border">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
               <CardDescription>
