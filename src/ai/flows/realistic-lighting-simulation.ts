@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import wav from 'wav';
 
 const GenerateRealisticPreviewInputSchema = z.object({
   ballDesignDataUri: z
@@ -42,23 +41,6 @@ export async function generateRealisticPreview(
   return generateRealisticPreviewFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'realisticPreviewPrompt',
-  input: {schema: GenerateRealisticPreviewInputSchema},
-  output: {schema: GenerateRealisticPreviewOutputSchema},
-  prompt: `You are an expert in generating realistic images of custom golf ball designs.
-
-  Based on the provided golf ball design, lighting condition, and angle, create a realistic image that showcases how the final product will look.
-
-  Golf Ball Design: {{media url=ballDesignDataUri}}
-  Lighting Condition: {{{lightingCondition}}}
-  Angle: {{{angle}}}
-
-  Ensure the generated image accurately reflects the custom prints, text, and chosen lighting condition and angle.
-  Return the generated image as a data URI.
-  `,
-});
-
 const generateRealisticPreviewFlow = ai.defineFlow(
   {
     name: 'generateRealisticPreviewFlow',
@@ -68,15 +50,10 @@ const generateRealisticPreviewFlow = ai.defineFlow(
   async input => {
     const {media} = await ai.generate({
       model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: [
+      prompt: `A realistic image of a custom golf ball. The design is provided in the image. The lighting should be ${input.lightingCondition}, and the viewing angle is ${input.angle}.`,
+      input: [
         {media: {url: input.ballDesignDataUri}},
-        {
-          text: `Generate a realistic image of the golf ball with ${input.lightingCondition} lighting and from a ${input.angle} angle.`,
-        },
-      ],
-      config: {
-        responseModalities: ['IMAGE', 'TEXT'],
-      },
+      ]
     });
 
     if (!media) {
