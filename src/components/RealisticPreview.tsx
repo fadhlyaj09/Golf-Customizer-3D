@@ -110,20 +110,46 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
   useEffect(() => {
     if (open) {
       setPreviewImage(null);
-      setIsLoading(false);
-      setCompositeImage('');
-      generateCompositeImage();
+      // Only set loading to false and regenerate image if it's not already loading
+      if(!isLoading) {
+        setIsLoading(false);
+        setCompositeImage('');
+        generateCompositeImage();
+      }
     }
-  }, [open, generateCompositeImage]);
+  }, [open, generateCompositeImage, isLoading]);
+
+  useEffect(() => {
+    // When angle changes, regenerate the composite image
+    if(open) {
+        generateCompositeImage();
+    }
+  }, [angle, open, generateCompositeImage]);
 
 
   const handleGeneratePreview = async () => {
+    // A small delay to ensure the canvas has finished generating the image
+    if (canvasRef.current?.dataset.generating === "true") {
+      toast({
+        title: 'Harap Tunggu',
+        description: 'Gambar desain dasar sedang disiapkan. Silakan coba sesaat lagi.',
+        variant: 'default'
+      })
+      return;
+    }
+    
+    if (!compositeImage) {
+        toast({
+            title: 'Gambar Belum Siap',
+            description: 'Gambar pratinjau belum siap. Mohon tunggu sebentar.',
+            variant: 'destructive'
+        });
+        return;
+    }
+
     setIsLoading(true);
     setPreviewImage(null);
     try {
-      if(!compositeImage || canvasRef.current?.dataset.generating) {
-        throw new Error('Gambar desain dasar belum siap. Mohon tunggu sebentar.');
-      }
       const result = await getRealisticPreview({
         ballDesignDataUri: compositeImage,
         lightingCondition: lighting,
@@ -157,7 +183,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
             <Label htmlFor="lighting" className="text-right">
               Cahaya
             </Label>
-            <RadioGroup defaultValue="sunny" className="col-span-3 flex gap-4" onValueChange={setLighting} value={lighting}>
+             <RadioGroup defaultValue="sunny" className="col-span-3 flex gap-4" onValueChange={setLighting} value={lighting}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sunny" id="r1" />
                 <Label htmlFor="r1">Cerah</Label>
@@ -204,7 +230,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !compositeImage || !!canvasRef.current?.dataset.generating}>
+          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || canvasRef.current?.dataset.generating === "true"}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
             Generate
           </Button>
