@@ -9,8 +9,8 @@ type ProductPageProps = {
    searchParams: { [key: string]: string | string[] | undefined }
 };
 
-export default function ProductPage({ params, searchParams }: ProductPageProps) {
-  const product = getProductById(params.id);
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+  const product = await getProductById(params.id);
   const startWithCustom = searchParams.custom === 'true';
 
   if (!product) {
