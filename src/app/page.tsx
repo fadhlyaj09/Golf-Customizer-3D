@@ -53,12 +53,12 @@ export default async function Home() {
           </h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
-              <Link href={`/product/${product.id}`} key={product.id}>
+              <Link href={`/product/${product.id}`} key={product.id} className="block h-full">
                 <Card className="group h-full transform overflow-hidden rounded-lg border shadow-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl">
                   <CardHeader className="p-0">
                     <div className="relative h-60 w-full">
                       <Image
-                        src={product.imageUrl}
+                        src={product.imageUrl || 'https://placehold.co/400x400'}
                         alt={product.name}
                         fill
                         data-ai-hint="golf ball"
@@ -66,7 +66,7 @@ export default async function Home() {
                       />
                     </div>
                   </CardHeader>
-                  <CardContent className="flex flex-col p-6">
+                  <CardContent className="flex h-full flex-col p-6">
                     <CardTitle className="text-xl font-semibold">{product.name}</CardTitle>
                      <p className="mt-2 text-sm text-muted-foreground flex-grow">{product.description.substring(0, 70)}...</p>
                     <p className="mt-4 text-lg font-bold text-primary">
