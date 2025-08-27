@@ -15,7 +15,7 @@ export function Header() {
   const { cart } = useCart();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, logIn, logOut } = useAuth();
+  const { user, logOut } = useAuth();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -100,3 +100,5 @@ export function Header() {
     </header>
   );
 }
+
+    

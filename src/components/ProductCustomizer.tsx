@@ -128,7 +128,7 @@ const RenderSideCustomizer = ({ side, customization, onSideTypeChange, onSideCon
 
 
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
-  const { user, logIn } = useAuth();
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
@@ -224,7 +224,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
   const handleAddToCart = () => {
     if (!user) {
-        logIn();
+        router.push('/login?from=' + window.location.pathname);
         return;
     }
     const finalCustomization: Customization = {
@@ -443,3 +443,5 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     </div>
   );
 }
+
+    

@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Address } from '@/lib/types';
+import { Label } from '@/components/ui/label';
 
 
 const checkoutSchema = z.object({
@@ -68,7 +69,7 @@ export default function CheckoutPage() {
     if (!userLoading && !user) {
       router.push('/login?from=/checkout');
     }
-    if (cart.length > 0 && selectedItems.length === 0) {
+    if (!userLoading && cart.length > 0 && selectedItems.length === 0) {
       toast({title: "Tidak ada item terpilih", description: "Silakan pilih item di keranjang untuk checkout.", variant: "destructive"});
       router.push('/cart');
     }
@@ -399,3 +400,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    

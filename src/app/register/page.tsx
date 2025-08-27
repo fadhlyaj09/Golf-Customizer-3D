@@ -58,9 +58,7 @@ export default function RegisterPage() {
                 displayName: `${data.firstName} ${data.lastName}`
             });
             
-            // 3. Temporarily disabled storing additional info to Firestore to fix sign-up issue.
-            // This part requires Firestore Security Rules to be configured.
-            /*
+            // 3. Store additional user info in Firestore
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 displayName: `${data.firstName} ${data.lastName}`,
@@ -68,7 +66,6 @@ export default function RegisterPage() {
                 phone: data.phone,
                 createdAt: new Date(),
             });
-            */
 
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
@@ -134,3 +131,5 @@ export default function RegisterPage() {
         </div>
     );
 }
+
+    

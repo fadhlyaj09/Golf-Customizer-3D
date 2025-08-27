@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  logIn: () => void;
   logOut: () => Promise<void>;
 }
 
@@ -28,28 +27,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const logIn = () => {
-    // Redirect to the login page, optionally preserving the original destination
-    const currentPath = window.location.pathname;
-    const from = currentPath !== '/login' ? `?from=${currentPath}` : '';
-    router.push(`/login${from}`);
-  };
-
   const logOut = async () => {
     try {
       await signOut(auth);
       // Redirect to home and reload to ensure all state is cleared
-      window.location.href = '/';
+      router.push('/');
+      router.refresh();
     } catch (error) {
       console.error("Logout Error", error);
     }
   };
 
-  const value = { user, loading, logIn, logOut };
+  const value = { user, loading, logOut };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
@@ -61,3 +54,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    

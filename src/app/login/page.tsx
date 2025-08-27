@@ -28,7 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const searchParams = useSearchParams();
     
     const form = useForm<LoginFormValues>({
@@ -37,11 +37,11 @@ export default function LoginPage() {
     });
 
     useEffect(() => {
-        if(user) {
+        if(!loading && user) {
             const from = searchParams.get('from') || '/';
             router.replace(from);
         }
-    }, [user, router, searchParams]);
+    }, [user, loading, router, searchParams]);
 
 
     const handleLogin = async (data: LoginFormValues) => {
@@ -89,12 +89,6 @@ export default function LoginPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
                     <div className="text-center text-sm text-muted-foreground">
-                        Atau lanjutkan dengan
-                    </div>
-                     <Button onClick={() => toast({ title: 'Segera Hadir', description: 'Login dengan Google akan segera tersedia.'})} variant="outline" className="w-full">
-                        Lanjutkan dengan Google
-                    </Button>
-                    <div className="mt-4 text-center text-sm">
                         Belum punya akun?{' '}
                         <Link href="/register" className="font-semibold text-primary hover:underline">
                             Daftar
@@ -105,3 +99,5 @@ export default function LoginPage() {
         </div>
     );
 }
+
+    
