@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo, ChangeEvent, useCallback, Suspense } from 'react';
+import { useState, useEffect, ChangeEvent, useCallback } from 'react';
 import type { Product, Customization, Decal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -148,22 +147,18 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     router.push('/cart');
   };
   
-  const activeDecalData = useMemo(() => {
-    return decals.find(d => d.id === activeDecalId);
-  }, [decals, activeDecalId]);
+  const activeDecalData = decals.find(d => d.id === activeDecalId);
 
 
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
       <div className="flex flex-col items-center gap-4 sticky top-24 h-[80vh]">
-         <Suspense fallback={<div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">Loading 3D Preview...</div>}>
-            <GolfBallCanvas 
-                ballColor={customization.color?.hex || '#ffffff'}
-                decals={decals}
-                activeDecalId={activeDecalId}
-                setActiveDecalId={setActiveDecalId}
-            />
-        </Suspense>
+         <GolfBallCanvas 
+            ballColor={customization.color?.hex || '#ffffff'}
+            decals={decals}
+            activeDecalId={activeDecalId}
+            setActiveDecalId={setActiveDecalId}
+        />
       </div>
 
       <div className="flex flex-col gap-6">
