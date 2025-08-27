@@ -7,6 +7,7 @@ export interface Product {
   gallery?: string[];
   customizable: boolean;
   colors?: { name: string; hex: string }[];
+  isFloater?: boolean;
 }
 
 export interface SideCustomization {

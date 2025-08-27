@@ -29,6 +29,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 
 interface ProductCustomizerProps {
@@ -147,11 +148,13 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   useEffect(() => {
     let finalPrice = product.basePrice;
     
-    const pricePerSide = customization.printSides === 1 ? 25000 : customization.printSides === 2 ? 40000 : 0;
-    finalPrice += pricePerSide;
+    if (!product.isFloater) {
+        const pricePerSide = customization.printSides === 1 ? 25000 : customization.printSides === 2 ? 40000 : 0;
+        finalPrice += pricePerSide;
+    }
 
     setTotalPrice(finalPrice * quantity);
-  }, [customization.printSides, quantity, product.basePrice]);
+  }, [customization.printSides, quantity, product.basePrice, product.isFloater]);
 
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
@@ -318,69 +321,80 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         </div>
 
         <Separator />
+        
+        {product.isFloater ? (
+            <Alert>
+                <MessageCircle className="h-4 w-4" />
+                <AlertTitle>Info Khusus Bola Floater</AlertTitle>
+                <AlertDescription>
+                    Harga dan kustomisasi untuk bola floater dapat bervariasi. Silakan hubungi kami via WhatsApp untuk konsultasi dan penawaran terbaik.
+                </AlertDescription>
+            </Alert>
+        ) : (
+            <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
+                {product.colors && (
+                <div className="flex flex-col gap-3">
+                    <Label className="text-base font-medium">Warna Bola</Label>
+                    <RadioGroup
+                    value={customization.color?.name}
+                    onValueChange={handleColorChange}
+                    className="flex flex-wrap gap-2"
+                    >
+                    {product.colors.map((color) => (
+                        <div key={color.name} className="flex items-center">
+                        <RadioGroupItem value={color.name} id={color.name} className="peer sr-only" />
+                        <Label
+                            htmlFor={color.name}
+                            className="flex cursor-pointer items-center gap-2 rounded-full border-2 border-muted bg-background p-1 pr-3 transition-colors peer-data-[state=checked]:border-primary"
+                        >
+                            <span
+                            className="block h-6 w-6 rounded-full"
+                            style={{ backgroundColor: color.hex, border: color.hex === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
+                            />
+                            {color.name}
+                        </Label>
+                        </div>
+                    ))}
+                    </RadioGroup>
+                </div>
+                )}
+                
+                <div className="flex flex-col gap-3">
+                    <Label className="text-base font-medium">Pilih Opsi Print</Label>
+                    <Select 
+                        value={String(customization.printSides)}
+                        onValueChange={handlePrintSidesChange}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih jumlah sisi untuk di-print" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">Tanpa Print</SelectItem>
+                            <SelectItem value="1">1 Sisi (+{formatRupiah(25000)})</SelectItem>
+                            <SelectItem value="2">2 Sisi (+{formatRupiah(40000)})</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
-        <div className="flex flex-col gap-4">
-            <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
-            {product.colors && (
-              <div className="flex flex-col gap-3">
-                <Label className="text-base font-medium">Warna Bola</Label>
-                <RadioGroup
-                  value={customization.color?.name}
-                  onValueChange={handleColorChange}
-                  className="flex flex-wrap gap-2"
-                >
-                  {product.colors.map((color) => (
-                    <div key={color.name} className="flex items-center">
-                      <RadioGroupItem value={color.name} id={color.name} className="peer sr-only" />
-                      <Label
-                        htmlFor={color.name}
-                        className="flex cursor-pointer items-center gap-2 rounded-full border-2 border-muted bg-background p-1 pr-3 transition-colors peer-data-[state=checked]:border-primary"
-                      >
-                        <span
-                          className="block h-6 w-6 rounded-full"
-                          style={{ backgroundColor: color.hex, border: color.hex === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
-                        />
-                        {color.name}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            )}
-            
-            <div className="flex flex-col gap-3">
-                <Label className="text-base font-medium">Pilih Opsi Print</Label>
-                 <Select 
-                    value={String(customization.printSides)}
-                    onValueChange={handlePrintSidesChange}
-                 >
-                    <SelectTrigger>
-                        <SelectValue placeholder="Pilih jumlah sisi untuk di-print" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="0">Tanpa Print</SelectItem>
-                        <SelectItem value="1">1 Sisi (+{formatRupiah(25000)})</SelectItem>
-                        <SelectItem value="2">2 Sisi (+{formatRupiah(40000)})</SelectItem>
-                    </SelectContent>
-                </Select>
+                {customization.printSides === 1 && <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />}
+                {customization.printSides === 2 && (
+                    <Tabs defaultValue="side1" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="side1">Sisi Depan</TabsTrigger>
+                            <TabsTrigger value="side2">Sisi Belakang</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="side1">
+                            <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />
+                        </TabsContent>
+                        <TabsContent value="side2">
+                            <RenderSideCustomizer side="side2" {...renderSideCustomizerProps} />
+                        </TabsContent>
+                    </Tabs>
+                )}
             </div>
+        )}
 
-            {customization.printSides === 1 && <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />}
-            {customization.printSides === 2 && (
-                <Tabs defaultValue="side1" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="side1">Sisi Depan</TabsTrigger>
-                        <TabsTrigger value="side2">Sisi Belakang</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="side1">
-                        <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />
-                    </TabsContent>
-                    <TabsContent value="side2">
-                        <RenderSideCustomizer side="side2" {...renderSideCustomizerProps} />
-                    </TabsContent>
-                </Tabs>
-            )}
-        </div>
 
         <Separator />
         
@@ -397,6 +411,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         </div>
 
         <div className="grid grid-cols-1 gap-4">
+           { !product.isFloater && (
             <Button size="lg" onClick={handleAddToCart} disabled={
                 (customization.printSides === 1 && customization.side1.type !== 'none' && !customization.side1.content) ||
                 (customization.printSides === 2 && ((customization.side1.type !== 'none' && !customization.side1.content) || (customization.side2.type !== 'none' && !customization.side2.content)))
@@ -404,6 +419,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Tambah ke Keranjang
             </Button>
+           )}
+           { !product.isFloater && (
              <RealisticPreview 
                 ballDesignDataUri={ballDesignDataUri}
                 customText={customization.side1.type === 'text' ? customization.side1.content : undefined}
@@ -414,6 +431,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                   Lihat Realistic Preview (AI)
                 </Button>
               </RealisticPreview>
+           )}
              <Button size="lg" variant="secondary" asChild>
                 <a href="https://wa.me/6281234567890?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-5 w-5" />

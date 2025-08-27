@@ -67,11 +67,12 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="flex flex-col p-6">
                     <CardTitle className="text-xl font-semibold">{product.name}</CardTitle>
+                     <p className="mt-2 text-sm text-muted-foreground flex-grow">{product.description.substring(0, 70)}...</p>
                     <p className="mt-4 text-lg font-bold text-primary">
-                      {formatRupiah(product.basePrice)}
+                      {product.isFloater ? "Hubungi untuk harga" : formatRupiah(product.basePrice)}
                     </p>
                     <Button variant="outline" className="mt-4 w-full">
-                        Detail Produk
+                        {product.isFloater ? "Konsultasi" : "Detail Produk"}
                     </Button>
                   </CardContent>
                 </Card>

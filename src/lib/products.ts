@@ -60,6 +60,20 @@ export const products: Product[] = [
     ],
     customizable: true,
   },
+  {
+    id: 'articogolf-floater',
+    name: 'Articogolf Floater',
+    description: 'Bola golf inovatif yang dapat mengapung di air. Sempurna untuk latihan di dekat danau atau rintangan air. Kustomisasi tersedia.',
+    basePrice: 250000,
+    imageUrl: 'https://picsum.photos/400/400?random=20',
+    gallery: [
+        'https://picsum.photos/400/400?random=21',
+        'https://picsum.photos/400/400?random=22',
+        'https://picsum.photos/400/400?random=23'
+    ],
+    customizable: true,
+    isFloater: true, // Custom flag to identify this product
+  },
 ];
 
 export const getProductById = (id: string): Product | undefined => {
