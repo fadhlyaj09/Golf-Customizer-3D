@@ -1,3 +1,5 @@
+import type { Euler, Vector3 } from "three";
+
 export interface Product {
   id: string;
   name: string;
@@ -48,4 +50,15 @@ export interface Banner {
   title: string;
   subtitle: string;
   imageUrl: string;
+}
+
+export interface Decal {
+  id: string;
+  type: 'logo' | 'text';
+  content: string;
+  position: Vector3;
+  rotation: Euler;
+  scale: number;
+  font?: string;
+  color?: string;
 }
