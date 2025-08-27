@@ -1,24 +1,5 @@
+
 /** @type {import('next').NextConfig} */
-
-import withPWAInit from "next-pwa";
-
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  // add your own strategies to the existing ones
-  // Your PWA cache strategy of choice.
-  // an array of cache strategies - this is a good default
-  // customize this to your needs
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: true,
-  swcMinify: true,
-  workboxOptions: {
-    disableDevLogs: true,
-  },
-});
-
-
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
@@ -40,8 +21,14 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+       {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
