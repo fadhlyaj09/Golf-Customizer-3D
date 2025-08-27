@@ -1,3 +1,4 @@
+
 import type { Product } from './types';
 import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
@@ -14,9 +15,7 @@ export const ALL_PRODUCTS_CACHE_TAG = 'products';
 export async function getProducts(): Promise<Product[]> {
   try {
     const productsCol = collection(db, 'products');
-    // Removed orderBy clause to prevent indexing issues. Sorting can be done client-side if needed.
-    const q = query(productsCol);
-    const productSnapshot = await getDocs(q);
+    const productSnapshot = await getDocs(productsCol);
     const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
     return productList;
   } catch (error) {

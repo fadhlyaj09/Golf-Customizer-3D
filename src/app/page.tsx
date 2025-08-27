@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getProducts } from '@/lib/products';
@@ -36,7 +37,7 @@ export default async function Home() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-                <Link href="/product/articogolf-1-standard">
+                <Link href="/product/ag-1-standard">
                     Buat Custom Bola
                     <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

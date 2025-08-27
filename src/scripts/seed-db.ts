@@ -1,4 +1,5 @@
 
+
 // This script is used to seed the Firestore database with initial product data.
 // To run it, use: `npx tsx src/scripts/seed-db.ts`
 // Make sure you have Firestore configured in your firebase.ts and have the necessary permissions.
@@ -90,7 +91,8 @@ async function seedDatabase() {
     // Create a URL-friendly ID from the product name
     const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const docRef = doc(productsCollection, productId);
-    batch.set(docRef, productData);
+    const dataToSet: Omit<Product, 'id'> & { id: string } = { ...productData, id: productId };
+    batch.set(docRef, dataToSet);
     console.log(`Preparing to add: ${productData.name} (ID: ${productId})`);
   });
 
