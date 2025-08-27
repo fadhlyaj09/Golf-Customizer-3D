@@ -68,10 +68,10 @@ export default async function Home() {
                   </CardHeader>
                   <CardContent className="flex h-full flex-col p-6">
                     <CardTitle className="text-xl font-semibold">{product.name}</CardTitle>
-                     <p className="mt-2 text-sm text-muted-foreground flex-grow">{product.description.substring(0, 70)}...</p>
-                    <p className="mt-4 text-lg font-bold text-primary">
+                    <p className="mt-2 text-lg font-bold text-primary">
                       {product.isFloater ? "Hubungi untuk harga" : formatRupiah(product.basePrice)}
                     </p>
+                    <p className="mt-2 text-sm text-muted-foreground flex-grow">{product.description.substring(0, 70)}...</p>
                     <Button variant="outline" className="mt-4 w-full">
                         {product.isFloater ? "Konsultasi" : "Detail Produk"}
                     </Button>
