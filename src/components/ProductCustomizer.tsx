@@ -35,7 +35,7 @@ interface ProductCustomizerProps {
   startWithCustom: boolean;
 }
 
-const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Eagle Lake"];
+const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Eagle Lake", "Perpetua", "Pirulen", "Arial", "Cream Cake", "Bauhaus 93", "IBM Plex Sans", "Rockwell", "MV Boli"];
 const textColors = [
     { name: 'Hitam', value: '#000000'},
     { name: 'Biru', value: '#0000FF'},
