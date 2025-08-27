@@ -317,10 +317,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.description}</p>
-          <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / box (12 bola)</p>
+          {!product.isFloater && <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / box (12 bola)</p>}
         </div>
-
-        <Separator />
         
         {product.isFloater ? (
             <Alert>
@@ -332,6 +330,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             </Alert>
         ) : (
             <div className="flex flex-col gap-4">
+                <Separator />
                 <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
                 {product.colors && (
                 <div className="flex flex-col gap-3">
@@ -395,20 +394,21 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             </div>
         )}
 
-
-        <Separator />
+        {!product.isFloater && <Separator />}
         
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => setQuantity(q => Math.max(1, q-1))}><Minus className="h-4 w-4" /></Button>
-                <span className="w-10 text-center text-lg font-bold">{quantity}</span>
-                <Button variant="outline" size="icon" onClick={() => setQuantity(q => q+1)}><Plus className="h-4 w-4" /></Button>
+        {!product.isFloater && (
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => setQuantity(q => Math.max(1, q-1))}><Minus className="h-4 w-4" /></Button>
+                    <span className="w-10 text-center text-lg font-bold">{quantity}</span>
+                    <Button variant="outline" size="icon" onClick={() => setQuantity(q => q+1)}><Plus className="h-4 w-4" /></Button>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total Harga</p>
+                    <p className="text-3xl font-bold tracking-tight">{formatRupiah(totalPrice)}</p>
+                </div>
             </div>
-            <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Harga</p>
-                <p className="text-3xl font-bold tracking-tight">{formatRupiah(totalPrice)}</p>
-            </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4">
            { !product.isFloater && (
