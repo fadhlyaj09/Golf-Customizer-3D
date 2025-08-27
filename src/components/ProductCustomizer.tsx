@@ -19,13 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from './ui/separator';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -252,65 +245,44 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
       <div className="flex flex-col items-center gap-4">
-         <Carousel className="w-full max-w-md">
-            <CarouselContent>
-                <CarouselItem>
-                    <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
-                         <Image
-                            src={(product.gallery || [product.imageUrl])[0]}
-                            alt={`${product.name} - Sisi Depan`}
-                            fill
-                            data-ai-hint="golf ball"
-                            className="object-cover"
-                            style={{
-                              backgroundColor: customization.color?.hex || 'white'
-                            }}
-                        />
-                        {customization.side1.type === 'logo' && customization.side1.content && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-                                <Image src={customization.side1.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
-                            </div>
-                        )}
-                        {customization.side1.type === 'text' && customization.side1.content && (
-                             <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform text-center">
-                                <p className="font-bold text-xl" style={{ fontFamily: customization.side1.font, color: customization.side1.color }}>
-                                    {customization.side1.content}
-                                </p>
-                            </div>
-                        )}
-                    </Card>
-                </CarouselItem>
-                <CarouselItem>
-                    <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
-                         <Image
-                           src={(product.gallery || [product.imageUrl])[1] || (product.gallery || [product.imageUrl])[0]}
-                            alt={`${product.name} - Sisi Belakang`}
-                            fill
-                            data-ai-hint="golf ball"
-                            className="object-cover"
-                            style={{
-                              backgroundColor: customization.color?.hex || 'white'
-                            }}
-                        />
-                         {customization.side2.type === 'logo' && customization.side2.content && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-                                <Image src={customization.side2.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
-                            </div>
-                        )}
-                        {customization.side2.type === 'text' && customization.side2.content && (
-                           <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform text-center">
-                                <p className="font-bold text-xl" style={{ fontFamily: customization.side2.font, color: customization.side2.color }}>
-                                    {customization.side2.content}
-                                </p>
-                            </div>
-                        )}
-                    </Card>
-                </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="left-2" />
-            <CarouselNext className="right-2" />
-        </Carousel>
-
+        <Card className="relative aspect-square w-full max-w-md overflow-hidden rounded-lg border shadow-lg">
+            <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                data-ai-hint="golf ball"
+                className="object-cover"
+                style={{
+                    backgroundColor: customization.color?.hex || 'white'
+                }}
+            />
+            {/* Side 1 Preview */}
+            {customization.side1.type === 'logo' && customization.side1.content && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                    <Image src={customization.side1.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
+                </div>
+            )}
+            {customization.side1.type === 'text' && customization.side1.content && (
+                <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform text-center">
+                    <p className="font-bold text-xl" style={{ fontFamily: customization.side1.font, color: customization.side1.color }}>
+                        {customization.side1.content}
+                    </p>
+                </div>
+            )}
+            {/* Side 2 Preview (smaller, on a corner) */}
+            {customization.side2.type === 'logo' && customization.side2.content && (
+                <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 transform">
+                    <Image src={customization.side2.content} alt="Side 2 Logo Preview" width={40} height={40} className="object-contain opacity-80" />
+                </div>
+            )}
+            {customization.side2.type === 'text' && customization.side2.content && (
+                <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 transform text-center">
+                    <p className="font-bold text-xs" style={{ fontFamily: customization.side2.font, color: customization.side2.color, opacity: 0.8 }}>
+                        {customization.side2.content}
+                    </p>
+                </div>
+            )}
+        </Card>
       </div>
 
       <div className="flex flex-col gap-6">
