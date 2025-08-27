@@ -23,10 +23,10 @@ export const products: Product[] = [
     imageUrl: 'https://picsum.photos/600/400?random=3',
     colors: [
       { name: 'White', hex: '#FFFFFF' },
-      { name: 'Matte Red', hex: '#E53E3E' },
-      { name: 'Matte Blue', hex: '#3182CE' },
-      { name: 'Matte Green', hex: '#38A169' },
-      { name: 'Matte Yellow', hex: '#D69E2E' },
+      { name: 'Pink', hex: '#FFC0CB' },
+      { name: 'Green', hex: '#008000' },
+      { name: 'Yellow', hex: '#FFFF00' },
+      { name: 'Orange', hex: '#FFA500' },
     ],
   },
   {

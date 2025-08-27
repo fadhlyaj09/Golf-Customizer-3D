@@ -2,7 +2,7 @@
 
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-import { Golf, ShoppingCart } from 'lucide-react';
+import { Club, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
@@ -22,7 +22,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Golf className="h-7 w-7 text-primary" />
+          <Club className="h-7 w-7 text-primary" />
           <span className="hidden font-bold sm:inline-block">Golf Customizer 3D</span>
         </Link>
 
