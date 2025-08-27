@@ -2,8 +2,9 @@
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -12,7 +13,7 @@ const ProductSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   basePrice: z.coerce.number().min(0, 'Price must be a positive number'),
-  imageUrl: z.string().url('Must be a valid URL'),
+  image: z.any().optional(),
   isFloater: z.boolean().default(false),
   customizable: z.boolean().default(true),
 });
@@ -22,23 +23,24 @@ export type ProductFormState = {
     name?: string[];
     description?: string[];
     basePrice?: string[];
-    imageUrl?: string[];
+    image?: string[];
   };
   message?: string | null;
 };
 
 
 export async function saveProduct(prevState: ProductFormState, formData: FormData) {
-  
+
   const validatedFields = ProductSchema.safeParse({
     id: formData.get('id') || undefined,
     name: formData.get('name'),
     description: formData.get('description'),
     basePrice: formData.get('basePrice'),
-    imageUrl: formData.get('imageUrl'),
+    image: formData.get('image'),
     isFloater: formData.get('isFloater') === 'on',
     customizable: true,
   });
+  
 
   if (!validatedFields.success) {
     return {
@@ -47,19 +49,32 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
     };
   }
   
-  const { id, ...productData } = validatedFields.data;
+  const { id, image, ...productData } = validatedFields.data;
+  let imageUrl = formData.get('currentImageUrl') as string || '';
+
   const productsCollection = collection(db, 'products');
 
   try {
+     if (image && image.size > 0) {
+        // Upload new image
+        const imageName = `${Date.now()}-${image.name}`;
+        const storageRef = ref(storage, `products/${imageName}`);
+        const buffer = Buffer.from(await image.arrayBuffer());
+        await uploadBytes(storageRef, buffer);
+        imageUrl = await getDownloadURL(storageRef);
+    }
+    
+    const dataToSave = { ...productData, imageUrl };
+
     if (id) {
       // Update existing product
       const productRef = doc(db, 'products', id);
-      await updateDoc(productRef, productData);
+      await updateDoc(productRef, dataToSave);
     } else {
       // Create new product
       const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const productRef = doc(productsCollection, productId);
-      await setDoc(productRef, { ...productData, id: productId });
+      await setDoc(productRef, { ...dataToSave, id: productId });
     }
   } catch (e) {
     console.error(e);

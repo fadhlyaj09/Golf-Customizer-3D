@@ -2,11 +2,12 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   "projectId": "golf-customizer-3d",
   "appId": "1:554446603581:web:bb0eacb2096d7edabbf154",
-  "storageBucket": "golf-customizer-3d.firebasestorage.app",
+  "storageBucket": "golf-customizer-3d.appspot.com",
   "apiKey": "AIzaSyC-8g1pdaWLaAeAT7FLyNhBALviEqEoHSc",
   "authDomain": "golf-customizer-3d.firebaseapp.com",
   "measurementId": "",
@@ -24,4 +25,5 @@ if (!getApps().length) {
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { saveProduct } from '@/actions/productActions';
 import { getProductById } from '@/lib/products';
@@ -17,13 +16,26 @@ import { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import Image from 'next/image';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 
 const ProductSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   basePrice: z.coerce.number().min(0, 'Price must be a positive number'),
-  imageUrl: z.string().url('Must be a valid URL'),
+  image: z.any()
+    .refine((file) => {
+        if (!file || file.length === 0) return true; // Allow no file on edit
+        return file?.[0]?.size <= MAX_FILE_SIZE;
+    }, `Max image size is 5MB.`)
+    .refine((file) => {
+        if (!file || file.length === 0) return true;
+        return ACCEPTED_IMAGE_TYPES.includes(file?.[0]?.type);
+    }, "Only .jpg, .jpeg, .png and .webp formats are supported."),
   isFloater: z.boolean().default(false),
 });
 
@@ -32,9 +44,9 @@ type ProductFormValues = z.infer<typeof ProductSchema>;
 export default function ProductFormPage() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
-  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(!!productId);
   const [isPending, startTransition] = useTransition();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(ProductSchema),
@@ -42,7 +54,7 @@ export default function ProductFormPage() {
       name: '',
       description: '',
       basePrice: 0,
-      imageUrl: '',
+      image: undefined,
       isFloater: false,
     },
   });
@@ -53,8 +65,14 @@ export default function ProductFormPage() {
         setLoading(true);
         const fetchedProduct = await getProductById(productId);
         if (fetchedProduct) {
-          setProduct(fetchedProduct);
-          form.reset(fetchedProduct); // Populate form with fetched data
+          form.reset({
+             name: fetchedProduct.name,
+             description: fetchedProduct.description,
+             basePrice: fetchedProduct.basePrice,
+             isFloater: fetchedProduct.isFloater,
+             id: fetchedProduct.id
+          });
+          setImagePreview(fetchedProduct.imageUrl);
         }
         setLoading(false);
       };
@@ -64,11 +82,21 @@ export default function ProductFormPage() {
 
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
     const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        formData.append(key, String(value));
-      }
-    });
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('basePrice', String(data.basePrice));
+    formData.append('isFloater', data.isFloater ? 'on' : 'off');
+    
+    if (data.id) {
+        formData.append('id', data.id);
+    }
+    if (imagePreview) {
+        formData.append('currentImageUrl', imagePreview)
+    }
+
+    if (data.image && data.image.length > 0) {
+      formData.append('image', data.image[0]);
+    }
 
     startTransition(async () => {
       await saveProduct(undefined, formData);
@@ -91,7 +119,8 @@ export default function ProductFormPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-              <input type="hidden" {...form.register('id')} />
+               {productId && <input type="hidden" {...form.register('id')} />}
+
               <FormField
                 control={form.control}
                 name="name"
@@ -125,17 +154,41 @@ export default function ProductFormPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL Gambar</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                <FormField
+                    control={form.control}
+                    name="image"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Gambar Produk</FormLabel>
+                             <FormControl>
+                                <Input 
+                                    type="file" 
+                                    accept="image/png, image/jpeg, image/webp"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        field.onChange(e.target.files);
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                setImagePreview(reader.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                        } else {
+                                            setImagePreview(null);
+                                        }
+                                    }}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 {imagePreview && (
+                    <div className="mt-4">
+                        <p className="text-sm font-medium mb-2">Pratinjau Gambar:</p>
+                        <Image src={imagePreview} alt="Image preview" width={100} height={100} className="rounded-md object-cover" />
+                    </div>
                 )}
-              />
               <FormField
                 control={form.control}
                 name="isFloater"
