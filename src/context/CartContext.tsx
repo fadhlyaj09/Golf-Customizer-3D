@@ -10,6 +10,8 @@ interface CartContextType {
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  toggleItemSelected: (itemId: string) => void;
+  clearCartSelection: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,25 +38,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Product, customization: Customization, quantity: number, price: number) => {
     setCart((prevCart) => {
-      // Create a unique ID for the cart item based on product and customizations
       const customId = JSON.stringify(customization);
       const itemId = `${product.id}-${customId}`;
 
       const existingItem = prevCart.find((item) => item.id === itemId);
 
       if (existingItem) {
-        // Update quantity of existing item
         return prevCart.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === itemId ? { ...item, quantity: item.quantity + quantity, selected: true } : item
         );
       } else {
-        // Add new item to cart
         const newItem: CartItem = {
           id: itemId,
           product,
           customization,
           quantity,
           price,
+          selected: true,
         };
         return [...prevCart, newItem];
       }
@@ -74,19 +74,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === itemId ? { ...item, quantity: Math.max(0, quantity) } : item
+    setCart((prevCart) => {
+      if (quantity <= 0) {
+        return prevCart.filter(item => item.id !== itemId);
+      }
+      return prevCart.map((item) =>
+        item.id === itemId ? { ...item, quantity } : item
       )
-    );
+    });
   };
+
+  const toggleItemSelected = (itemId: string) => {
+    setCart(prevCart => prevCart.map(item =>
+        item.id === itemId ? { ...item, selected: !item.selected } : item
+    ));
+  }
+  
+  const clearCartSelection = () => {
+    setCart(prevCart => prevCart.map(item => ({...item, selected: false})));
+  }
   
   const clearCart = () => {
-    setCart([]);
+    // This now clears only the selected items after a successful checkout
+    setCart(prevCart => prevCart.filter(item => !item.selected));
   }
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, toggleItemSelected, clearCartSelection }}>
       {children}
     </CartContext.Provider>
   );

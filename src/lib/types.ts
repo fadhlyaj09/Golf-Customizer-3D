@@ -9,7 +9,7 @@ export interface Product {
   colors?: { name: string; hex: string }[];
 }
 
-interface SideCustomization {
+export interface SideCustomization {
   type: 'logo' | 'text' | 'none';
   content: string; // data URL for logo, or the text content
   font?: string;
@@ -21,9 +21,6 @@ export interface Customization {
   printSides: 0 | 1 | 2;
   side1: SideCustomization;
   side2: SideCustomization;
-  // Legacy fields for cart summary, can be removed if cart is updated
-  logo?: string;
-  text?: string;
 }
 
 export interface CartItem {
@@ -32,4 +29,16 @@ export interface CartItem {
   customization: Customization;
   quantity: number;
   price: number; // final price per item including customization
+  selected?: boolean; // For checkout selection
+}
+
+export interface Address {
+    id: string;
+    name: string;
+    phone: string;
+    fullAddress: string;
+    province: string;
+    city: string;
+    zip: string;
+    isDefault?: boolean;
 }

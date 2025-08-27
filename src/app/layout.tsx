@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { CartProvider } from '@/context/CartContext';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,14 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        <CartProvider>
-          <div className="relative flex min-h-dvh flex-col bg-background">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Toaster />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="relative flex min-h-dvh flex-col bg-background">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

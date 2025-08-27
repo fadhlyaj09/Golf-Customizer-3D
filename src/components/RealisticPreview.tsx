@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,14 +17,16 @@ import { getRealisticPreview } from '@/actions/aiActions';
 import Image from 'next/image';
 import { Loader2, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Customization } from '@/lib/types';
 
 interface RealisticPreviewProps {
   children: React.ReactNode;
   ballDesignDataUri: string;
   customText?: string;
+  side2Data: Customization['side2'];
 }
 
-export function RealisticPreview({ children, ballDesignDataUri, customText }: RealisticPreviewProps) {
+export function RealisticPreview({ children, ballDesignDataUri, customText, side2Data }: RealisticPreviewProps) {
   const [open, setOpen] = useState(false);
   const [lighting, setLighting] = useState('sunny');
   const [angle, setAngle] = useState('top-down');
@@ -35,70 +37,92 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const generateCompositeImage = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    // Set a flag to indicate that we are generating the image
+    canvas.dataset.generating = "true";
+
+    const baseImage = new window.Image();
+    baseImage.crossOrigin = "Anonymous"; 
+    baseImage.src = 'https://picsum.photos/512/512?random=ball';
+    
+    const drawText = (text: string, font: string, color: string, yPos: number) => {
+      ctx.fillStyle = color;
+      ctx.font = `bold 24px "${font}"`;
+      ctx.textAlign = 'center';
+      ctx.fillText(text, canvas.width / 2, yPos);
+    }
+    
+    const drawLogo = (dataUri: string, yPos: number, size: number) => {
+        return new Promise<void>((resolve) => {
+            const logoImage = new window.Image();
+            logoImage.src = dataUri;
+            logoImage.onload = () => {
+                const x = (canvas.width - size) / 2;
+                ctx.drawImage(logoImage, x, yPos, size, size);
+                resolve();
+            }
+            logoImage.onerror = () => resolve(); // continue even if logo fails
+        });
+    }
+
+    baseImage.onload = async () => {
+      canvas.width = baseImage.width;
+      canvas.height = baseImage.height;
+      ctx.drawImage(baseImage, 0, 0);
+
+      // Handle side 1
+      if (ballDesignDataUri.startsWith('data:image')) {
+        await drawLogo(ballDesignDataUri, (canvas.height/2) - 100, 100);
+      } else if (customText) {
+        drawText(customText, 'Arial', 'black', (canvas.height / 2) - 20);
+      }
+      
+      // Handle side 2, visible only in 'side view'
+      if (angle === 'side view') {
+        if(side2Data.type === 'logo' && side2Data.content) {
+            // We can't actually show two logos correctly without a 3D model, 
+            // so we'll just place it somewhere else as a placeholder representation
+             await drawLogo(side2Data.content, (canvas.height/2) + 50, 50);
+        } else if (side2Data.type === 'text' && side2Data.content && side2Data.font && side2Data.color) {
+            drawText(side2Data.content, side2Data.font, side2Data.color, canvas.height * 0.7);
+        }
+      }
+
+      setCompositeImage(canvas.toDataURL('image/png'));
+      delete canvas.dataset.generating;
+    };
+    
+    baseImage.onerror = () => {
+      toast({
+        title: 'Gagal Memuat Gambar Dasar',
+        description: 'Tidak dapat memuat gambar bola golf. Silakan coba lagi.',
+        variant: 'destructive'
+      })
+      delete canvas.dataset.generating;
+    }
+  }, [ballDesignDataUri, customText, side2Data, angle, toast]);
+
+
   useEffect(() => {
     if (open) {
-      // Reset state when dialog opens
       setPreviewImage(null);
       setIsLoading(false);
       setCompositeImage('');
-      
-      // Create a composite image using canvas
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
-
-      const baseImage = new window.Image();
-      baseImage.crossOrigin = "Anonymous"; 
-      baseImage.src = 'https://picsum.photos/512/512?random=ball';
-      
-      baseImage.onload = () => {
-        canvas.width = baseImage.width;
-        canvas.height = baseImage.height;
-        ctx.drawImage(baseImage, 0, 0);
-
-        if (ballDesignDataUri.startsWith('data:image')) {
-            const logoImage = new window.Image();
-            logoImage.src = ballDesignDataUri;
-            logoImage.onload = () => {
-                const logoSize = 100;
-                const x = (canvas.width - logoSize) / 2;
-                const y = (canvas.height - logoSize) / 2;
-                ctx.drawImage(logoImage, x, y, logoSize, logoSize);
-                if (customText) drawText();
-                setCompositeImage(canvas.toDataURL('image/png'));
-            }
-        } else {
-             if (customText) drawText();
-             setCompositeImage(canvas.toDataURL('image/png'));
-        }
-      };
-      
-      baseImage.onerror = () => {
-        toast({
-          title: 'Gagal Memuat Gambar Dasar',
-          description: 'Tidak dapat memuat gambar bola golf. Silakan coba lagi.',
-          variant: 'destructive'
-        })
-      }
-
-      const drawText = () => {
-        if(customText) {
-            ctx.fillStyle = 'black';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(customText, canvas.width / 2, canvas.height * 0.7);
-        }
-      }
+      generateCompositeImage();
     }
-  }, [open, ballDesignDataUri, customText, toast]);
+  }, [open, generateCompositeImage]);
 
 
   const handleGeneratePreview = async () => {
     setIsLoading(true);
     setPreviewImage(null);
     try {
-      if(!compositeImage) {
-        throw new Error('Gambar desain dasar belum siap.');
+      if(!compositeImage || canvasRef.current?.dataset.generating) {
+        throw new Error('Gambar desain dasar belum siap. Mohon tunggu sebentar.');
       }
       const result = await getRealisticPreview({
         ballDesignDataUri: compositeImage,
@@ -180,7 +204,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !compositeImage}>
+          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !compositeImage || !!canvasRef.current?.dataset.generating}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
             Generate
           </Button>

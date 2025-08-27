@@ -7,13 +7,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Minus, Plus, Trash2, XCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Customization } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { cart, removeFromCart, updateQuantity, toggleItemSelected, clearCartSelection } = useCart();
+  const router = useRouter();
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const selectedItems = cart.filter(item => item.selected);
+  const total = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const handleCheckout = () => {
+    if (selectedItems.length > 0) {
+      router.push('/checkout');
+    }
+  }
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -53,7 +63,10 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold tracking-tight">Keranjang Belanja</h1>
+      <div className='flex justify-between items-center mb-8'>
+        <h1 className="text-3xl font-bold tracking-tight">Keranjang Belanja</h1>
+        <Button onClick={clearCartSelection} variant="link">Hapus Pilihan</Button>
+      </div>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="lg:col-span-2">
             <Card>
@@ -61,6 +74,7 @@ export default function CartPage() {
                     <Table>
                         <TableHeader>
                         <TableRow>
+                            <TableHead className="w-[20px]"></TableHead>
                             <TableHead className="w-[100px]">Produk</TableHead>
                             <TableHead>Detail</TableHead>
                             <TableHead className="text-center">Jumlah</TableHead>
@@ -70,7 +84,13 @@ export default function CartPage() {
                         </TableHeader>
                         <TableBody>
                         {cart.map((item) => (
-                            <TableRow key={item.id}>
+                            <TableRow key={item.id} data-state={item.selected ? 'selected' : ''}>
+                             <TableCell>
+                                <Checkbox
+                                    checked={item.selected}
+                                    onCheckedChange={() => toggleItemSelected(item.id)}
+                                />
+                             </TableCell>
                             <TableCell>
                                 <div className="relative h-20 w-20">
                                 <Image
@@ -120,24 +140,25 @@ export default function CartPage() {
           <Card>
             <CardHeader>
               <CardTitle>Ringkasan Pesanan</CardTitle>
+              <CardDescription>
+                Hanya item yang dipilih akan diproses.
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>Subtotal ({selectedItems.length} item)</span>
                 <span>{formatRupiah(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Pengiriman</span>
-                <span className='text-primary font-medium'>GRATIS</span>
+                <Link href="/checkout" className='text-primary font-medium underline text-sm'>Hitung di checkout</Link>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-4 mt-2">
                 <span>Total</span>
                 <span>{formatRupiah(total)}</span>
               </div>
-              <Button asChild size="lg" className="w-full mt-4">
-                <Link href="/checkout">
-                  Lanjut ke Checkout <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+              <Button onClick={handleCheckout} size="lg" className="w-full mt-4" disabled={selectedItems.length === 0}>
+                  Lanjut ke Checkout ({selectedItems.length}) <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>

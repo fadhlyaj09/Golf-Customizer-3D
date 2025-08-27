@@ -2,15 +2,20 @@
 
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-import { ShoppingCart } from 'lucide-react';
+import { LogOut, ShoppingCart, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 export function Header() {
   const { cart } = useCart();
   const pathname = usePathname();
+  const { user, logIn, logOut } = useAuth();
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
@@ -45,15 +50,42 @@ export function Header() {
         </div>
 
 
-        <div className="flex items-center gap-2">
-          <Button asChild>
-              <Link href="/cart">Pesan Sekarang</Link>
-          </Button>
-          <Button asChild variant="outline" size="icon">
+        <div className="flex items-center gap-4">
+          { user ? (
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+                    <AvatarFallback><UserIcon className="h-5 w-5"/></AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" onClick={logIn}>Login</Button>
+          )}
+
+          <Button asChild variant="outline" size="icon" className="relative">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                   {totalItems}
                 </span>
               )}

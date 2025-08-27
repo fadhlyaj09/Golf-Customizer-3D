@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Upload, Wand2, X, ShoppingCart, Type, Image as ImageIcon } from 'lucide-react';
+import { Minus, Plus, Upload, Wand2, X, ShoppingCart, Type, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import {
   Select,
@@ -27,6 +27,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from '@/context/AuthContext';
 
 
 interface ProductCustomizerProps {
@@ -125,6 +126,7 @@ const RenderSideCustomizer = ({ side, customization, onSideTypeChange, onSideCon
 
 
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
+  const { user, logIn } = useAuth();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [customization, setCustomization] = useState<Customization>({
@@ -216,11 +218,12 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
 
   const handleAddToCart = () => {
+    if (!user) {
+        logIn();
+        return;
+    }
     const finalCustomization: Customization = {
         ...customization,
-        // Ensure legacy fields are populated for cart/checkout display if needed
-        logo: customization.side1.type === 'logo' ? customization.side1.content : (customization.side2.type === 'logo' ? customization.side2.content : undefined),
-        text: customization.side1.type === 'text' ? customization.side1.content : (customization.side2.type === 'text' ? customization.side2.content : undefined)
     };
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
   };
@@ -401,12 +404,19 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
              <RealisticPreview 
                 ballDesignDataUri={ballDesignDataUri}
                 customText={customization.side1.type === 'text' ? customization.side1.content : undefined}
+                side2Data={customization.side2}
               >
                 <Button size="lg" variant="outline" className="w-full">
                   <Wand2 className="mr-2 h-5 w-5" />
                   Lihat Realistic Preview (AI)
                 </Button>
               </RealisticPreview>
+             <Button size="lg" variant="secondary" asChild>
+                <a href="https://wa.me/6281234567890?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Konsultasi via WA
+                </a>
+              </Button>
         </div>
       </div>
     </div>
