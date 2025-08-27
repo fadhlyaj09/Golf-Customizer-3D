@@ -13,6 +13,7 @@ export function Footer() {
             <Link href="/product/articogolf-1-standard?custom=true" className="text-muted-foreground hover:text-foreground">Custom</Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">FAQ</Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">Kontak</Link>
+            <Link href="/admin" className="text-muted-foreground hover:text-foreground">Admin</Link>
         </nav>
         <p className="text-sm text-muted-foreground mt-4 sm:mt-0">
           © {new Date().getFullYear()} Articogolf. All Rights Reserved.
