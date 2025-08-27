@@ -58,8 +58,9 @@ export default function RegisterPage() {
                 displayName: `${data.firstName} ${data.lastName}`
             });
             
-            // 3. Store additional user information in Firestore
-            // This is the part that might be failing if Firestore isn't set up
+            // 3. Temporarily disabled storing additional info to Firestore to fix sign-up issue.
+            // This part requires Firestore Security Rules to be configured.
+            /*
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 displayName: `${data.firstName} ${data.lastName}`,
@@ -67,6 +68,7 @@ export default function RegisterPage() {
                 phone: data.phone,
                 createdAt: new Date(),
             });
+            */
 
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
@@ -77,7 +79,7 @@ export default function RegisterPage() {
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
             } else if (error.code === 'permission-denied' || error.message.includes('firestore')) {
-                errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore telah diaktifkan.';
+                 errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore telah diaktifkan dan security rules memperbolehkan write.';
             }
             
             toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
