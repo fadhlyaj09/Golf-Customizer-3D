@@ -6,7 +6,7 @@ export interface Product {
   imageUrl: string;
   gallery?: string[];
   customizable: boolean;
-  colors?: { name: string; hex: string }[];
+  colors?: { name: string; hex: string; imageUrl?: string }[];
   isFloater?: boolean;
 }
 
@@ -18,7 +18,7 @@ export interface SideCustomization {
 }
 
 export interface Customization {
-  color?: { name: string; hex: string };
+  color?: { name: string; hex: string; imageUrl?: string };
   printSides: 0 | 1 | 2;
   side1: SideCustomization;
   side2: SideCustomization;

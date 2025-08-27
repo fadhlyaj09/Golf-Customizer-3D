@@ -42,11 +42,11 @@ export function getDefaultProducts(): Product[] {
             ],
             customizable: true,
             colors: [
-              { name: 'Mix Color', hex: '#FFFFFF' },
-              { name: 'Pink', hex: '#FFC0CB' },
-              { name: 'Green', hex: '#90EE90' },
-              { name: 'Yellow', hex: '#FFFFE0' },
-              { name: 'Orange', hex: '#FFA500' },
+              { name: 'Mix Color', hex: '#FFFFFF', imageUrl: 'https://picsum.photos/400/400?random=9' },
+              { name: 'Pink', hex: '#FFC0CB', imageUrl: 'https://picsum.photos/400/400?random=25' },
+              { name: 'Green', hex: '#90EE90', imageUrl: 'https://picsum.photos/400/400?random=26' },
+              { name: 'Yellow', hex: '#FFFFE0', imageUrl: 'https://picsum.photos/400/400?random=27' },
+              { name: 'Orange', hex: '#FFA500', imageUrl: 'https://picsum.photos/400/400?random=28' },
             ],
         },
         {

@@ -240,6 +240,10 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
       onSideFontChange: handleSideFontChange,
       onSideColorChange: handleSideColorChange,
   };
+  
+  const activeImageUrl = useMemo(() => {
+      return customization.color?.imageUrl || product.imageUrl;
+  }, [customization.color, product.imageUrl]);
 
 
   return (
@@ -247,14 +251,11 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
       <div className="flex flex-col items-center gap-4">
         <Card className="relative aspect-square w-full max-w-md overflow-hidden rounded-lg border shadow-lg">
             <Image
-                src={product.imageUrl}
+                src={activeImageUrl}
                 alt={product.name}
                 fill
                 data-ai-hint="golf ball"
                 className="object-cover"
-                style={{
-                    backgroundColor: customization.color?.hex || 'white'
-                }}
             />
             {/* Side 1 Preview */}
             {customization.side1.type === 'logo' && customization.side1.content && (
