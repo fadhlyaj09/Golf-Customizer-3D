@@ -242,8 +242,9 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   };
   
   const activeImageUrl = useMemo(() => {
-      return customization.color?.imageUrl || product.imageUrl;
-  }, [customization.color, product.imageUrl]);
+      // Use the color-specific image if available, otherwise use a high-quality 3D ball
+      return customization.color?.imageUrl || "https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png";
+  }, [customization.color]);
 
 
   return (
@@ -255,7 +256,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 alt={product.name}
                 fill
                 data-ai-hint="golf ball"
-                className="object-cover"
+                className="object-contain"
+                unoptimized // Prevents Next.js from optimizing the external image
             />
             {/* Side 1 Preview */}
             {customization.side1.type === 'logo' && customization.side1.content && (

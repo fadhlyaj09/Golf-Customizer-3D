@@ -47,7 +47,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
 
     const baseImage = new window.Image();
     baseImage.crossOrigin = "Anonymous"; 
-    baseImage.src = 'https://picsum.photos/512/512?random=ball';
+    baseImage.src = 'https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png';
     
     const drawText = (text: string, font: string, color: string, yPos: number) => {
       ctx.fillStyle = color;
