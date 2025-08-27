@@ -25,7 +25,6 @@ import { Euler, MathUtils, Vector3 } from 'three';
 
 interface ProductCustomizerProps {
   product: Product;
-  startWithCustom: boolean;
 }
 
 const fonts = ["Inter", "Roboto", "Montserrat", "Poppins", "Merriweather"];

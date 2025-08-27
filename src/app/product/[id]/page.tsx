@@ -11,15 +11,14 @@ type ProductPageProps = {
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const product = await getProductById(params.id);
-  const startWithCustom = searchParams.custom === 'true';
-
+  
   if (!product) {
     notFound();
   }
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <ProductCustomizer product={product} startWithCustom={startWithCustom} />
+      <ProductCustomizer product={product} />
     </div>
   );
 }
