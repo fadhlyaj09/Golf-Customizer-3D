@@ -35,12 +35,11 @@ interface ProductCustomizerProps {
   startWithCustom: boolean;
 }
 
-const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather"];
+const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Eagle Lake"];
 const textColors = [
     { name: 'Hitam', value: '#000000'},
-    { name: 'Putih', value: '#FFFFFF'},
-    { name: 'Emas', value: '#FFD700'},
-    { name: 'Silver', value: '#C0C0C0'},
+    { name: 'Biru', value: '#0000FF'},
+    { name: 'Merah', value: '#FF0000'},
 ];
 
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {

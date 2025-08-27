@@ -40,6 +40,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
       // Reset state when dialog opens
       setPreviewImage(null);
       setIsLoading(false);
+      setCompositeImage('');
       
       // Create a composite image using canvas
       const canvas = canvasRef.current;
@@ -71,6 +72,14 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
              setCompositeImage(canvas.toDataURL('image/png'));
         }
       };
+      
+      baseImage.onerror = () => {
+        toast({
+          title: 'Gagal Memuat Gambar Dasar',
+          description: 'Tidak dapat memuat gambar bola golf. Silakan coba lagi.',
+          variant: 'destructive'
+        })
+      }
 
       const drawText = () => {
         if(customText) {
@@ -81,7 +90,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
         }
       }
     }
-  }, [open, ballDesignDataUri, customText]);
+  }, [open, ballDesignDataUri, customText, toast]);
 
 
   const handleGeneratePreview = async () => {
@@ -171,7 +180,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading}>
+          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !compositeImage}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
             Generate
           </Button>
