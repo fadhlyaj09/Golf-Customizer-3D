@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { products } from '@/lib/products';
@@ -6,6 +8,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Home() {
+    const formatRupiah = (amount: number) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    }
   return (
     <div className="flex flex-col">
       <section className="relative h-[60vh] w-full text-white">
@@ -58,7 +63,7 @@ export default function Home() {
                     <p className="mt-2 text-muted-foreground">{product.description}</p>
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-lg font-bold text-primary">
-                        ${product.basePrice.toFixed(2)}
+                        {formatRupiah(product.basePrice)}
                       </p>
                       <Button variant="ghost" size="sm">
                         {product.customizable ? 'Customize' : 'View Details'}

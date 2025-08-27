@@ -10,7 +10,7 @@ export interface Product {
 
 export interface Customization {
   color?: { name: string; hex: string };
-  printSides?: 1 | 2;
+  printSides?: 0 | 1 | 2;
   logo?: string; // data URL of the logo
   text?: string;
 }

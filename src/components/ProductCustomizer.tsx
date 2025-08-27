@@ -5,14 +5,20 @@ import type { Product, Customization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Upload, Wand2 } from 'lucide-react';
+import { Minus, Plus, Upload, Wand2, X } from 'lucide-react';
 import { Card } from './ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface ProductCustomizerProps {
   product: Product;
@@ -23,7 +29,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [quantity, setQuantity] = useState(1);
   const [customization, setCustomization] = useState<Customization>({
     color: product.colors?.[0],
-    printSides: 1,
+    printSides: 0,
     logo: undefined,
     text: '',
   });
@@ -32,18 +38,23 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined);
   
   const isCustomizable = product.customizable;
+  
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  }
 
   useEffect(() => {
     let finalPrice = product.basePrice;
     if (isCustomizable) {
-        const pricePerSide = 5;
-        const textPrice = customization.text ? 3 : 0;
-        const sidePrice = (customization.printSides - 1) * pricePerSide;
-        const logoPrice = customization.logo ? pricePerSide : 0;
+        const pricePerSide = 75000;
+        const textPrice = customization.text ? 45000 : 0;
+        const sidePrice = (customization.printSides || 0) * pricePerSide;
         
         let optionsPrice = 0;
         if (customization.logo || customization.text) {
-            optionsPrice = textPrice + sidePrice + logoPrice;
+             optionsPrice = textPrice + sidePrice;
+        } else if (customization.printSides > 0) {
+            optionsPrice = sidePrice;
         }
         finalPrice += optionsPrice;
     }
@@ -62,12 +73,17 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setCustomization((prev) => ({ ...prev, logo: result }));
+        setCustomization((prev) => ({ ...prev, logo: result, printSides: prev.printSides === 0 ? 1 : prev.printSides }));
         setLogoPreview(result);
       };
       reader.readAsDataURL(file);
     }
   };
+  
+  const removeLogo = () => {
+    setLogoPreview(undefined);
+    setCustomization(prev => ({...prev, logo: undefined}));
+  }
 
   const handleAddToCart = () => {
     const finalCustomization = isCustomizable ? customization : {};
@@ -144,26 +160,38 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
           <>
             <div className="flex flex-col gap-3">
                 <Label className="text-base font-medium">Custom Print</Label>
-                <div className="flex items-center space-x-2 rounded-lg border p-4">
-                    <Switch 
-                        id="print-sides" 
-                        checked={customization.printSides === 2}
-                        onCheckedChange={(checked) => setCustomization(prev => ({...prev, printSides: checked ? 2 : 1}))}
-                    />
-                    <Label htmlFor="print-sides" className='flex-grow'>{customization.printSides} Sisi</Label>
-                    <p className="text-sm text-muted-foreground">Harga per sisi: $5.00</p>
-                </div>
+                 <Select 
+                    value={String(customization.printSides)}
+                    onValueChange={(value) => setCustomization(prev => ({...prev, printSides: Number(value) as (0 | 1 | 2)}))}
+                 >
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select print sides" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="0">No Print (Logo/Text only)</SelectItem>
+                        <SelectItem value="1">1 Side</SelectItem>
+                        <SelectItem value="2">2 Sides</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <p className="text-sm text-muted-foreground">Harga per sisi: Rp 75.000</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-3">
                     <Label htmlFor="logo-upload" className="text-base font-medium">Upload Logo</Label>
-                    <Button asChild variant="outline" className='h-auto'>
-                        <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4">
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                            <span className="mt-2 text-sm">{logoPreview ? 'Change Logo' : 'Upload Logo'}</span>
-                        </label>
-                    </Button>
+                    <div className="relative">
+                        <Button asChild variant="outline" className='h-auto w-full'>
+                            <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <span className="mt-2 text-sm">{logoPreview ? 'Change Logo' : 'Upload Logo'}</span>
+                            </label>
+                        </Button>
+                        {logoPreview && (
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={removeLogo}>
+                                <X className="h-4 w-4"/>
+                            </Button>
+                        )}
+                    </div>
                     <Input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                 </div>
                 <div className="flex flex-col gap-3">
@@ -174,7 +202,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                         value={customization.text}
                         onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
                     />
-                     <p className="text-xs text-muted-foreground">Biaya tambahan teks: $3.00</p>
+                     <p className="text-xs text-muted-foreground">Biaya tambahan teks: Rp 45.000</p>
                 </div>
             </div>
           </>
@@ -187,7 +215,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 <Button variant="outline" size="icon" onClick={() => setQuantity(q => q+1)}><Plus className="h-4 w-4" /></Button>
             </div>
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">${totalPrice.toFixed(2)}</span>
+                <span className="text-3xl font-bold tracking-tight">{formatRupiah(totalPrice)}</span>
             </div>
         </div>
 

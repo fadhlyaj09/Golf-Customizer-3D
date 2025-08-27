@@ -14,6 +14,10 @@ export default function CartPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  }
+
   if (cart.length === 0) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
@@ -80,7 +84,7 @@ export default function CartPage() {
                                     </Button>
                                 </div>
                             </TableCell>
-                            <TableCell className="text-right font-medium">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-medium">{formatRupiah(item.price * item.quantity)}</TableCell>
                             <TableCell>
                                 <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
                                     <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -101,7 +105,7 @@ export default function CartPage() {
             <CardContent className="grid gap-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatRupiah(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
@@ -109,7 +113,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatRupiah(total)}</span>
               </div>
               <Button asChild size="lg" className="w-full">
                 <Link href="/checkout">

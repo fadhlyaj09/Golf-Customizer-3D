@@ -41,6 +41,10 @@ export default function CheckoutPage() {
   });
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  }
 
   const onSubmit = (data: CheckoutFormValues) => {
     console.log('Order placed:', data);
@@ -119,18 +123,18 @@ export default function CheckoutPage() {
                         <div>
                           <p className="font-medium">{item.product.name} x {item.quantity}</p>
                           <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)} each
+                            {formatRupiah(item.price)} each
                           </p>
                         </div>
                       </div>
-                      <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-medium">{formatRupiah(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-6 border-t pt-6 space-y-2">
                    <div className="flex justify-between font-semibold">
                         <span>Total</span>
-                        <span>${total.toFixed(2)}</span>
+                        <span>{formatRupiah(total)}</span>
                    </div>
                 </div>
               </CardContent>
