@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { getShippingCost, getCities, getProvinces, City, Province, ShippingCost } from '@/actions/shippingActions';
 import Select from 'react-select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 
 const checkoutSchema = z.object({
@@ -24,10 +25,10 @@ const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Invalid phone number'),
   address: z.string().min(10, 'Address is too short'),
-  province: z.object({ value: z.string(), label: z.string() }),
-  city: z.object({ value: z.string(), label: z.string() }),
+  province: z.object({ value: z.string(), label: z.string() }).nullable(),
+  city: z.object({ value: z.string(), label: z.string() }).nullable(),
   zip: z.string().min(5, 'Invalid ZIP code'),
-  courier: z.object({ value: z.string(), label: z.string() }),
+  courier: z.object({ value: z.string(), label: z.string() }).nullable(),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
@@ -48,7 +49,10 @@ export default function CheckoutPage() {
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      name: '', email: '', phone: '', address: '', zip: ''
+      name: '', email: '', phone: '', address: '', zip: '',
+      province: null,
+      city: null,
+      courier: null,
     }
   });
 
@@ -83,7 +87,8 @@ export default function CheckoutPage() {
     if (selectedProvinceId) {
       const fetchCities = async () => {
         setIsLoadingCities(true);
-        form.setValue('city', null as any); // Reset city
+        form.setValue('city', null); // Reset city
+        setCities([]);
         try {
           const cityData = await getCities(selectedProvinceId);
           setCities(cityData);
@@ -94,8 +99,12 @@ export default function CheckoutPage() {
         }
       };
       fetchCities();
+    } else {
+        setCities([]);
+        form.setValue('city', null);
     }
-  }, [selectedProvinceId, form, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProvinceId, form.setValue, toast]);
 
   useEffect(() => {
       if(selectedCityId && selectedCourier && totalWeight > 0) {
@@ -117,6 +126,9 @@ export default function CheckoutPage() {
               }
           }
           fetchShipping();
+      } else {
+          setShippingCosts(null);
+          setSelectedShipping(null);
       }
   }, [selectedCityId, selectedCourier, totalWeight, toast]);
 

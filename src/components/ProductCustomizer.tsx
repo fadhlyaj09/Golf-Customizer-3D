@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
 import { Minus, Plus, Upload, Wand2, X, ShoppingCart, Type, Image as ImageIcon } from 'lucide-react';
@@ -160,12 +159,12 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     setCustomization(prev => {
         const newCustomization = {...prev, printSides: sides};
         if (sides === 0) {
-            newCustomization.side1 = { type: 'none', content: '' };
-            newCustomization.side2 = { type: 'none', content: '' };
+            newCustomization.side1 = { type: 'none', content: '', font: 'Roboto', color: '#000000' };
+            newCustomization.side2 = { type: 'none', content: '', font: 'Roboto', color: '#000000' };
         }
         if (sides === 1) {
-            newCustomization.side1.type = 'logo'; // Default to logo
-            newCustomization.side2 = { type: 'none', content: '' };
+            if (newCustomization.side1.type === 'none') newCustomization.side1.type = 'logo'; // Default to logo
+            newCustomization.side2 = { type: 'none', content: '', font: 'Roboto', color: '#000000' };
         }
         if (sides === 2) {
             if(newCustomization.side1.type === 'none') newCustomization.side1.type = 'logo';
@@ -227,6 +226,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   };
   
   const ballDesignDataUri = useMemo(() => {
+    // This logic might need to be smarter if we want to show both sides in the realistic preview
     return customization.side1.type === 'logo' ? customization.side1.content : product.imageUrl;
   }, [customization.side1, product.imageUrl]);
 
@@ -249,7 +249,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                     <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
                          <Image
                             src={(product.gallery || [product.imageUrl])[0]}
-                            alt={`${product.name} - view 1`}
+                            alt={`${product.name} - Sisi Depan`}
                             fill
                             data-ai-hint="golf ball"
                             className="object-cover"
@@ -275,7 +275,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                     <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
                          <Image
                            src={(product.gallery || [product.imageUrl])[1] || (product.gallery || [product.imageUrl])[0]}
-                            alt={`${product.name} - view 2`}
+                            alt={`${product.name} - Sisi Belakang`}
                             fill
                             data-ai-hint="golf ball"
                             className="object-cover"
@@ -392,8 +392,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
         <div className="grid grid-cols-1 gap-4">
             <Button size="lg" onClick={handleAddToCart} disabled={
-                (customization.printSides > 0 && customization.side1.type !== 'none' && !customization.side1.content) ||
-                (customization.printSides > 1 && customization.side2.type !== 'none' && !customization.side2.content)
+                (customization.printSides === 1 && customization.side1.type !== 'none' && !customization.side1.content) ||
+                (customization.printSides === 2 && ((customization.side1.type !== 'none' && !customization.side1.content) || (customization.side2.type !== 'none' && !customization.side2.content)))
             }>
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Tambah ke Keranjang
