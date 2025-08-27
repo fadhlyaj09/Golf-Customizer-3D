@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -48,10 +48,11 @@ export default function RegisterPage() {
     });
 
     const handleSignUp = async (data: RegisterFormValues) => {
+        let user;
         try {
             // 1. Create user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const user = userCredential.user;
+            user = userCredential.user;
 
             // 2. Update the user's profile in Firebase Auth
             await updateProfile(user, {
@@ -71,13 +72,23 @@ export default function RegisterPage() {
             router.push('/');
 
         } catch (error: any) {
-            console.error("Sign up error", error);
+            console.error("Sign up error code:", error.code);
+            console.error("Sign up error message:", error.message);
+            
+            // If writing to Firestore fails, delete the created Auth user to allow retry
+            if (user) {
+                await deleteUser(user);
+                console.log("Partially created user was deleted from Auth.");
+            }
+
             let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
+            } else if (error.code === 'permission-denied') {
+                errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore API telah diaktifkan di Google Cloud Console untuk proyek Anda dan aturan keamanan memperbolehkan penulisan.';
             }
             
-            toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
+            toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive', duration: 9000 });
         }
     }
 
