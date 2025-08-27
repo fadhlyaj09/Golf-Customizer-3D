@@ -32,7 +32,7 @@ export default async function Home() {
               className="object-cover"
               priority
             />
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 flex h-full flex-col items-start justify-center text-left container mx-auto px-4 md:px-6">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl max-w-2xl">
               {title || 'ARTICOGOLF AG-1 – New 2025 Design'}
@@ -60,26 +60,26 @@ export default async function Home() {
             <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter sm:text-4xl">Koleksi Produk Kami</h2>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
-               <Link key={product.id} href={`/product/${product.id}`} className="block h-full">
-                <Card className="group h-full transform overflow-hidden rounded-lg border shadow-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl">
+               <Link key={product.id} href={`/product/${product.id}`} className="block group">
+                <Card className="h-full flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:border-primary hover:shadow-xl hover:-translate-y-1">
                     <CardHeader className="p-0">
-                        <div className="relative h-60 w-full">
+                        <div className="relative h-60 w-full overflow-hidden">
                         <Image
                             src={product.imageUrl}
                             alt={product.name}
                             fill
                             data-ai-hint="golf ball"
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex h-full flex-col p-6">
-                       <h3 className="text-xl font-semibold">{product.name}</h3>
-                       <p className="mt-2 text-lg font-bold text-primary">
+                    <CardContent className="flex flex-1 flex-col p-4">
+                       <h3 className="text-lg font-semibold">{product.name}</h3>
+                       <p className="mt-1 text-base font-bold text-primary">
                           {product.isFloater ? "Hubungi untuk harga" : formatRupiah(product.basePrice)}
                        </p>
                        <p className="mt-2 text-sm text-muted-foreground flex-grow">
-                          {truncate(product.description, 100)}
+                          {truncate(product.description, 80)}
                        </p>
                        <Button variant="outline" className="mt-4 w-full">
                            {product.isFloater ? "Konsultasi" : "Detail Produk"}
