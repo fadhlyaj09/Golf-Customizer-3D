@@ -51,6 +51,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     text: '',
     font: 'Roboto',
     textColor: '#000000',
+    playNumber: '1',
   });
   const [totalPrice, setTotalPrice] = useState(product.basePrice);
 
@@ -103,6 +104,13 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     return customization.logo || product.imageUrl;
   }, [customization.logo, product.imageUrl]);
 
+  const handlePlayNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d{0,2}$/.test(value)) { // Allow up to 2 digits
+      setCustomization(prev => ({...prev, playNumber: value}));
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
       <div className="flex flex-col items-center gap-4">
@@ -121,6 +129,16 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                                   backgroundColor: customization.color?.hex || 'white'
                                 }}
                             />
+                             {index === 0 && customization.playNumber && (
+                                <div
+                                className="absolute top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 transform text-center"
+                                style={{ top: '42%' }}
+                                >
+                                <p className="font-bold text-2xl text-black">
+                                    {customization.playNumber.padStart(2, '0')}
+                                </p>
+                                </div>
+                            )}
                             {index === 0 && logoPreview && (
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
                                     <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
@@ -181,6 +199,20 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
               </div>
             )}
             
+            <div className="flex flex-col gap-3">
+                <Label className="text-base font-medium">Nomor Pemain (0-99)</Label>
+                <Input
+                    id="play-number"
+                    type="text"
+                    pattern="\d*"
+                    maxLength={2}
+                    placeholder="e.g. 7"
+                    value={customization.playNumber}
+                    onChange={handlePlayNumberChange}
+                    className="w-24"
+                />
+            </div>
+
             <div className="flex flex-col gap-3">
                 <Label className="text-base font-medium">Upload Logo/Desain</Label>
                 <div className="relative">

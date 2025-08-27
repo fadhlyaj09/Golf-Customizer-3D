@@ -16,6 +16,7 @@ export interface Customization {
   text?: string;
   font?: string;
   textColor?: string;
+  playNumber?: string;
 }
 
 export interface CartItem {

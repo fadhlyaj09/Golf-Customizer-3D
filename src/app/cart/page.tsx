@@ -65,6 +65,7 @@ export default function CartPage() {
                                 <p className="font-bold">{item.product.name}</p>
                                 <div className="text-xs text-muted-foreground">
                                     {item.customization.color && <p>Warna: {item.customization.color.name}</p>}
+                                    {item.customization.playNumber && <p>No. Pemain: {item.customization.playNumber}</p>}
                                     <p>Print: {item.customization.printSides > 0 ? `${item.customization.printSides} sisi` : 'Tanpa Print'}</p>
                                     {item.customization.logo && <p>Logo: Diunggah</p>}
                                     {item.customization.text && <p>Teks: "{item.customization.text}"</p>}
