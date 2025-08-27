@@ -57,7 +57,7 @@ export default async function AdminPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[100px]">Gambar</TableHead>
+                                <TableHead className="hidden w-[100px] sm:table-cell">Gambar</TableHead>
                                 <TableHead>Nama Produk</TableHead>
                                 <TableHead>Harga</TableHead>
                                 <TableHead className="text-right">Aksi</TableHead>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
                         <TableBody>
                             {products.map((product) => (
                                 <TableRow key={product.id}>
-                                    <TableCell>
+                                    <TableCell className="hidden sm:table-cell">
                                         <Image
                                             src={product.imageUrl}
                                             alt={product.name}

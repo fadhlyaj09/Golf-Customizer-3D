@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useFormState } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -43,36 +42,24 @@ function SubmitButton() {
 export default function ProductFormPage() {
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
+  const [initialState, setInitialState] = useState<ProductFormState | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!productId);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(ProductSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      basePrice: 0,
-      imageUrl: '',
-      isFloater: false,
-    },
-  });
+  const [formState, formAction] = useFormState(saveProduct, initialState);
+
 
   useEffect(() => {
     if (productId) {
       const fetchProduct = async () => {
         setLoading(true);
         const fetchedProduct = await getProductById(productId);
-        if (fetchedProduct) {
-          setProduct(fetchedProduct);
-          form.reset(fetchedProduct);
-        }
+        setProduct(fetchedProduct || null);
         setLoading(false);
       };
       fetchProduct();
-    } else {
-        setLoading(false);
     }
-  }, [productId, form]);
+  }, [productId]);
 
   if(loading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
@@ -88,8 +75,8 @@ export default function ProductFormPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={saveProduct} className="flex flex-col gap-6">
-            <input type="hidden" name="id" value={productId || ''} />
+          <form action={formAction} className="flex flex-col gap-6">
+            <input type="hidden" name="id" value={product?.id || ''} />
              <div>
                 <Label htmlFor="name">Nama Produk</Label>
                 <Input id="name" name="name" defaultValue={product?.name} className="mt-1"/>
@@ -107,8 +94,8 @@ export default function ProductFormPage() {
                 <Input id="imageUrl" name="imageUrl" defaultValue={product?.imageUrl} className="mt-1" />
             </div>
              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="isFloater" name="isFloater" defaultChecked={product?.isFloater} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                <Label htmlFor="isFloater">Ini adalah produk bola floater</Label>
+                <Checkbox id="isFloater" name="isFloater" defaultChecked={product?.isFloater} />
+                <Label htmlFor="isFloater">Ini adalah produk bola floater (harga tidak ditampilkan)</Label>
             </div>
             <div className="flex justify-end gap-4">
                  <Button variant="outline" asChild>
