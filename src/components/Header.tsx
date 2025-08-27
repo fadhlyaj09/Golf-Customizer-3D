@@ -2,10 +2,10 @@
 
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-import { LogOut, ShoppingCart, User as UserIcon, Loader2 } from 'lucide-react';
+import { LogOut, ShoppingCart, User as UserIcon, Loader2, Search } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -14,15 +14,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export function Header() {
   const { cart } = useCart();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, logOut, loading } = useAuth();
   const router = useRouter();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
-    { href: '/product/ag-1-standard', label: 'Produk' },
-    { href: '/product/ag-1-standard?custom=true', label: 'Custom Print' },
+    { href: '/', label: 'Home' },
+    { href: '/product/ag-1-standard', label: 'Shop' },
+    { href: '/product/ag-1-standard?custom=true', label: 'Custom' },
+    { href: '/admin', label: 'Admin' },
   ];
   
   const handleLogout = async () => {
@@ -66,54 +67,59 @@ export function Header() {
     }
 
     return (
-      <Button asChild variant="outline">
-        <Link href="/login">Login</Link>
+      <Button asChild variant="ghost" size="icon">
+        <Link href="/login">
+          <UserIcon className="h-6 w-6" />
+          <span className="sr-only">Login</span>
+        </Link>
       </Button>
     );
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo />
-            </Link>
-
-            <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'transition-colors hover:text-foreground/80',
-                    (pathname.startsWith('/product') && !searchParams.get('custom') && link.label === 'Produk') || (pathname.startsWith('/product') && searchParams.get('custom') === 'true' && link.label === 'Custom Print')
-                      ? 'text-foreground'
-                      : 'text-foreground/60'
-                  )}
-                >
-                  {link.label}
+        <div className="bg-primary text-primary-foreground">
+            <div className="container flex h-16 max-w-7xl items-center justify-between">
+                <Link href="/" className="flex items-center gap-2">
+                <Logo />
                 </Link>
-              ))}
-            </nav>
-        </div>
 
+                <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
+                {navLinks.map((link) => (
+                    <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                        'transition-colors hover:text-primary-foreground/80',
+                        pathname === link.href
+                        ? 'text-primary-foreground'
+                        : 'text-primary-foreground/70'
+                    )}
+                    >
+                    {link.label}
+                    </Link>
+                ))}
+                </nav>
 
-        <div className="flex items-center gap-4">
-          {renderUserAuth()}
-
-          <Button asChild variant="outline" size="icon" className="relative">
-            <Link href="/cart">
-              <ShoppingCart className="h-5 w-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {totalItems}
-                </span>
-              )}
-              <span className="sr-only">Shopping Cart</span>
-            </Link>
-          </Button>
-        </div>
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon">
+                        <Search className="h-6 w-6" />
+                        <span className="sr-only">Search</span>
+                    </Button>
+                    {renderUserAuth()}
+                    <Button asChild variant="ghost" size="icon" className="relative">
+                        <Link href="/cart">
+                        <ShoppingCart className="h-6 w-6" />
+                        {totalItems > 0 && (
+                            <span className="absolute top-0 right-0 flex h-5 w-5 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-background text-xs font-semibold text-primary">
+                            {totalItems}
+                            </span>
+                        )}
+                        <span className="sr-only">Shopping Cart</span>
+                        </Link>
+                    </Button>
+                </div>
+            </div>
       </div>
     </header>
   );
