@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/carousel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 
 interface ProductCustomizerProps {
@@ -128,6 +129,7 @@ const RenderSideCustomizer = ({ side, customization, onSideTypeChange, onSideCon
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
   const { user, logIn } = useAuth();
   const { addToCart } = useCart();
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [customization, setCustomization] = useState<Customization>({
     color: product.colors?.[0],
@@ -226,6 +228,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         ...customization,
     };
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
+    router.push('/cart');
   };
   
   const ballDesignDataUri = useMemo(() => {

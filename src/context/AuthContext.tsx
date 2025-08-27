@@ -3,9 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { FcGoogle } from 'react-icons/fc';
+import { useRouter } from 'next/navigation';
+
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -30,21 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logIn = () => {
-    setIsLoginDialogOpen(true);
+    router.push('/login');
   };
-  
-  const handleGoogleSignIn = async () => {
-      try {
-          await signInWithPopup(auth, googleProvider);
-          setIsLoginDialogOpen(false);
-      } catch (error) {
-          console.error("Google Sign-In Error", error);
-      }
-  }
 
   const logOut = async () => {
     try {
       await signOut(auth);
+      router.push('/');
     } catch (error) {
       console.error("Logout Error", error);
     }
@@ -55,20 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
-      <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Login atau Daftar</DialogTitle>
-            <DialogDescription>
-                Untuk melanjutkan, silakan login menggunakan akun Google Anda. Ini memungkinkan Anda untuk menyimpan alamat dan melihat riwayat pesanan.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
-            <FcGoogle className="mr-2 h-5 w-5" />
-            Lanjutkan dengan Google
-          </Button>
-        </DialogContent>
-      </Dialog>
     </AuthContext.Provider>
   );
 }

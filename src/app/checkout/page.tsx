@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, PlusCircle, Save } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,7 @@ import Select from 'react-select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { doc, setDoc, getDoc, collection, getDocs, writeBatch } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Address } from '@/lib/types';
 
@@ -66,12 +66,13 @@ export default function CheckoutPage() {
   // Redirect if not logged in or cart is empty
   useEffect(() => {
     if (!userLoading && !user) {
-      router.push('/?login=true');
+      router.push('/login?from=/checkout');
     }
     if (cart.length > 0 && selectedItems.length === 0) {
+      toast({title: "Tidak ada item terpilih", description: "Silakan pilih item di keranjang untuk checkout.", variant: "destructive"});
       router.push('/cart');
     }
-  }, [user, userLoading, router, cart.length, selectedItems.length]);
+  }, [user, userLoading, router, cart.length, selectedItems.length, toast]);
 
   const loadSavedAddresses = useCallback(async () => {
     if (!user) return;
@@ -103,8 +104,10 @@ export default function CheckoutPage() {
   }, [user, form, toast]);
 
   useEffect(() => {
-    loadSavedAddresses();
-  }, [loadSavedAddresses]);
+    if(user) {
+      loadSavedAddresses();
+    }
+  }, [user, loadSavedAddresses]);
 
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalWeight = totalQuantity * 600; // 600g per box
@@ -134,31 +137,31 @@ export default function CheckoutPage() {
   const selectedCourier = form.watch('courier');
 
   useEffect(() => {
-    if (selectedProvince?.value) {
-      const fetchCities = async () => {
-        setIsLoadingCities(true);
-        form.setValue('city', null);
-        setCities([]);
-        try {
-          const cityData = await getCities(selectedProvince.value);
-          setCities(cityData);
-        } catch (error) {
-          toast({ title: 'Error', description: 'Failed to load cities.', variant: 'destructive' });
-        } finally {
-          setIsLoadingCities(false);
+    const fetchCities = async () => {
+        if (selectedProvince?.value) {
+            setIsLoadingCities(true);
+            form.setValue('city', null);
+            setCities([]);
+            try {
+                const cityData = await getCities(selectedProvince.value);
+                setCities(cityData);
+            } catch (error) {
+                toast({ title: 'Error', description: 'Failed to load cities.', variant: 'destructive' });
+            } finally {
+                setIsLoadingCities(false);
+            }
+        } else {
+            setCities([]);
+            form.setValue('city', null);
         }
-      };
-      fetchCities();
-    } else {
-        setCities([]);
-        form.setValue('city', null);
-    }
+    };
+    fetchCities();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProvince?.value, form.setValue, toast]);
+  }, [selectedProvince?.value]);
 
   useEffect(() => {
-      if(selectedCity?.value && selectedCourier?.value && totalWeight > 0) {
-          const fetchShipping = async () => {
+      const fetchShipping = async () => {
+          if(selectedCity?.value && selectedCourier?.value && totalWeight > 0) {
               setIsLoadingShipping(true);
               setShippingCosts(null);
               setSelectedShipping(null);
@@ -170,16 +173,16 @@ export default function CheckoutPage() {
                   });
                   setShippingCosts(shippingData[0].costs);
               } catch(error) {
-                  toast({ title: 'Error', description: 'Failed to load shipping options.', variant: 'destructive' });
+                  toast({ title: 'Error', description: 'Gagal memuat opsi pengiriman.', variant: 'destructive' });
               } finally {
                   setIsLoadingShipping(false);
               }
+          } else {
+              setShippingCosts(null);
+              setSelectedShipping(null);
           }
-          fetchShipping();
-      } else {
-          setShippingCosts(null);
-          setSelectedShipping(null);
       }
+      fetchShipping();
   }, [selectedCity?.value, selectedCourier?.value, totalWeight, toast]);
 
 
@@ -220,7 +223,7 @@ export default function CheckoutPage() {
     router.push('/');
   };
 
-  if (userLoading || (cart.length > 0 && selectedItems.length === 0)) {
+  if (userLoading || isLoadingAddresses) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
 
@@ -241,7 +244,7 @@ export default function CheckoutPage() {
               <CardTitle>Alamat Pengiriman</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-6">
-                {isLoadingAddresses ? <Loader2 className="animate-spin" /> : savedAddresses.length > 0 && (
+                {savedAddresses.length > 0 && (
                   <div className='flex flex-col gap-2'>
                     <Label>Gunakan Alamat Tersimpan</Label>
                     <div className='flex gap-2 overflow-x-auto pb-2'>

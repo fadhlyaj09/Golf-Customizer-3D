@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { LogOut, ShoppingCart, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Logo } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export function Header() {
   const { cart } = useCart();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, logIn, logOut } = useAuth();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -38,7 +39,7 @@ export function Header() {
                   href={link.href}
                   className={cn(
                     'transition-colors hover:text-foreground/80',
-                    (pathname.startsWith('/product') && link.label === 'Produk') || (pathname.startsWith('/product') && new URLSearchParams(window.location.search).get('custom') && link.label === 'Custom Print')
+                    (pathname.startsWith('/product') && link.label === 'Produk') || (pathname.startsWith('/product') && searchParams.get('custom') === 'true' && link.label === 'Custom Print')
                       ? 'text-foreground'
                       : 'text-foreground/60'
                   )}
@@ -78,7 +79,9 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" onClick={logIn}>Login</Button>
+            <Button asChild variant="outline">
+              <Link href="/login">Login</Link>
+            </Button>
           )}
 
           <Button asChild variant="outline" size="icon" className="relative">
