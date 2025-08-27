@@ -28,13 +28,13 @@ const ProductSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   basePrice: z.coerce.number().min(0, 'Price must be a positive number'),
   image: z.any()
-    .refine((file) => {
-        if (!file || file.length === 0) return true; // Allow no file on edit
-        return file?.[0]?.size <= MAX_FILE_SIZE;
+    .refine((files) => {
+        if (!files || files.length === 0) return true; // Allow no file on edit
+        return files?.[0]?.size <= MAX_FILE_SIZE;
     }, `Max image size is 5MB.`)
-    .refine((file) => {
-        if (!file || file.length === 0) return true;
-        return ACCEPTED_IMAGE_TYPES.includes(file?.[0]?.type);
+    .refine((files) => {
+        if (!files || files.length === 0) return true;
+        return ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type);
     }, "Only .jpg, .jpeg, .png and .webp formats are supported."),
   isFloater: z.boolean().default(false),
 });
@@ -47,6 +47,8 @@ export default function ProductFormPage() {
   const [loading, setLoading] = useState(!!productId);
   const [isPending, startTransition] = useTransition();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('');
+
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(ProductSchema),
@@ -69,10 +71,13 @@ export default function ProductFormPage() {
              name: fetchedProduct.name,
              description: fetchedProduct.description,
              basePrice: fetchedProduct.basePrice,
-             isFloater: fetchedProduct.isFloater,
+             isFloater: !!fetchedProduct.isFloater, // Ensure boolean
              id: fetchedProduct.id
           });
-          setImagePreview(fetchedProduct.imageUrl);
+          if (fetchedProduct.imageUrl) {
+            setImagePreview(fetchedProduct.imageUrl);
+            setCurrentImageUrl(fetchedProduct.imageUrl);
+          }
         }
         setLoading(false);
       };
@@ -80,26 +85,24 @@ export default function ProductFormPage() {
     }
   }, [productId, form]);
 
-  const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
-    const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('description', data.description);
-    formData.append('basePrice', String(data.basePrice));
-    formData.append('isFloater', data.isFloater ? 'on' : 'off');
-    
-    if (data.id) {
-        formData.append('id', data.id);
-    }
-    if (imagePreview) {
-        formData.append('currentImageUrl', imagePreview)
-    }
-
-    if (data.image && data.image.length > 0) {
-      formData.append('image', data.image[0]);
-    }
-
+  const onSubmit = (data: ProductFormValues) => {
     startTransition(async () => {
-      await saveProduct(undefined, formData);
+        const formData = new FormData();
+        if (data.id) formData.append('id', data.id);
+        formData.append('name', data.name);
+        formData.append('description', data.description);
+        formData.append('basePrice', String(data.basePrice));
+        // This is the correct way to handle a checkbox with FormData
+        if (data.isFloater) {
+          formData.append('isFloater', 'on');
+        }
+        if (currentImageUrl) {
+            formData.append('currentImageUrl', currentImageUrl);
+        }
+        if (data.image && data.image.length > 0) {
+            formData.append('image', data.image[0]);
+        }
+        await saveProduct(undefined, formData);
     });
   };
 
@@ -119,8 +122,6 @@ export default function ProductFormPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-               {productId && <input type="hidden" {...form.register('id')} />}
-
               <FormField
                 control={form.control}
                 name="name"
@@ -157,7 +158,7 @@ export default function ProductFormPage() {
                 <FormField
                     control={form.control}
                     name="image"
-                    render={({ field }) => (
+                    render={({ field: { onChange, value, ...rest } }) => (
                         <FormItem>
                             <FormLabel>Gambar Produk</FormLabel>
                              <FormControl>
@@ -166,7 +167,7 @@ export default function ProductFormPage() {
                                     accept="image/png, image/jpeg, image/webp"
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
-                                        field.onChange(e.target.files);
+                                        onChange(e.target.files);
                                         if (file) {
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
@@ -174,9 +175,10 @@ export default function ProductFormPage() {
                                             };
                                             reader.readAsDataURL(file);
                                         } else {
-                                            setImagePreview(null);
+                                            setImagePreview(currentImageUrl); // Revert to original if no file selected
                                         }
                                     }}
+                                    {...rest}
                                 />
                             </FormControl>
                             <FormMessage />

@@ -29,7 +29,10 @@ export type ProductFormState = {
 };
 
 
-export async function saveProduct(prevState: ProductFormState, formData: FormData) {
+export async function saveProduct(prevState: ProductFormState | undefined, formData: FormData) {
+
+  // Correctly handle checkbox value
+  const isFloaterChecked = formData.get('isFloater') === 'on';
 
   const validatedFields = ProductSchema.safeParse({
     id: formData.get('id') || undefined,
@@ -37,7 +40,7 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
     description: formData.get('description'),
     basePrice: formData.get('basePrice'),
     image: formData.get('image'),
-    isFloater: formData.get('isFloater') === 'on',
+    isFloater: isFloaterChecked,
     customizable: true,
   });
   
@@ -64,6 +67,7 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
         imageUrl = await getDownloadURL(storageRef);
     }
     
+    // Ensure the id is always included in the data being saved
     const dataToSave = { ...productData, imageUrl, id: productId };
     const productRef = doc(db, 'products', productId);
 
