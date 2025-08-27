@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Minus, Plus, Trash2, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Customization } from '@/lib/types';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
@@ -16,6 +17,25 @@ export default function CartPage() {
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  }
+  
+  const renderCustomizationDetails = (customization: Customization) => {
+    const details = [];
+    if (customization.color) details.push(`Warna: ${customization.color.name}`);
+
+    if (customization.printSides > 0) {
+      details.push(`Print: ${customization.printSides} sisi`);
+      if (customization.side1?.type !== 'none') {
+        details.push(`Sisi 1: ${customization.side1.type === 'logo' ? 'Logo' : `Teks "${customization.side1.content}"`}`);
+      }
+      if (customization.side2?.type !== 'none') {
+        details.push(`Sisi 2: ${customization.side2.type === 'logo' ? 'Logo' : `Teks "${customization.side2.content}"`}`);
+      }
+    } else {
+        details.push('Print: Tanpa Print');
+    }
+
+    return details.map((d, i) => <p key={i}>{d}</p>)
   }
 
   if (cart.length === 0) {
@@ -54,7 +74,7 @@ export default function CartPage() {
                             <TableCell>
                                 <div className="relative h-20 w-20">
                                 <Image
-                                    src={item.customization.logo || item.product.imageUrl}
+                                    src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl}
                                     alt={item.product.name}
                                     fill
                                     className="rounded-md object-cover"
@@ -64,11 +84,7 @@ export default function CartPage() {
                             <TableCell className="font-medium">
                                 <p className="font-bold">{item.product.name}</p>
                                 <div className="text-xs text-muted-foreground">
-                                    {item.customization.color && <p>Warna: {item.customization.color.name}</p>}
-                                    {item.customization.playNumber && <p>No. Pemain: {item.customization.playNumber}</p>}
-                                    <p>Print: {item.customization.printSides > 0 ? `${item.customization.printSides} sisi` : 'Tanpa Print'}</p>
-                                    {item.customization.logo && <p>Logo: Diunggah</p>}
-                                    {item.customization.text && <p>Teks: "{item.customization.text}"</p>}
+                                    {renderCustomizationDetails(item.customization)}
                                 </div>
                             </TableCell>
                             <TableCell>

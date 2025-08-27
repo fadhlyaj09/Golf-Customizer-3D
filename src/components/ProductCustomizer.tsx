@@ -10,7 +10,7 @@ import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Upload, Wand2, X, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Upload, Wand2, X, ShoppingCart, Type, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import {
   Select,
@@ -27,6 +27,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface ProductCustomizerProps {
   product: Product;
@@ -47,15 +49,11 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   const [customization, setCustomization] = useState<Customization>({
     color: product.colors?.[0],
     printSides: 0,
-    logo: undefined,
-    text: '',
-    font: 'Roboto',
-    textColor: '#000000',
-    playNumber: '1',
+    side1: { type: 'none', content: '', font: 'Roboto', color: '#000000' },
+    side2: { type: 'none', content: '', font: 'Roboto', color: '#000000' },
   });
-  const [totalPrice, setTotalPrice] = useState(product.basePrice);
 
-  const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined);
+  const [totalPrice, setTotalPrice] = useState(product.basePrice);
   
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -65,50 +63,161 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     let finalPrice = product.basePrice;
     
     const pricePerSide = customization.printSides === 1 ? 25000 : customization.printSides === 2 ? 40000 : 0;
-    
-    let optionsPrice = pricePerSide;
-    
-    finalPrice += optionsPrice;
+    finalPrice += pricePerSide;
 
     setTotalPrice(finalPrice * quantity);
-  }, [customization, quantity, product.basePrice]);
+  }, [customization.printSides, quantity, product.basePrice]);
 
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
     setCustomization((prev) => ({ ...prev, color: selectedColor }));
   };
+  
+  const handlePrintSidesChange = (value: string) => {
+    const sides = Number(value) as (0 | 1 | 2);
+    setCustomization(prev => {
+        const newCustomization = {...prev, printSides: sides};
+        if (sides === 0) {
+            newCustomization.side1 = { type: 'none', content: '' };
+            newCustomization.side2 = { type: 'none', content: '' };
+        }
+        if (sides === 1) {
+            newCustomization.side1.type = 'logo'; // Default to logo
+            newCustomization.side2 = { type: 'none', content: '' };
+        }
+        if (sides === 2) {
+            if(newCustomization.side1.type === 'none') newCustomization.side1.type = 'logo';
+            if(newCustomization.side2.type === 'none') newCustomization.side2.type = 'text';
+        }
+        return newCustomization;
+    });
+  }
 
-  const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleSideTypeChange = (side: 'side1' | 'side2', type: 'logo' | 'text' | 'none') => {
+      setCustomization(prev => ({
+          ...prev,
+          [side]: { ...prev[side], type: type, content: '' }
+      }));
+  }
+
+  const handleSideContentChange = (side: 'side1' | 'side2', content: string) => {
+       setCustomization(prev => ({
+          ...prev,
+          [side]: { ...prev[side], content: content }
+      }));
+  }
+
+  const handleSideFileUpload = (side: 'side1' | 'side2', e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setCustomization((prev) => ({ ...prev, logo: result, printSides: prev.printSides === 0 ? 1 : prev.printSides }));
-        setLogoPreview(result);
+        handleSideContentChange(side, result);
       };
       reader.readAsDataURL(file);
     }
   };
-  
-  const removeLogo = () => {
-    setLogoPreview(undefined);
-    setCustomization(prev => ({...prev, logo: undefined}));
+
+  const handleSideFontChange = (side: 'side1' | 'side2', font: string) => {
+       setCustomization(prev => ({
+          ...prev,
+          [side]: { ...prev[side], font: font }
+      }));
   }
 
+  const handleSideColorChange = (side: 'side1' | 'side2', color: string) => {
+       setCustomization(prev => ({
+          ...prev,
+          [side]: { ...prev[side], color: color }
+      }));
+  }
+
+
   const handleAddToCart = () => {
-    addToCart(product, customization, quantity, totalPrice / quantity);
+    const finalCustomization: Customization = {
+        ...customization,
+        // Ensure legacy fields are populated for cart/checkout display if needed
+        logo: customization.side1.type === 'logo' ? customization.side1.content : (customization.side2.type === 'logo' ? customization.side2.content : undefined),
+        text: customization.side1.type === 'text' ? customization.side1.content : (customization.side2.type === 'text' ? customization.side2.content : undefined)
+    };
+    addToCart(product, finalCustomization, quantity, totalPrice / quantity);
   };
   
   const ballDesignDataUri = useMemo(() => {
-    return customization.logo || product.imageUrl;
-  }, [customization.logo, product.imageUrl]);
+    return customization.side1.type === 'logo' ? customization.side1.content : product.imageUrl;
+  }, [customization.side1, product.imageUrl]);
 
-  const handlePlayNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^\d{0,2}$/.test(value)) { // Allow up to 2 digits
-      setCustomization(prev => ({...prev, playNumber: value}));
-    }
+  const RenderSideCustomizer = ({ side }: { side: 'side1' | 'side2' }) => {
+    const sideData = customization[side];
+
+    return (
+        <div className="flex flex-col gap-4 p-4 border rounded-lg">
+             {customization.printSides === 2 && <h4 className="font-semibold text-center">Sisi {side === 'side1' ? 'Depan' : 'Belakang'}</h4>}
+            <RadioGroup
+                value={sideData.type}
+                onValueChange={(v) => handleSideTypeChange(side, v as 'logo' | 'text' | 'none')}
+                className="flex gap-2 justify-center"
+            >
+                <div className="flex items-center">
+                    <RadioGroupItem value="logo" id={`${side}-logo`} className="peer sr-only" />
+                    <Label htmlFor={`${side}-logo`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
+                       <ImageIcon className="h-6 w-6"/>
+                       Logo
+                    </Label>
+                </div>
+                 <div className="flex items-center">
+                    <RadioGroupItem value="text" id={`${side}-text`} className="peer sr-only" />
+                    <Label htmlFor={`${side}-text`} className="flex flex-col items-center justify-center gap-2 rounded-md border-2 border-muted bg-background p-3 text-center cursor-pointer peer-data-[state=checked]:border-primary w-28">
+                        <Type className="h-6 w-6"/>
+                        Teks
+                    </Label>
+                </div>
+            </RadioGroup>
+
+            {sideData.type === 'logo' && (
+                 <div className="flex flex-col gap-3">
+                    <div className="relative">
+                        <Button asChild variant="outline" className='h-auto w-full'>
+                            <label htmlFor={`${side}-upload`} className="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <span className="mt-2 text-sm text-center">{sideData.content ? 'Ganti Logo' : 'Klik untuk upload (JPG/PNG)'}</span>
+                            </label>
+                        </Button>
+                        {sideData.content && (
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => handleSideContentChange(side, '')}>
+                                <X className="h-4 w-4"/>
+                            </Button>
+                        )}
+                    </div>
+                    <Input id={`${side}-upload`} type="file" className="hidden" accept="image/jpeg,image/png" onChange={(e) => handleSideFileUpload(side, e)} />
+                </div>
+            )}
+            {sideData.type === 'text' && (
+                 <div className="flex flex-col gap-3">
+                    <Input 
+                        placeholder="e.g. Inisial atau Nama Anda"
+                        value={sideData.content}
+                        onChange={(e) => handleSideContentChange(side, e.target.value)}
+                    />
+                     <div className="grid grid-cols-2 gap-4">
+                         <Select value={sideData.font} onValueChange={(v) => handleSideFontChange(side, v)}>
+                             <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
+                             <SelectContent>
+                                 {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                             </SelectContent>
+                         </Select>
+                         <Select value={sideData.color} onValueChange={(v) => handleSideColorChange(side, v)}>
+                             <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
+                             <SelectContent>
+                                 {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
+                             </SelectContent>
+                         </Select>
+                     </div>
+                </div>
+            )}
+        </div>
+    )
   }
 
   return (
@@ -116,44 +225,58 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
       <div className="flex flex-col items-center gap-4">
          <Carousel className="w-full max-w-md">
             <CarouselContent>
-                 {(product.gallery || [product.imageUrl]).map((img, index) => (
-                    <CarouselItem key={index}>
-                        <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
-                             <Image
-                                src={img}
-                                alt={`${product.name} - view ${index + 1}`}
-                                fill
-                                data-ai-hint="golf ball"
-                                className="object-cover"
-                                style={{
-                                  backgroundColor: customization.color?.hex || 'white'
-                                }}
-                            />
-                             {index === 0 && customization.playNumber && (
-                                <div
-                                className="absolute top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 transform text-center"
-                                style={{ top: '42%' }}
-                                >
-                                <p className="font-bold text-2xl text-black">
-                                    {customization.playNumber.padStart(2, '0')}
+                <CarouselItem>
+                    <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
+                         <Image
+                            src={(product.gallery || [product.imageUrl])[0]}
+                            alt={`${product.name} - view 1`}
+                            fill
+                            data-ai-hint="golf ball"
+                            className="object-cover"
+                            style={{
+                              backgroundColor: customization.color?.hex || 'white'
+                            }}
+                        />
+                        {customization.side1.type === 'logo' && customization.side1.content && (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                                <Image src={customization.side1.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
+                            </div>
+                        )}
+                        {customization.side1.type === 'text' && customization.side1.content && (
+                             <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform text-center">
+                                <p className="font-bold text-xl" style={{ fontFamily: customization.side1.font, color: customization.side1.color }}>
+                                    {customization.side1.content}
                                 </p>
-                                </div>
-                            )}
-                            {index === 0 && logoPreview && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-                                    <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
-                                </div>
-                            )}
-                            {index === 0 && customization.text && (
-                                <div className="absolute bottom-1/4 left-1/2 w-full -translate-x-1/2 transform text-center">
-                                    <p className="font-bold text-xl" style={{ fontFamily: customization.font, color: customization.textColor }}>
-                                        {customization.text}
-                                    </p>
-                                </div>
-                            )}
-                        </Card>
-                    </CarouselItem>
-                 ))}
+                            </div>
+                        )}
+                    </Card>
+                </CarouselItem>
+                <CarouselItem>
+                    <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
+                         <Image
+                           src={(product.gallery || [product.imageUrl])[1] || (product.gallery || [product.imageUrl])[0]}
+                            alt={`${product.name} - view 2`}
+                            fill
+                            data-ai-hint="golf ball"
+                            className="object-cover"
+                            style={{
+                              backgroundColor: customization.color?.hex || 'white'
+                            }}
+                        />
+                         {customization.side2.type === 'logo' && customization.side2.content && (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                                <Image src={customization.side2.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
+                            </div>
+                        )}
+                        {customization.side2.type === 'text' && customization.side2.content && (
+                           <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform text-center">
+                                <p className="font-bold text-xl" style={{ fontFamily: customization.side2.font, color: customization.side2.color }}>
+                                    {customization.side2.content}
+                                </p>
+                            </div>
+                        )}
+                    </Card>
+                </CarouselItem>
             </CarouselContent>
             <CarouselPrevious className="left-2" />
             <CarouselNext className="right-2" />
@@ -200,66 +323,10 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             )}
             
             <div className="flex flex-col gap-3">
-                <Label className="text-base font-medium">Nomor Pemain (0-99)</Label>
-                <Input
-                    id="play-number"
-                    type="text"
-                    pattern="\d*"
-                    maxLength={2}
-                    placeholder="e.g. 7"
-                    value={customization.playNumber}
-                    onChange={handlePlayNumberChange}
-                    className="w-24"
-                />
-            </div>
-
-            <div className="flex flex-col gap-3">
-                <Label className="text-base font-medium">Upload Logo/Desain</Label>
-                <div className="relative">
-                    <Button asChild variant="outline" className='h-auto w-full'>
-                        <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                            <span className="mt-2 text-sm text-center">{logoPreview ? 'Ganti Logo' : 'Klik untuk upload (JPG/PNG)'}</span>
-                        </label>
-                    </Button>
-                    {logoPreview && (
-                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={removeLogo}>
-                            <X className="h-4 w-4"/>
-                        </Button>
-                    )}
-                </div>
-                <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleLogoUpload} />
-            </div>
-
-            <div className="flex flex-col gap-3">
-                <Label htmlFor="custom-text" className="text-base font-medium">Tambah Teks</Label>
-                <Input 
-                    id="custom-text" 
-                    placeholder="e.g. Inisial atau Nama Anda"
-                    value={customization.text}
-                    onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
-                />
-                 <div className="grid grid-cols-2 gap-4">
-                     <Select value={customization.font} onValueChange={(v) => setCustomization(p => ({...p, font: v}))}>
-                         <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
-                         <SelectContent>
-                             {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                         </SelectContent>
-                     </Select>
-                     <Select value={customization.textColor} onValueChange={(v) => setCustomization(p => ({...p, textColor: v}))}>
-                         <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
-                         <SelectContent>
-                             {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
-                         </SelectContent>
-                     </Select>
-                 </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
                 <Label className="text-base font-medium">Pilih Opsi Print</Label>
                  <Select 
                     value={String(customization.printSides)}
-                    onValueChange={(value) => setCustomization(prev => ({...prev, printSides: Number(value) as (0 | 1 | 2)}))}
+                    onValueChange={handlePrintSidesChange}
                  >
                     <SelectTrigger>
                         <SelectValue placeholder="Pilih jumlah sisi untuk di-print" />
@@ -271,6 +338,14 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                     </SelectContent>
                 </Select>
             </div>
+
+            {customization.printSides === 1 && <RenderSideCustomizer side="side1" />}
+            {customization.printSides === 2 && (
+                <div className="grid grid-cols-1 gap-4">
+                    <RenderSideCustomizer side="side1" />
+                    <RenderSideCustomizer side="side2" />
+                </div>
+            )}
         </div>
 
         <Separator />
@@ -288,13 +363,16 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-            <Button size="lg" onClick={handleAddToCart}>
+            <Button size="lg" onClick={handleAddToCart} disabled={
+                (customization.side1.type !== 'none' && !customization.side1.content) ||
+                (customization.side2.type !== 'none' && !customization.side2.content)
+            }>
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Tambah ke Keranjang
             </Button>
              <RealisticPreview 
                 ballDesignDataUri={ballDesignDataUri}
-                customText={customization.text}
+                customText={customization.side1.type === 'text' ? customization.side1.content : undefined}
               >
                 <Button size="lg" variant="outline" className="w-full">
                   <Wand2 className="mr-2 h-5 w-5" />
