@@ -18,8 +18,8 @@ import { Loader2 } from 'lucide-react';
 
 
 const loginSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(1, 'Password is required'),
+    email: z.string().email('Alamat email tidak valid'),
+    password: z.string().min(1, 'Password tidak boleh kosong'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -99,5 +99,3 @@ export default function LoginPage() {
         </div>
     );
 }
-
-    

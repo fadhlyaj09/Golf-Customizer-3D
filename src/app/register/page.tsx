@@ -17,14 +17,14 @@ import { Loader2 } from 'lucide-react';
 
 
 const registerSchema = z.object({
-    firstName: z.string().min(2, 'First name is too short'),
-    lastName: z.string().min(2, 'Last name is too short'),
-    email: z.string().email('Invalid email address'),
-    phone: z.string().min(10, 'Invalid phone number'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    firstName: z.string().min(2, 'Nama depan terlalu pendek'),
+    lastName: z.string().min(2, 'Nama belakang terlalu pendek'),
+    email: z.string().email('Alamat email tidak valid'),
+    phone: z.string().min(10, 'Nomor telepon tidak valid'),
+    password: z.string().min(6, 'Password minimal 6 karakter'),
     confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Password tidak cocok",
     path: ["confirmPassword"],
 });
 
@@ -131,5 +131,3 @@ export default function RegisterPage() {
         </div>
     );
 }
-
-    

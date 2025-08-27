@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  logOut: () => Promise<void>;
+  logOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,7 +17,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -30,9 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logOut = async () => {
     try {
       await signOut(auth);
-      // Redirect to home and reload to ensure all state is cleared
-      router.push('/');
-      router.refresh();
+      // Let the onAuthStateChanged listener handle the state update
     } catch (error) {
       console.error("Logout Error", error);
     }
@@ -54,5 +51,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    

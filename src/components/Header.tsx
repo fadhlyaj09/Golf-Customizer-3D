@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { LogOut, ShoppingCart, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Logo } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -16,13 +16,19 @@ export function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, logOut } = useAuth();
+  const router = useRouter();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
-    { href: '/product/articogolf-1-standard', label: 'Produk' },
-    { href: '/product/articogolf-1-standard?custom=true', label: 'Custom Print' },
+    { href: '/product/ag-1-standard', label: 'Produk' },
+    { href: '/product/ag-1-standard?custom=true', label: 'Custom Print' },
   ];
+  
+  const handleLogout = () => {
+    logOut();
+    router.push('/');
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,7 +45,7 @@ export function Header() {
                   href={link.href}
                   className={cn(
                     'transition-colors hover:text-foreground/80',
-                    (pathname.startsWith('/product') && link.label === 'Produk') || (pathname.startsWith('/product') && searchParams.get('custom') === 'true' && link.label === 'Custom Print')
+                    (pathname.startsWith('/product') && !searchParams.get('custom') && link.label === 'Produk') || (pathname.startsWith('/product') && searchParams.get('custom') === 'true' && link.label === 'Custom Print')
                       ? 'text-foreground'
                       : 'text-foreground/60'
                   )}
@@ -72,7 +78,7 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logOut}>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -100,5 +106,3 @@ export function Header() {
     </header>
   );
 }
-
-    
