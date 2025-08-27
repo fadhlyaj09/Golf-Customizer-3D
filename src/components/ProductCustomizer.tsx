@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Wand2, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -38,7 +37,7 @@ const textColors = [
     { name: 'Green', value: '#008000'},
 ];
 
-export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
+export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -48,7 +47,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
   const [customization, setCustomization] = useState<Customization>({
     color: product.colors?.[0],
-    printSides: 0, // This is now deprecated but kept for cart compatibility
+    printSides: 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
   });
@@ -63,7 +62,6 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     let finalPrice = product.basePrice;
     
     if (!product.isFloater) {
-        // Example pricing: first decal is 25000, subsequent ones are 15000
         const pricePerSide = decals.length > 0 ? 25000 + (decals.length - 1) * 15000 : 0;
         finalPrice += pricePerSide;
     }
@@ -90,16 +88,15 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     };
     
     if (type === 'logo') {
-      // Trigger file input for logo
       const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
-      fileInput?.click(); // This will open file dialog, the actual decal is added in `handleFileUpload`
+      fileInput?.click(); 
     } else {
        setDecals(prev => [...prev, newDecal]);
        setActiveDecalId(newDecal.id);
     }
   }
 
-  const handleUpdateDecal = (id: string, newProps: Partial<Decal>) => {
+  const handleUpdateDecal = (id: string, newProps: Partial<Omit<Decal, 'id' | 'type'>>) => {
     setDecals(prev => prev.map(d => d.id === id ? { ...d, ...newProps } : d));
   };
   
@@ -128,7 +125,6 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         setActiveDecalId(newDecal.id);
       };
       reader.readAsDataURL(file);
-      // Reset file input value to allow uploading the same file again
       e.target.value = '';
     }
   };
@@ -139,13 +135,10 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         router.push('/login?from=' + window.location.pathname);
         return;
     }
-    // This part would need to be updated to handle the new decal structure if needed
-    // For now, we'll use a simplified customization structure for cart compatibility
+    
     const finalCustomization: Customization = {
         ...customization,
         printSides: decals.length > 0 ? (decals.length > 1 ? 2 : 1) : 0,
-        // A more complex mapping would be needed to save full 3D state.
-        // For now, let's represent the first logo as side1.
         side1: { 
             type: decals.find(d => d.type === 'logo')?.type || 'none',
             content: decals.find(d => d.type === 'logo')?.content || ''
@@ -156,18 +149,9 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     router.push('/cart');
   };
   
-  const ballDesignDataUri = useMemo(() => {
-    // This logic might need to be smarter if we want to show both sides in the realistic preview
-    return decals.find(d => d.type === 'logo')?.content || product.imageUrl;
-  }, [decals, product.imageUrl]);
-
   const activeDecalData = useMemo(() => {
     return decals.find(d => d.id === activeDecalId);
   }, [decals, activeDecalId]);
-  
-  const activeImageUrl = useMemo(() => {
-      return customization.color?.imageUrl || "https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png";
-  }, [customization.color]);
 
 
   return (
@@ -301,18 +285,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 Tambah ke Keranjang
             </Button>
            )}
-           {/* Realistic Preview might need to be adapted for 3D canvas state, disabling for now.
-           { !product.isFloater && (
-             <RealisticPreview 
-                ballDesignDataUri={ballDesignDataUri || ''}
-              >
-                <Button size="lg" variant="outline" className="w-full">
-                  <Wand2 className="mr-2 h-5 w-5" />
-                  Lihat Realistic Preview (AI)
-                </Button>
-              </RealisticPreview>
-           )}
-            */}
+           
              <Button size="lg" variant="secondary" asChild>
                 <a href="https://wa.me/6285723224918?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-5 w-5" />

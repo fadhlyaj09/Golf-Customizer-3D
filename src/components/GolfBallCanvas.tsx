@@ -19,7 +19,6 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
   const [normalMap] = useTexture(['/golf-normal.jpg']);
 
   const handlePointerDown = (e: any) => {
-    // If we click on the ball but not on a decal, deselect any active decal
     e.stopPropagation();
     setActiveDecalId(null);
   };
@@ -71,13 +70,8 @@ function Sticker({ decal, isActive, onClick }: {
             position={decal.position}
             rotation={decal.rotation}
             scale={decal.scale}
-            // The onClick event on Decal is buggy, so we put a mesh inside to catch events.
-            // When user clicks the mesh, we know they clicked the decal.
             onPointerDown={(e) => { e.stopPropagation(); onClick();}}
         >
-            <mesh>
-              {/* This mesh receives the click event */}
-              <planeGeometry args={[1, 1]} />
               <meshBasicMaterial
                 map={texture || undefined}
                 polygonOffset
@@ -87,13 +81,11 @@ function Sticker({ decal, isActive, onClick }: {
                 depthWrite={false}
                 toneMapped={false}
                 opacity={1}
-                // Add a visual indicator if the decal is active
                 color={isActive ? '#87CEEB' : 'white'} 
               />
 
               {decal.type === 'text' && (
                   <Text
-                      font="/fonts/Inter-Bold.ttf"
                       fontSize={0.5}
                       color={decal.color}
                       anchorX="center"
@@ -102,7 +94,6 @@ function Sticker({ decal, isActive, onClick }: {
                       {decal.content}
                   </Text>
               )}
-            </mesh>
         </DreiDecal>
     )
 }
@@ -118,7 +109,6 @@ export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDeca
       <GolfBall 
         ballColor={ballColor}
         decals={decals}
-        setDecals={() => {}} // setDecals is managed by the parent
         activeDecalId={activeDecalId}
         setActiveDecalId={setActiveDecalId}
       />
@@ -126,4 +116,3 @@ export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDeca
     </Canvas>
   );
 }
-
