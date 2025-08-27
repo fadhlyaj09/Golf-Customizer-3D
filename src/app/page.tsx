@@ -27,10 +27,10 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex h-full flex-col items-start justify-center text-left container mx-auto px-4 md:px-6">
-          <h1 className="text-4xl font-bold tracking-tight text-background sm:text-5xl md:text-6xl max-w-2xl">
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl max-w-2xl">
             {banner.title || "ARTICOGOLF AG-1 – New 2025 Design"}
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-background/90">
+          <p className="mt-4 max-w-xl text-lg text-white/90">
             {banner.subtitle || "Extreme Distance & Soft Feel"}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -40,7 +40,7 @@ export default async function Home() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-                <Link href="/product/ag-1-standard">
+                <Link href="/product/ag-1-standard?custom=true">
                     Buat Custom Bola
                     <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

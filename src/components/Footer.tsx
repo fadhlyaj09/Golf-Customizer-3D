@@ -9,8 +9,8 @@ export function Footer() {
           <Logo />
         </Link>
         <nav className="flex gap-4 sm:gap-6 mt-4 sm:mt-0 text-sm">
-            <Link href="/product/articogolf-1-standard" className="text-muted-foreground hover:text-foreground">Produk</Link>
-            <Link href="/product/articogolf-1-standard?custom=true" className="text-muted-foreground hover:text-foreground">Custom</Link>
+            <Link href="/product/ag-1-standard" className="text-muted-foreground hover:text-foreground">Produk</Link>
+            <Link href="/product/ag-1-standard?custom=true" className="text-muted-foreground hover:text-foreground">Custom</Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">FAQ</Link>
             <Link href="#" className="text-muted-foreground hover:text-foreground">Kontak</Link>
             <Link href="/admin" className="text-muted-foreground hover:text-foreground">Admin</Link>
