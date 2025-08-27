@@ -433,7 +433,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
               </RealisticPreview>
            )}
              <Button size="lg" variant="secondary" asChild>
-                <a href="https://wa.me/6281234567890?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/6285723224918?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-5 w-5" />
                   Konsultasi via WA
                 </a>
