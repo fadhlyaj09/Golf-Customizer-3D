@@ -35,7 +35,7 @@ interface ProductCustomizerProps {
   startWithCustom: boolean;
 }
 
-const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Eagle Lake", "Perpetua", "Pirulen", "Arial", "Cream Cake", "Bauhaus 93", "IBM Plex Sans", "Rockwell", "MV Boli"];
+const fonts = ["Roboto", "Montserrat", "Poppins", "Merriweather", "Orbitron", "Le Chan", "Pirulen", "Arial", "Cream Cake", "MV Boli"];
 const textColors = [
     { name: 'Hitam', value: '#000000'},
     { name: 'Biru', value: '#0000FF'},
@@ -178,14 +178,14 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   const handleSideTypeChange = useCallback((side: 'side1' | 'side2', type: 'logo' | 'text' | 'none') => {
       setCustomization(prev => ({
           ...prev,
-          [side]: { ...prev[side], type: type, content: '' }
+          [side]: { ...prev[side], type, content: '' }
       }));
   }, []);
 
   const handleSideContentChange = useCallback((side: 'side1' | 'side2', content: string) => {
        setCustomization(prev => ({
           ...prev,
-          [side]: { ...prev[side], content: content }
+          [side]: { ...prev[side], content }
       }));
   }, []);
 
@@ -204,14 +204,14 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   const handleSideFontChange = useCallback((side: 'side1' | 'side2', font: string) => {
        setCustomization(prev => ({
           ...prev,
-          [side]: { ...prev[side], font: font }
+          [side]: { ...prev[side], font }
       }));
   }, []);
 
   const handleSideColorChange = useCallback((side: 'side1' | 'side2', color: string) => {
        setCustomization(prev => ({
           ...prev,
-          [side]: { ...prev[side], color: color }
+          [side]: { ...prev[side], color }
       }));
   }, []);
 
@@ -361,10 +361,18 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
             {customization.printSides === 1 && <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />}
             {customization.printSides === 2 && (
-                <div className="grid grid-cols-1 gap-4">
-                    <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />
-                    <RenderSideCustomizer side="side2" {...renderSideCustomizerProps} />
-                </div>
+                <Tabs defaultValue="side1" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="side1">Sisi Depan</TabsTrigger>
+                        <TabsTrigger value="side2">Sisi Belakang</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="side1">
+                        <RenderSideCustomizer side="side1" {...renderSideCustomizerProps} />
+                    </TabsContent>
+                    <TabsContent value="side2">
+                        <RenderSideCustomizer side="side2" {...renderSideCustomizerProps} />
+                    </TabsContent>
+                </Tabs>
             )}
         </div>
 
@@ -384,8 +392,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
 
         <div className="grid grid-cols-1 gap-4">
             <Button size="lg" onClick={handleAddToCart} disabled={
-                (customization.side1.type !== 'none' && !customization.side1.content) ||
-                (customization.side2.type !== 'none' && !customization.side2.content)
+                (customization.printSides > 0 && customization.side1.type !== 'none' && !customization.side1.content) ||
+                (customization.printSides > 1 && customization.side2.type !== 'none' && !customization.side2.content)
             }>
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Tambah ke Keranjang

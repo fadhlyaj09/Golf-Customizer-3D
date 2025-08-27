@@ -51,7 +51,7 @@ const generateRealisticPreviewFlow = ai.defineFlow(
     const {media} = await ai.generate({
       model: 'googleai/imagen-4.0-fast-generate-001',
       prompt: `A realistic image of a custom golf ball. The design is provided in the image. The lighting should be ${input.lightingCondition}, and the viewing angle is ${input.angle}.`,
-      input: [
+       input: [
         {media: {url: input.ballDesignDataUri}},
       ]
     });
