@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -48,6 +48,7 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
   }
   
   const { id, ...productData } = validatedFields.data;
+  const productsCollection = collection(db, 'products');
 
   try {
     if (id) {
@@ -56,9 +57,9 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
       await updateDoc(productRef, productData);
     } else {
       // Create new product
-      const productsCollection = collection(db, 'products');
-      const newDocRef = doc(productsCollection, productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
-      await addDoc(productsCollection, productData);
+      const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const productRef = doc(productsCollection, productId);
+      await setDoc(productRef, productData);
     }
   } catch (e) {
     console.error(e);

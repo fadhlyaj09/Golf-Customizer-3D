@@ -7,25 +7,14 @@ import Link from 'next/link';
 import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { deleteProduct } from '@/actions/productActions';
-import { revalidatePath } from 'next/cache';
 
-function DeleteProduct({ id }: { id: string }) {
-  const deleteProductWithId = async () => {
-    'use server';
-    try {
-      await deleteProduct(id);
-      revalidatePath('/admin');
-    } catch(e) {
-        console.error(e)
-    }
-  };
+function DeleteProductForm({ id }: { id: string }) {
+  const deleteProductWithId = deleteProduct.bind(null, id);
   return (
     <form action={deleteProductWithId}>
-       <button type="submit" className="w-full text-left">
-          <DropdownMenuItem className="text-red-600 cursor-pointer">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
+       <button type="submit" className="w-full text-left relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-600">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
        </button>
     </form>
   );
@@ -90,7 +79,7 @@ export default async function AdminPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/admin/product-form?id=${product.id}`}>Edit</Link>
                                                 </DropdownMenuItem>
-                                                <DeleteProduct id={product.id} />
+                                                <DeleteProductForm id={product.id} />
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
