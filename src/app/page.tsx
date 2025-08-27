@@ -2,12 +2,14 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getProducts } from '@/lib/products';
+import { getBanner } from '@/lib/banner';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function Home() {
     const products = await getProducts();
+    const banner = await getBanner();
 
     const formatRupiah = (amount: number) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -16,19 +18,20 @@ export default async function Home() {
     <div className="flex flex-col">
       <section className="relative h-[70vh] w-full text-white">
         <Image
-          src="https://picsum.photos/1920/1080?random=10"
-          alt="Aesthetic golf course"
+          src={banner.imageUrl || "https://picsum.photos/1920/1080?random=10"}
+          alt={banner.title || "Aesthetic golf course"}
           data-ai-hint="golf course"
           fill
           className="object-cover"
+          priority
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex h-full flex-col items-start justify-center text-left container mx-auto px-4 md:px-6">
           <h1 className="text-4xl font-bold tracking-tight text-background sm:text-5xl md:text-6xl max-w-2xl">
-            ARTICOGOLF AG-1 – New 2025 Design
+            {banner.title || "ARTICOGOLF AG-1 – New 2025 Design"}
           </h1>
           <p className="mt-4 max-w-xl text-lg text-background/90">
-            Extreme Distance & Soft Feel
+            {banner.subtitle || "Extreme Distance & Soft Feel"}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">

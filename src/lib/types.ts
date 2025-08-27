@@ -43,3 +43,9 @@ export interface Address {
     zip: string;
     isDefault?: boolean;
 }
+
+export interface Banner {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
