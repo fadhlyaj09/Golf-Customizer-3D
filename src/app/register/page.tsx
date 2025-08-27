@@ -49,14 +49,17 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
+            // 1. Create user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const user = userCredential.user;
 
+            // 2. Update the user's profile in Firebase Auth
             await updateProfile(user, {
                 displayName: `${data.firstName} ${data.lastName}`
             });
             
-            // Store additional user information in Firestore
+            // 3. Store additional user information in Firestore
+            // This is the part that might be failing if Firestore isn't set up
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 displayName: `${data.firstName} ${data.lastName}`,
@@ -65,16 +68,18 @@ export default function RegisterPage() {
                 createdAt: new Date(),
             });
 
-
-            toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat.' });
+            toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
 
         } catch (error: any) {
             console.error("Sign up error", error);
-            let errorMessage = 'Terjadi kesalahan saat mendaftar.';
+            let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
+            } else if (error.code === 'permission-denied' || error.message.includes('firestore')) {
+                errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore telah diaktifkan.';
             }
+            
             toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
         }
     }
