@@ -257,7 +257,6 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 fill
                 data-ai-hint="golf ball"
                 className="object-contain"
-                unoptimized // Prevents Next.js from optimizing the external image
             />
             {/* Side 1 Preview */}
             {customization.side1.type === 'logo' && customization.side1.content && (
