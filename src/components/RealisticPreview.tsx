@@ -47,7 +47,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
       if (!canvas || !ctx) return;
 
       const baseImage = new window.Image();
-      baseImage.crossOrigin = "Anonymous"; // Important for picsum.photos
+      baseImage.crossOrigin = "Anonymous"; 
       baseImage.src = 'https://picsum.photos/512/512?random=ball';
       
       baseImage.onload = () => {
@@ -55,7 +55,6 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
         canvas.height = baseImage.height;
         ctx.drawImage(baseImage, 0, 0);
 
-        // Draw logo if it exists (and is a data URI)
         if (ballDesignDataUri.startsWith('data:image')) {
             const logoImage = new window.Image();
             logoImage.src = ballDesignDataUri;
@@ -90,7 +89,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
     setPreviewImage(null);
     try {
       if(!compositeImage) {
-        throw new Error('Base design image not ready.');
+        throw new Error('Gambar desain dasar belum siap.');
       }
       const result = await getRealisticPreview({
         ballDesignDataUri: compositeImage,
@@ -101,8 +100,8 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Error Generating Preview',
-        description: error instanceof Error ? error.message : 'An unknown error occurred.',
+        title: 'Gagal Membuat Preview',
+        description: error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui.',
         variant: 'destructive'
       })
     } finally {
@@ -117,22 +116,22 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
         <DialogHeader>
           <DialogTitle>Generate Realistic Preview</DialogTitle>
           <DialogDescription>
-            See how your custom golf ball looks in different conditions. This uses AI and may take a moment.
+            Lihat bagaimana tampilan bola golf custom Anda dalam berbagai kondisi. Proses ini menggunakan AI dan mungkin perlu beberapa saat.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="lighting" className="text-right">
-              Lighting
+              Cahaya
             </Label>
             <RadioGroup defaultValue="sunny" className="col-span-3 flex gap-4" onValueChange={setLighting} value={lighting}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="sunny" id="r1" />
-                <Label htmlFor="r1">Sunny</Label>
+                <Label htmlFor="r1">Cerah</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="overcast" id="r2" />
-                <Label htmlFor="r2">Overcast</Label>
+                <Label htmlFor="r2">Mendung</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="indoor" id="r3" />
@@ -142,16 +141,16 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="angle" className="text-right">
-              Angle
+              Sudut
             </Label>
             <RadioGroup defaultValue="top-down" className="col-span-3 flex gap-4" onValueChange={setAngle} value={angle}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="top-down" id="a1" />
-                <Label htmlFor="a1">Top-Down</Label>
+                <Label htmlFor="a1">Atas</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="side view" id="a2" />
-                <Label htmlFor="a2">Side View</Label>
+                <Label htmlFor="a2">Samping</Label>
               </div>
             </RadioGroup>
           </div>
@@ -159,14 +158,14 @@ export function RealisticPreview({ children, ballDesignDataUri, customText }: Re
             {isLoading ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <p>Generating your preview...</p>
+                <p>Membuat preview Anda...</p>
               </div>
             ) : previewImage ? (
               <Image src={previewImage} alt="Realistic preview" width={256} height={256} className="h-full w-full object-contain" />
             ) : (
                 <div className="text-center text-muted-foreground">
                     <Wand2 className="mx-auto h-8 w-8" />
-                    <p className="mt-2">Your AI-generated preview will appear here.</p>
+                    <p className="mt-2">Preview yang di-generate AI akan muncul di sini.</p>
                 </div>
             )}
           </div>

@@ -3,7 +3,7 @@
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Minus, Plus, Trash2, XCircle } from 'lucide-react';
@@ -22,10 +22,10 @@ export default function CartPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
         <XCircle className="mx-auto h-16 w-16 text-muted-foreground" />
-        <h1 className="mt-4 text-3xl font-bold tracking-tight">Your Cart is Empty</h1>
-        <p className="mt-2 text-muted-foreground">Looks like you haven't added any custom golf balls yet.</p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight">Keranjang Anda Kosong</h1>
+        <p className="mt-2 text-muted-foreground">Sepertinya Anda belum menambahkan bola golf custom.</p>
         <Button asChild className="mt-6">
-          <Link href="/">Start Designing</Link>
+          <Link href="/">Mulai Belanja</Link>
         </Button>
       </div>
     );
@@ -33,7 +33,7 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold tracking-tight">Your Cart</h1>
+      <h1 className="mb-8 text-3xl font-bold tracking-tight">Keranjang Belanja</h1>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="lg:col-span-2">
             <Card>
@@ -41,10 +41,10 @@ export default function CartPage() {
                     <Table>
                         <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[100px]">Product</TableHead>
-                            <TableHead>Details</TableHead>
-                            <TableHead className="text-center">Quantity</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
+                            <TableHead className="w-[100px]">Produk</TableHead>
+                            <TableHead>Detail</TableHead>
+                            <TableHead className="text-center">Jumlah</TableHead>
+                            <TableHead className="text-right">Harga</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                         </TableHeader>
@@ -52,24 +52,26 @@ export default function CartPage() {
                         {cart.map((item) => (
                             <TableRow key={item.id}>
                             <TableCell>
+                                <div className="relative h-20 w-20">
                                 <Image
-                                src={item.customization.logo || item.product.imageUrl}
-                                alt={item.product.name}
-                                width={80}
-                                height={80}
-                                className="rounded-md object-cover"
+                                    src={item.customization.logo || item.product.imageUrl}
+                                    alt={item.product.name}
+                                    fill
+                                    className="rounded-md object-cover"
                                 />
+                                </div>
                             </TableCell>
                             <TableCell className="font-medium">
-                                <p>{item.product.name}</p>
+                                <p className="font-bold">{item.product.name}</p>
                                 <div className="text-xs text-muted-foreground">
-                                    {item.customization.color && <p>Color: {item.customization.color.name}</p>}
-                                    <p>Print: {item.customization.printSides} side(s)</p>
-                                    {item.customization.text && <p>Text: "{item.customization.text}"</p>}
+                                    {item.customization.color && <p>Warna: {item.customization.color.name}</p>}
+                                    <p>Print: {item.customization.printSides > 0 ? `${item.customization.printSides} sisi` : 'Tanpa Print'}</p>
+                                    {item.customization.logo && <p>Logo: Diunggah</p>}
+                                    {item.customization.text && <p>Teks: "{item.customization.text}"</p>}
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <div className="flex items-center justify-center gap-2">
+                                <div className="flex items-center justify-center gap-1 sm:gap-2">
                                     <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity - 1)}>
                                         <Minus className="h-4 w-4" />
                                     </Button>
@@ -77,7 +79,7 @@ export default function CartPage() {
                                         type="number"
                                         value={item.quantity}
                                         onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
-                                        className="h-8 w-14 text-center"
+                                        className="h-8 w-12 text-center"
                                     />
                                     <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity + 1)}>
                                         <Plus className="h-4 w-4" />
@@ -100,7 +102,7 @@ export default function CartPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>Ringkasan Pesanan</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="flex justify-between">
@@ -108,16 +110,16 @@ export default function CartPage() {
                 <span>{formatRupiah(total)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Shipping</span>
-                <span className='text-primary'>FREE</span>
+                <span>Pengiriman</span>
+                <span className='text-primary font-medium'>GRATIS</span>
               </div>
-              <div className="flex justify-between text-lg font-bold">
+              <div className="flex justify-between text-lg font-bold border-t pt-4 mt-2">
                 <span>Total</span>
                 <span>{formatRupiah(total)}</span>
               </div>
-              <Button asChild size="lg" className="w-full">
+              <Button asChild size="lg" className="w-full mt-4">
                 <Link href="/checkout">
-                  Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
+                  Lanjut ke Checkout <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </CardContent>

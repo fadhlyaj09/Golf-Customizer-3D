@@ -6,10 +6,12 @@ type ProductPageProps = {
   params: {
     id: string;
   };
+   searchParams: { [key: string]: string | string[] | undefined }
 };
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage({ params, searchParams }: ProductPageProps) {
   const product = getProductById(params.id);
+  const startWithCustom = searchParams.custom === 'true';
 
   if (!product) {
     notFound();
@@ -17,7 +19,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <ProductCustomizer product={product} />
+      <ProductCustomizer product={product} startWithCustom={startWithCustom} />
     </div>
   );
 }

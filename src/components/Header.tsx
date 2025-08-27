@@ -13,37 +13,43 @@ export function Header() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/product/articogolf-1-standard', label: 'Products' },
-    { href: '/cart', label: 'Cart' },
+    { href: '/product/articogolf-1-standard', label: 'Produk' },
+    { href: '/product/articogolf-1-standard?custom=true', label: 'Custom Print' },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Club className="h-7 w-7 text-primary" />
-          <span className="hidden font-bold sm:inline-block">Articogolf</span>
-        </Link>
-
-        <nav className="hidden items-center gap-6 text-sm md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'transition-colors hover:text-foreground/80',
-                pathname.startsWith('/product') && link.href.startsWith('/product') ? 'text-foreground' :
-                pathname === link.href ? 'text-foreground' : 'text-foreground/60'
-              )}
-            >
-              {link.label}
+        <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2">
+              <Club className="h-7 w-7 text-primary" />
+              <span className="font-bold text-lg sm:inline-block">ARTICOGOLF</span>
             </Link>
-          ))}
-        </nav>
 
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
+            <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'transition-colors hover:text-foreground/80',
+                    (pathname.startsWith('/product') && link.label === 'Produk') || (pathname.startsWith('/product') && new URLSearchParams(window.location.search).get('custom') && link.label === 'Custom Print')
+                      ? 'text-foreground'
+                      : 'text-foreground/60'
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+        </div>
+
+
+        <div className="flex items-center gap-2">
+          <Button asChild>
+              <Link href="/cart">Pesan Sekarang</Link>
+          </Button>
+          <Button asChild variant="outline" size="icon">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (

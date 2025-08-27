@@ -10,8 +10,8 @@ import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Upload, Wand2, X } from 'lucide-react';
-import { Card } from './ui/card';
+import { Minus, Plus, Upload, Wand2, X, ShoppingCart } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
 import {
   Select,
   SelectContent,
@@ -19,12 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from './ui/separator';
 
 interface ProductCustomizerProps {
   product: Product;
+  startWithCustom: boolean;
 }
 
-export default function ProductCustomizer({ product }: ProductCustomizerProps) {
+const fonts = ["Roboto", "Montserrat", "Playfair", "Poppins", "Merriweather"];
+const textColors = [
+    { name: 'Hitam', value: '#000000'},
+    { name: 'Putih', value: '#FFFFFF'},
+    { name: 'Emas', value: '#FFD700'},
+    { name: 'Silver', value: '#C0C0C0'},
+];
+
+export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [customization, setCustomization] = useState<Customization>({
@@ -32,12 +42,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     printSides: 0,
     logo: undefined,
     text: '',
+    font: 'Roboto',
+    textColor: '#000000',
   });
   const [totalPrice, setTotalPrice] = useState(product.basePrice);
 
   const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined);
-  
-  const isCustomizable = product.customizable;
   
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -45,22 +55,15 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
   useEffect(() => {
     let finalPrice = product.basePrice;
-    if (isCustomizable) {
-        const pricePerSide = 75000;
-        const textPrice = customization.text ? 45000 : 0;
-        const sidePrice = (customization.printSides || 0) * pricePerSide;
-        
-        let optionsPrice = 0;
-        if (customization.logo || customization.text) {
-             optionsPrice = textPrice + sidePrice;
-        } else if (customization.printSides > 0) {
-            optionsPrice = sidePrice;
-        }
-        finalPrice += optionsPrice;
-    }
+    
+    const pricePerSide = customization.printSides === 1 ? 25000 : customization.printSides === 2 ? 40000 : 0;
+    
+    let optionsPrice = pricePerSide;
+    
+    finalPrice += optionsPrice;
 
     setTotalPrice(finalPrice * quantity);
-  }, [customization, quantity, product.basePrice, isCustomizable]);
+  }, [customization, quantity, product.basePrice]);
 
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
@@ -86,8 +89,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   const handleAddToCart = () => {
-    const finalCustomization = isCustomizable ? customization : {};
-    addToCart(product, finalCustomization, quantity, totalPrice / quantity);
+    addToCart(product, customization, quantity, totalPrice / quantity);
   };
   
   const ballDesignDataUri = useMemo(() => {
@@ -95,9 +97,9 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }, [customization.logo, product.imageUrl]);
 
   return (
-    <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-      <div className="flex flex-col items-center">
-         <Card className="relative aspect-square w-full max-w-md overflow-hidden rounded-lg shadow-lg">
+    <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+      <div className="flex flex-col items-center gap-4">
+         <Card className="relative aspect-square w-full max-w-md overflow-hidden rounded-lg border shadow-lg">
             <Image
                 src={product.imageUrl}
                 alt={product.name}
@@ -105,108 +107,127 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 data-ai-hint="golf ball"
                 className="object-cover"
                 style={{
-                  backgroundColor: isCustomizable ? customization.color?.hex || 'white' : 'white'
+                  backgroundColor: customization.color?.hex || 'white'
                 }}
             />
-            {isCustomizable && logoPreview && (
+            {logoPreview && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
                     <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
                 </div>
             )}
-            {isCustomizable && customization.text && (
+            {customization.text && (
                 <div className="absolute bottom-1/4 left-1/2 w-full -translate-x-1/2 transform text-center">
-                    <p className="font-bold text-xl text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    <p className="font-bold text-xl" style={{ fontFamily: customization.font, color: customization.textColor }}>
                         {customization.text}
                     </p>
                 </div>
             )}
         </Card>
+        <div className="flex gap-4">
+            <Image src="https://picsum.photos/100/100?random=box" alt="Packaging Box" width={100} height={100} className="rounded-lg border shadow-sm"/>
+            <Image src="https://picsum.photos/100/100?random=bag" alt="Mesh Bag" width={100} height={100} className="rounded-lg border shadow-sm"/>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.description}</p>
+          <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / box (12 bola)</p>
         </div>
 
-        {isCustomizable && product.colors && (
-          <div className="flex flex-col gap-3">
-            <Label className="text-base font-medium">Color</Label>
-            <RadioGroup
-              value={customization.color?.name}
-              onValueChange={handleColorChange}
-              className="flex flex-wrap gap-2"
-            >
-              {product.colors.map((color) => (
-                <div key={color.name} className="flex items-center">
-                  <RadioGroupItem value={color.name} id={color.name} className="peer sr-only" />
-                  <Label
-                    htmlFor={color.name}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border-2 border-muted bg-background p-1 pr-3 transition-colors peer-data-[state=checked]:border-primary"
-                  >
-                    <span
-                      className="block h-6 w-6 rounded-full"
-                      style={{ backgroundColor: color.hex, border: color.hex === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
-                    />
-                    {color.name}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        )}
-        
-        {isCustomizable && (
-          <>
+        <Separator />
+
+        <div className="flex flex-col gap-4">
+            <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
+            {product.colors && (
+              <div className="flex flex-col gap-3">
+                <Label className="text-base font-medium">Warna Bola</Label>
+                <RadioGroup
+                  value={customization.color?.name}
+                  onValueChange={handleColorChange}
+                  className="flex flex-wrap gap-2"
+                >
+                  {product.colors.map((color) => (
+                    <div key={color.name} className="flex items-center">
+                      <RadioGroupItem value={color.name} id={color.name} className="peer sr-only" />
+                      <Label
+                        htmlFor={color.name}
+                        className="flex cursor-pointer items-center gap-2 rounded-full border-2 border-muted bg-background p-1 pr-3 transition-colors peer-data-[state=checked]:border-primary"
+                      >
+                        <span
+                          className="block h-6 w-6 rounded-full"
+                          style={{ backgroundColor: color.hex, border: color.hex === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
+                        />
+                        {color.name}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+            
             <div className="flex flex-col gap-3">
-                <Label className="text-base font-medium">Custom Print</Label>
+                <Label className="text-base font-medium">Upload Logo/Desain</Label>
+                <div className="relative">
+                    <Button asChild variant="outline" className='h-auto w-full'>
+                        <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-lg">
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                            <span className="mt-2 text-sm text-center">{logoPreview ? 'Ganti Logo' : 'Klik untuk upload (JPG/PNG)'}</span>
+                        </label>
+                    </Button>
+                    {logoPreview && (
+                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={removeLogo}>
+                            <X className="h-4 w-4"/>
+                        </Button>
+                    )}
+                </div>
+                <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleLogoUpload} />
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <Label htmlFor="custom-text" className="text-base font-medium">Tambah Teks</Label>
+                <Input 
+                    id="custom-text" 
+                    placeholder="e.g. Inisial atau Nama Anda"
+                    value={customization.text}
+                    onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
+                />
+                 <div className="grid grid-cols-2 gap-4">
+                     <Select value={customization.font} onValueChange={(v) => setCustomization(p => ({...p, font: v}))}>
+                         <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
+                         <SelectContent>
+                             {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                         </SelectContent>
+                     </Select>
+                     <Select value={customization.textColor} onValueChange={(v) => setCustomization(p => ({...p, textColor: v}))}>
+                         <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
+                         <SelectContent>
+                             {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
+                         </SelectContent>
+                     </Select>
+                 </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <Label className="text-base font-medium">Pilih Opsi Print</Label>
                  <Select 
                     value={String(customization.printSides)}
                     onValueChange={(value) => setCustomization(prev => ({...prev, printSides: Number(value) as (0 | 1 | 2)}))}
                  >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select print sides" />
+                        <SelectValue placeholder="Pilih jumlah sisi untuk di-print" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="0">No Print (Logo/Text only)</SelectItem>
-                        <SelectItem value="1">1 Side</SelectItem>
-                        <SelectItem value="2">2 Sides</SelectItem>
+                        <SelectItem value="0">Tanpa Print</SelectItem>
+                        <SelectItem value="1">1 Sisi (+{formatRupiah(25000)})</SelectItem>
+                        <SelectItem value="2">2 Sisi (+{formatRupiah(40000)})</SelectItem>
                     </SelectContent>
                 </Select>
-                 <p className="text-sm text-muted-foreground">Harga per sisi: Rp 75.000</p>
             </div>
+        </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-3">
-                    <Label htmlFor="logo-upload" className="text-base font-medium">Upload Logo</Label>
-                    <div className="relative">
-                        <Button asChild variant="outline" className='h-auto w-full'>
-                            <label htmlFor="logo-upload" className="cursor-pointer flex flex-col items-center justify-center p-4">
-                                <Upload className="h-6 w-6 text-muted-foreground" />
-                                <span className="mt-2 text-sm">{logoPreview ? 'Change Logo' : 'Upload Logo'}</span>
-                            </label>
-                        </Button>
-                        {logoPreview && (
-                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={removeLogo}>
-                                <X className="h-4 w-4"/>
-                            </Button>
-                        )}
-                    </div>
-                    <Input id="logo-upload" type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                </div>
-                <div className="flex flex-col gap-3">
-                    <Label htmlFor="custom-text" className="text-base font-medium">Tambah Teks</Label>
-                    <Input 
-                        id="custom-text" 
-                        placeholder="e.g. Your Name"
-                        value={customization.text}
-                        onChange={(e) => setCustomization(prev => ({...prev, text: e.target.value}))}
-                    />
-                     <p className="text-xs text-muted-foreground">Biaya tambahan teks: Rp 45.000</p>
-                </div>
-            </div>
-          </>
-        )}
+        <Separator />
         
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -214,27 +235,26 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 <span className="w-10 text-center text-lg font-bold">{quantity}</span>
                 <Button variant="outline" size="icon" onClick={() => setQuantity(q => q+1)}><Plus className="h-4 w-4" /></Button>
             </div>
-            <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight">{formatRupiah(totalPrice)}</span>
+            <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total Harga</p>
+                <p className="text-3xl font-bold tracking-tight">{formatRupiah(totalPrice)}</p>
             </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {isCustomizable ? (
-              <RealisticPreview 
+        <div className="grid grid-cols-1 gap-4">
+            <Button size="lg" onClick={handleAddToCart}>
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Tambah ke Keranjang
+            </Button>
+             <RealisticPreview 
                 ballDesignDataUri={ballDesignDataUri}
                 customText={customization.text}
               >
                 <Button size="lg" variant="outline" className="w-full">
                   <Wand2 className="mr-2 h-5 w-5" />
-                  Realistic Preview
+                  Lihat Realistic Preview (AI)
                 </Button>
               </RealisticPreview>
-            ) : <div/>}
-
-            <Button size="lg" onClick={handleAddToCart} className={cn(!isCustomizable && "col-span-2")}>
-                Add to Cart
-            </Button>
         </div>
       </div>
     </div>

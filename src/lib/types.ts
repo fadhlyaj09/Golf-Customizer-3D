@@ -13,6 +13,8 @@ export interface Customization {
   printSides?: 0 | 1 | 2;
   logo?: string; // data URL of the logo
   text?: string;
+  font?: string;
+  textColor?: string;
 }
 
 export interface CartItem {
