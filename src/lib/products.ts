@@ -17,7 +17,7 @@ export async function getProducts(): Promise<Product[]> {
     const productSnapshot = await getDocs(productsCol);
     const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
     
-    // If database is empty or fails, return a default static list to ensure page always loads
+    // If database is empty, return a default static list to ensure page always loads
     if (productList.length === 0) {
       console.warn("Firestore 'products' collection is empty. Falling back to default products.");
       return getDefaultProducts();
