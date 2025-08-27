@@ -2,35 +2,18 @@ export function Logo({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      width="100"
-      height="40"
-      viewBox="0 0 120 40"
+      width="60"
+      height="45"
+      viewBox="0 0 60 45"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g clipPath="url(#clip0_105_2)">
-        <text
-          x="40"
-          y="30"
-          fontFamily="sans-serif"
-          fontSize="24"
-          fontWeight="bold"
-          fill="currentColor"
-          className="fill-current"
-        >
-          GOLF
-        </text>
-        <path
-          d="M20 0C8.954 0 0 8.954 0 20C0 31.046 8.954 40 20 40C31.046 40 40 31.046 40 20C40 8.954 31.046 0 20 0ZM28.536 29.58C25.79 31.572 22.462 32.74 19.016 32.74C12.392 32.74 6.98 27.886 6.98 21.366C6.98 14.846 12.392 9.992 19.016 9.992C22.462 9.992 25.79 11.16 28.536 13.152L26.312 15.76C24.238 14.28 21.71 13.33 19.016 13.33C14.73 13.33 11.236 16.924 11.236 21.366C11.236 25.808 14.73 29.402 19.016 29.402C21.71 29.402 24.238 28.452 26.312 26.972L28.536 29.58Z"
-          fill="hsl(var(--primary))"
-          className="fill-primary"
-        />
-      </g>
-      <defs>
-        <clipPath id="clip0_105_2">
-          <rect width="120" height="40" fill="white" />
-        </clipPath>
-      </defs>
+      <rect width="60" height="45" fill="black"/>
+      <path d="M15.36 10.5H23.6V13.62H18.48V19.32H23.04V22.44H18.48V31.5H15.36V10.5Z" fill="white"/>
+      <path d="M26.435 31.5V10.5H37.795V13.62H29.555V19.08H37.235V22.2H29.555V28.38H37.795V31.5H26.435Z" fill="white"/>
+      <text x="15" y="42" fontFamily="Arial, sans-serif" fontSize="6" fontWeight="bold" fill="white">
+        HAVIOUR
+      </text>
     </svg>
   );
 }

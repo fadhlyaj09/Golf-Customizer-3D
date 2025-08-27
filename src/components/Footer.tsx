@@ -1,76 +1,64 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Facebook, Twitter } from 'lucide-react';
+import Image from 'next/image';
+
+const appStores = [
+  { name: 'App Store', imageUrl: 'https://placehold.co/135x40/000000/FFFFFF/png?text=App+Store' },
+  { name: 'Google Play', imageUrl: 'https://placehold.co/135x40/000000/FFFFFF/png?text=Google+Play' },
+  { name: 'Amazon', imageUrl: 'https://placehold.co/135x40/000000/FFFFFF/png?text=Amazon' },
+];
+
 
 export function Footer() {
   return (
-    <footer className="w-full bg-background border-t">
-        <div className="py-12 bg-gray-100">
-            <div className="container mx-auto px-4 md:px-6 text-center">
-                <h3 className="text-2xl font-bold">Sign up For our Discounts today!</h3>
-                <p className="text-muted-foreground mt-2 mb-6 max-w-xl mx-auto">
-                    Promotional offers, new products and sales. Directly to your inbox.
-                    We’ll never share your email address with a third-party.
-                </p>
-                <form className="flex max-w-md mx-auto">
-                    <Input type="email" placeholder="Enter your email address" className="rounded-r-none focus:z-10" />
-                    <Button type="submit" className="rounded-l-none">Subscribe</Button>
-                </form>
-                <div className="flex justify-center gap-4 mt-6">
-                    <Link href="#"><Facebook className="w-6 h-6 text-muted-foreground hover:text-primary" /></Link>
-                    <Link href="#"><Twitter className="w-6 h-6 text-muted-foreground hover:text-primary" /></Link>
-                    <Link href="#"><Instagram className="w-6 h-6 text-muted-foreground hover:text-primary" /></Link>
-                    <Link href="#"><Youtube className="w-6 h-6 text-muted-foreground hover:text-primary" /></Link>
+    <footer className="w-full bg-[#111314] border-t border-white/10 text-muted-foreground">
+        <div className="container mx-auto px-4 md:px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div>
+                <h3 className="font-bold text-white mb-4">Facebook</h3>
+                <div className='space-y-4 text-sm'>
+                    <p>Link shared on: July 3, 2014</p>
+                    <p>Link shared on: June 25, 2014<br/>StarCitizen Monthly Report - June 2014</p>
+                    <p>Link shared on: June 25, 2014<br/>Watch the first of five CG teasers introducing the races of Warhammer 40,000: Eternal Crusade</p>
+                </div>
+            </div>
+            <div>
+                <h3 className="font-bold text-white mb-4">Tweets</h3>
+                 <div className='space-y-4 text-sm'>
+                    <p>Nathalie Vallires @NatVallieres - Jul 2<br/>Poste à pourvoir: Administrateur réseau / Network Administ</p>
+                    <p>Nikki Grives @nikki_grives - Jun 26<br/>@miguelcaron @behaviour The game vids look amazing!! :D Cant wait! Got my first character named!</p>
+                    <p>Nathalie Vallires @NatVallieres - Jun 26<br/>Poste à pourvoir: Concepteur de son/Sound Designer @behaviour</p>
                 </div>
             </div>
         </div>
-      <div className="bg-neutral-900 text-neutral-300">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 py-12 px-4 md:px-6">
-            <div>
-                <Logo />
-                <p className="mt-4 text-sm">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                </p>
+      <div className="bg-black">
+        <div className="container mx-auto flex items-center justify-between py-8 px-4 md:px-6">
+            <div className="flex gap-4">
+              {appStores.map((store) => (
+                <Link href="#" key={store.name}>
+                  <Image src={store.imageUrl} alt={store.name} width={135} height={40} className='rounded-md' />
+                </Link>
+              ))}
             </div>
-            <div>
-                <h4 className="font-bold text-white mb-4">Help</h4>
-                <nav className="flex flex-col gap-2 text-sm">
-                    <Link href="#" className="hover:text-primary">Search</Link>
-                    <Link href="#" className="hover:text-primary">Help</Link>
-                    <Link href="#" className="hover:text-primary">Information</Link>
-                    <Link href="#" className="hover:text-primary">Privacy Policy</Link>
-                    <Link href="#" className="hover:text-primary">Shipping Details</Link>
-                </nav>
-            </div>
-            <div>
-                 <h4 className="font-bold text-white mb-4">Support</h4>
-                <nav className="flex flex-col gap-2 text-sm">
-                    <Link href="#" className="hover:text-primary">Contact us</Link>
-                    <Link href="#" className="hover:text-primary">About us</Link>
-                    <Link href="#" className="hover:text-primary">Careers</Link>
-                    <Link href="#" className="hover:text-primary">Refunds & Returns</Link>
-                    <Link href="#" className="hover:text-primary">Deliveries</Link>
-                </nav>
-            </div>
-            <div>
-                 <h4 className="font-bold text-white mb-4">Information</h4>
-                 <div className="text-sm flex flex-col gap-2">
-                    <p>Lorem Ipsum, 40C, Lorem Ipsum, 64500, India</p>
-                    <p>+91 9876543210</p>
-                    <p>info@golf.com</p>
+
+            <div className="flex items-center gap-8">
+              <Logo />
+               <div className="text-xs">
+                <p>© 2012 Behaviour Interactive Inc. | Behaviour and logo are trademarks of Behaviour Interactive Inc. All rights reserved.</p>
+                 <div className="flex gap-4 mt-1">
+                    <Link href="#" className="hover:text-white">Privacy Policy</Link>
+                    <Link href="#" className="hover:text-white">Terms of Service</Link>
                  </div>
-            </div>
-        </div>
-        <div className="border-t border-neutral-700">
-            <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between py-4 px-4 md:px-6 text-sm">
-                <p>&copy; {new Date().getFullYear()} Articogolf. All Rights Reserved.</p>
-                <div className="flex items-center gap-4 mt-4 sm:mt-0">
-                    <p>Visa</p>
-                    <p>MasterCard</p>
-                    <p>PayPal</p>
-                </div>
+               </div>
+               <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="#"><Facebook className="h-4 w-4" /></Link>
+                </Button>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="#"><Twitter className="h-4 w-4" /></Link>
+                </Button>
+              </div>
             </div>
         </div>
       </div>
