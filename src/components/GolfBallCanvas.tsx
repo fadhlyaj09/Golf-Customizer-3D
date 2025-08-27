@@ -63,9 +63,8 @@ function Sticker({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // FIX: Hooks cannot be called conditionally. `useTexture` must be called at the top level.
-    // We pass a valid data URI for logos, or an empty string for text, which useTexture can handle.
-    const texture = useTexture(decal.type === 'logo' ? decal.content : '');
+    // Correctly handle conditional hook usage. Only call useTexture if it's a logo with content.
+    const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
          <DreiDecal
@@ -75,8 +74,7 @@ function Sticker({ decal, isActive, onClick }: {
             onPointerDown={(e) => { e.stopPropagation(); onClick();}}
         >
               <meshBasicMaterial
-                // Only use the texture if the decal type is 'logo'
-                map={decal.type === 'logo' ? texture : undefined}
+                map={texture || undefined}
                 polygonOffset
                 polygonOffsetFactor={-10}
                 transparent
@@ -84,14 +82,13 @@ function Sticker({ decal, isActive, onClick }: {
                 depthWrite={false}
                 toneMapped={false}
                 opacity={1}
-                // Highlight the active decal
-                color={isActive ? '#87CEEB' : 'white'} 
+                color={isActive ? '#000000' : 'white'} 
               />
-
               {decal.type === 'text' && (
                   <Text
                       fontSize={0.5}
                       color={decal.color}
+                      font="sans-serif"
                       anchorX="center"
                       anchorY="middle"
                   >

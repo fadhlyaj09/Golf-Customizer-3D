@@ -135,12 +135,21 @@ export function Header() {
                 </div>
                  {renderNavLinks(true)}
                  <div className='flex flex-col gap-2 mt-8 border-t pt-6'>
-                    <Button asChild variant="outline" className='w-full' onClick={() => setMobileMenuOpen(false)}>
-                      <Link href="/login">Login</Link>
-                    </Button>
-                    <Button asChild variant="default" className='w-full' onClick={() => setMobileMenuOpen(false)}>
-                      <Link href="/register">Sign Up</Link>
-                    </Button>
+                    {user ? (
+                      <div className='text-center'>
+                        <p>Welcome, {user.displayName}</p>
+                        <Button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className='w-full mt-2'>Logout</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Button asChild variant="outline" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                          <Link href="/login">Login</Link>
+                        </Button>
+                        <Button asChild variant="default" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                          <Link href="/register">Sign Up</Link>
+                        </Button>
+                      </>
+                    )}
                  </div>
               </SheetContent>
             </Sheet>
