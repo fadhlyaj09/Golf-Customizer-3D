@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { deleteProduct } from '@/actions/productActions';
 
@@ -12,7 +12,7 @@ function DeleteProductForm({ id }: { id: string }) {
   const deleteProductWithId = deleteProduct.bind(null, id);
   return (
     <form action={deleteProductWithId}>
-       <button type="submit" className="w-full text-left relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-600">
+       <button type="submit" className="w-full text-left relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-destructive hover:text-white focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-600">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
        </button>
@@ -77,7 +77,9 @@ export default async function AdminPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem asChild>
-                                                    <Link href={`/admin/product-form?id=${product.id}`}>Edit</Link>
+                                                    <Link href={`/admin/product-form?id=${product.id}`} className='flex items-center gap-2'>
+                                                      <Edit className="mr-2 h-4 w-4" /> Edit
+                                                    </Link>
                                                 </DropdownMenuItem>
                                                 <DeleteProductForm id={product.id} />
                                             </DropdownMenuContent>

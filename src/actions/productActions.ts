@@ -59,7 +59,7 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
       // Create new product
       const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const productRef = doc(productsCollection, productId);
-      await setDoc(productRef, productData);
+      await setDoc(productRef, { ...productData, id: productId });
     }
   } catch (e) {
     console.error(e);

@@ -1,6 +1,6 @@
 import type { Product } from './types';
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, query } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 
 
 export const ALL_PRODUCTS_CACHE_TAG = 'products';
@@ -40,6 +40,13 @@ export async function getProductById(id: string): Promise<Product | undefined> {
       return { id: productSnap.id, ...productSnap.data() } as Product;
     } else {
       console.warn(`Product with id ${id} not found in Firestore.`);
+      // Fallback: search by id field if doc.id doesn't match
+      const q = query(collection(db, 'products'), where('id', '==', id));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Product;
+      }
       return undefined;
     }
   } catch (error) {
