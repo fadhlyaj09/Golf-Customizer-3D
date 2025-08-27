@@ -1,0 +1,4 @@
+// This is a placeholder for the binary data of the Inter-Bold.ttf font file.
+// The build system will handle replacing this with the actual file.
+// In a real scenario, you would place the font file in the /public/fonts directory.
+placeholder_for_Inter-Bold.ttf_binary_data

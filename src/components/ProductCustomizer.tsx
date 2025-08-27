@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, ChangeEvent, useCallback, Suspense } from 'react';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import { RealisticPreview } from './RealisticPreview';
-import { Minus, Plus, Upload, Wand2, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
+import { Minus, Plus, Wand2, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -28,13 +29,13 @@ interface ProductCustomizerProps {
   startWithCustom: boolean;
 }
 
-const fonts = ["Roboto", "Montserrat", "Poppins", "Merriweather", "Orbitron", "Pirulen", "Arial", "Cream Cake"];
+const fonts = ["Inter", "Roboto", "Montserrat", "Poppins", "Merriweather"];
 const textColors = [
-    { name: 'Hitam', value: '#000000'},
-    { name: 'Putih', value: '#FFFFFF'},
-    { name: 'Biru', value: '#0000FF'},
-    { name: 'Merah', value: '#FF0000'},
-    { name: 'Hijau', value: '#008000'},
+    { name: 'Black', value: '#000000'},
+    { name: 'White', value: '#FFFFFF'},
+    { name: 'Blue', value: '#0000FF'},
+    { name: 'Red', value: '#FF0000'},
+    { name: 'Green', value: '#008000'},
 ];
 
 export default function ProductCustomizer({ product, startWithCustom }: ProductCustomizerProps) {
@@ -43,13 +44,13 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [decals, setDecals] = useState<Decal[]>([]);
-  const [activeDecal, setActiveDecal] = useState<string | null>(null);
+  const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
 
   const [customization, setCustomization] = useState<Customization>({
     color: product.colors?.[0],
-    printSides: 0,
-    side1: { type: 'none', content: '', font: 'Roboto', color: '#000000' },
-    side2: { type: 'none', content: '', font: 'Roboto', color: '#000000' },
+    printSides: 0, // This is now deprecated but kept for cart compatibility
+    side1: { type: 'none', content: '' },
+    side2: { type: 'none', content: '' },
   });
 
   const [totalPrice, setTotalPrice] = useState(product.basePrice);
@@ -62,6 +63,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     let finalPrice = product.basePrice;
     
     if (!product.isFloater) {
+        // Example pricing: first decal is 25000, subsequent ones are 15000
         const pricePerSide = decals.length > 0 ? 25000 + (decals.length - 1) * 15000 : 0;
         finalPrice += pricePerSide;
     }
@@ -79,15 +81,22 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     const newDecal: Decal = {
       id: MathUtils.generateUUID(),
       type: type,
-      content: type === 'text' ? 'Your Text' : '',
-      position: new Vector3(0, 0, 0.5),
+      content: type === 'text' ? 'Your Text' : '', // Placeholder for text, empty for logo until uploaded
+      position: new Vector3(0, 0, 0.5), // Default position on the front
       rotation: new Euler(0,0,0),
       scale: 0.15,
-      font: 'Roboto',
+      font: 'Inter',
       color: '#000000',
     };
-    setDecals(prev => [...prev, newDecal]);
-    setActiveDecal(newDecal.id);
+    
+    if (type === 'logo') {
+      // Trigger file input for logo
+      const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
+      fileInput?.click(); // This will open file dialog, the actual decal is added in `handleFileUpload`
+    } else {
+       setDecals(prev => [...prev, newDecal]);
+       setActiveDecalId(newDecal.id);
+    }
   }
 
   const handleUpdateDecal = (id: string, newProps: Partial<Decal>) => {
@@ -96,8 +105,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   
   const handleRemoveDecal = (id: string) => {
     setDecals(prev => prev.filter(d => d.id !== id));
-    if (activeDecal === id) {
-      setActiveDecal(null);
+    if (activeDecalId === id) {
+      setActiveDecalId(null);
     }
   };
 
@@ -116,9 +125,11 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
           scale: 0.15,
         };
         setDecals(prev => [...prev, newDecal]);
-        setActiveDecal(newDecal.id);
+        setActiveDecalId(newDecal.id);
       };
       reader.readAsDataURL(file);
+      // Reset file input value to allow uploading the same file again
+      e.target.value = '';
     }
   };
 
@@ -129,13 +140,17 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
         return;
     }
     // This part would need to be updated to handle the new decal structure if needed
-    // For now, we'll use the old customization structure for cart compatibility
+    // For now, we'll use a simplified customization structure for cart compatibility
     const finalCustomization: Customization = {
         ...customization,
         printSides: decals.length > 0 ? (decals.length > 1 ? 2 : 1) : 0,
-        // A more complex mapping would be needed to save full 3D state
-        side1: { type: 'none', content: ''},
-        side2: { type: 'none', content: ''},
+        // A more complex mapping would be needed to save full 3D state.
+        // For now, let's represent the first logo as side1.
+        side1: { 
+            type: decals.find(d => d.type === 'logo')?.type || 'none',
+            content: decals.find(d => d.type === 'logo')?.content || ''
+        },
+        side2: { type: 'none', content: ''}, // simplified for now
     };
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
     router.push('/cart');
@@ -147,8 +162,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   }, [decals, product.imageUrl]);
 
   const activeDecalData = useMemo(() => {
-    return decals.find(d => d.id === activeDecal);
-  }, [decals, activeDecal]);
+    return decals.find(d => d.id === activeDecalId);
+  }, [decals, activeDecalId]);
   
   const activeImageUrl = useMemo(() => {
       return customization.color?.imageUrl || "https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png";
@@ -162,9 +177,8 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             <GolfBallCanvas 
                 ballColor={customization.color?.hex || '#ffffff'}
                 decals={decals}
-                setDecals={setDecals}
-                activeDecalId={activeDecal}
-                setActiveDecalId={setActiveDecal}
+                activeDecalId={activeDecalId}
+                setActiveDecalId={setActiveDecalId}
             />
         </Suspense>
       </div>
@@ -196,11 +210,11 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                             <button
                                 key={color.name}
                                 onClick={() => handleColorChange(color.name)}
-                                className={`flex cursor-pointer items-center gap-2 rounded-full border-2 p-1 pr-3 transition-colors ${customization.color?.name === color.name ? 'border-primary' : 'border-muted'}`}
+                                className={`flex cursor-pointer items-center gap-2 rounded-full border-2 p-1 pr-3 transition-colors ${customization.color?.name === color.name ? 'border-primary' : 'border-transparent'}`}
                             >
                                 <span
                                 className="block h-6 w-6 rounded-full"
-                                style={{ backgroundColor: color.hex, border: color.hex === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
+                                style={{ backgroundColor: color.hex, border: color.hex.toUpperCase() === '#FFFFFF' ? '1px solid #ccc' : 'none' }}
                                 />
                                 {color.name}
                             </button>
@@ -213,32 +227,32 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                     <Label className="text-base font-medium">Tambah Desain</Label>
                      <div className="grid grid-cols-2 gap-4">
                         <Button onClick={() => handleAddDecal('text')} variant="outline"><Type className='mr-2'/> Tambah Teks</Button>
-                        <Button asChild variant="outline">
-                            <label htmlFor="logo-upload" className='cursor-pointer'><ImageIcon className='mr-2'/> Tambah Logo</label>
-                        </Button>
-                        <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png" onChange={handleFileUpload} />
+                        <Button onClick={() => handleAddDecal('logo')} variant="outline"><ImageIcon className='mr-2'/> Tambah Logo</Button>
+                        <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
                     </div>
                 </div>
 
                 {decals.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                        <Label>Desain Aktif</Label>
+                    <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/20">
+                        <Label>Daftar Desain</Label>
+                        <div className="flex flex-col gap-2">
                         {decals.map((decal, index) => (
                             <div key={decal.id} 
-                                 className={`p-2 border rounded-lg flex justify-between items-center cursor-pointer ${activeDecal === decal.id ? 'border-primary bg-muted/50' : ''}`}
-                                 onClick={() => setActiveDecal(decal.id)}>
-                                <span>{decal.type === 'logo' ? `Logo ${index + 1}` : decal.content}</span>
+                                 className={`p-2 border rounded-lg flex justify-between items-center cursor-pointer ${activeDecalId === decal.id ? 'border-primary bg-primary/10' : 'bg-background'}`}
+                                 onClick={() => setActiveDecalId(decal.id)}>
+                                <span>{decal.type === 'logo' ? `Logo ${index + 1}` : `Teks: "${decal.content}"`}</span>
                                 <Button size="icon" variant="ghost" className='h-7 w-7' onClick={(e) => { e.stopPropagation(); handleRemoveDecal(decal.id); }}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
                         ))}
+                        </div>
                     </div>
                 )}
 
                 {activeDecalData?.type === 'text' && (
                      <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/30">
-                        <Label>Edit Teks</Label>
+                        <Label>Edit Teks Aktif</Label>
                         <Input 
                             value={activeDecalData.content}
                             onChange={(e) => handleUpdateDecal(activeDecalData.id, { content: e.target.value })}
@@ -247,7 +261,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                             <Select value={activeDecalData.font} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { font: v })}>
                                  <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
                                  <SelectContent>
-                                     {fonts.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                                     {fonts.map(f => <SelectItem key={f} value={f} style={{fontFamily: f}}>{f}</SelectItem>)}
                                  </SelectContent>
                             </Select>
                             <Select value={activeDecalData.color} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { color: v })}>
@@ -287,6 +301,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 Tambah ke Keranjang
             </Button>
            )}
+           {/* Realistic Preview might need to be adapted for 3D canvas state, disabling for now.
            { !product.isFloater && (
              <RealisticPreview 
                 ballDesignDataUri={ballDesignDataUri || ''}
@@ -297,6 +312,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
                 </Button>
               </RealisticPreview>
            )}
+            */}
              <Button size="lg" variant="secondary" asChild>
                 <a href="https://wa.me/6285723224918?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-5 w-5" />

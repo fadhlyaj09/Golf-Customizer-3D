@@ -1,0 +1,5 @@
+// This is a placeholder for the binary data of the normal map image. 
+// The build system will handle replacing this with the actual file.
+// In a real scenario, you would place the golf-normal.jpg file in the /public directory.
+// For the purpose of this simulation, we'll use a placeholder content.
+placeholder_for_golf-normal.jpg_binary_data
