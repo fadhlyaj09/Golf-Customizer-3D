@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC-8g1pdaWLaAeAT7FLyNhBALviEqEoHSc",
-  authDomain: "golf-customizer-3d.firebaseapp.com",
-  projectId: "golf-customizer-3d",
-  storageBucket: "golf-customizer-3d.appspot.com",
-  messagingSenderId: "554446603581",
-  appId: "1:554446603581:web:bb0eacb2096d7edabbf154"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 
