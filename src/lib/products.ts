@@ -7,6 +7,11 @@ export const products: Product[] = [
     description: 'Performa total untuk setiap pemain, dengan alignment assist.',
     basePrice: 175000,
     imageUrl: 'https://picsum.photos/600/400?random=1',
+    gallery: [
+        'https://picsum.photos/600/400?random=1',
+        'https://picsum.photos/600/400?random=5',
+        'https://picsum.photos/600/400?random=6'
+    ],
     customizable: true,
   },
   {
@@ -15,6 +20,11 @@ export const products: Product[] = [
     description: 'Desain klasik dan bersih untuk nuansa tradisional.',
     basePrice: 200000,
     imageUrl: 'https://picsum.photos/600/400?random=2',
+    gallery: [
+        'https://picsum.photos/600/400?random=2',
+        'https://picsum.photos/600/400?random=7',
+        'https://picsum.photos/600/400?random=8'
+    ],
     customizable: true,
   },
   {
@@ -23,6 +33,11 @@ export const products: Product[] = [
     description: 'Warna cerah dengan hasil akhir matte untuk visibilitas tinggi.',
     basePrice: 200000,
     imageUrl: 'https://picsum.photos/600/400?random=3',
+    gallery: [
+        'https://picsum.photos/600/400?random=3',
+        'https://picsum.photos/600/400?random=9',
+        'https://picsum.photos/600/400?random=10'
+    ],
     customizable: true,
     colors: [
       { name: 'Mix Color', hex: '#FFFFFF' },
@@ -38,6 +53,11 @@ export const products: Product[] = [
     description: 'Spin dan kontrol tingkat tour dengan cover urethane.',
     basePrice: 300000,
     imageUrl: 'https://picsum.photos/600/400?random=4',
+    gallery: [
+        'https://picsum.photos/600/400?random=4',
+        'https://picsum.photos/600/400?random=11',
+        'https://picsum.photos/600/400?random=12'
+    ],
     customizable: true,
   },
 ];

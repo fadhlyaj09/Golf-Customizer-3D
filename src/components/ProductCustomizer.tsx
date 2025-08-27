@@ -20,6 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from './ui/separator';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface ProductCustomizerProps {
   product: Product;
@@ -99,34 +106,41 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
       <div className="flex flex-col items-center gap-4">
-         <Card className="relative aspect-square w-full max-w-md overflow-hidden rounded-lg border shadow-lg">
-            <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                data-ai-hint="golf ball"
-                className="object-cover"
-                style={{
-                  backgroundColor: customization.color?.hex || 'white'
-                }}
-            />
-            {logoPreview && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-                    <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
-                </div>
-            )}
-            {customization.text && (
-                <div className="absolute bottom-1/4 left-1/2 w-full -translate-x-1/2 transform text-center">
-                    <p className="font-bold text-xl" style={{ fontFamily: customization.font, color: customization.textColor }}>
-                        {customization.text}
-                    </p>
-                </div>
-            )}
-        </Card>
-        <div className="flex gap-4">
-            <Image src="https://picsum.photos/100/100?random=box" alt="Packaging Box" width={100} height={100} className="rounded-lg border shadow-sm"/>
-            <Image src="https://picsum.photos/100/100?random=bag" alt="Mesh Bag" width={100} height={100} className="rounded-lg border shadow-sm"/>
-        </div>
+         <Carousel className="w-full max-w-md">
+            <CarouselContent>
+                 {(product.gallery || [product.imageUrl]).map((img, index) => (
+                    <CarouselItem key={index}>
+                        <Card className="relative aspect-square w-full overflow-hidden rounded-lg border shadow-lg">
+                             <Image
+                                src={img}
+                                alt={`${product.name} - view ${index + 1}`}
+                                fill
+                                data-ai-hint="golf ball"
+                                className="object-cover"
+                                style={{
+                                  backgroundColor: customization.color?.hex || 'white'
+                                }}
+                            />
+                            {index === 0 && logoPreview && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                                    <Image src={logoPreview} alt="Logo Preview" width={80} height={80} className="object-contain" />
+                                </div>
+                            )}
+                            {index === 0 && customization.text && (
+                                <div className="absolute bottom-1/4 left-1/2 w-full -translate-x-1/2 transform text-center">
+                                    <p className="font-bold text-xl" style={{ fontFamily: customization.font, color: customization.textColor }}>
+                                        {customization.text}
+                                    </p>
+                                </div>
+                            )}
+                        </Card>
+                    </CarouselItem>
+                 ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2" />
+            <CarouselNext className="right-2" />
+        </Carousel>
+
       </div>
 
       <div className="flex flex-col gap-6">

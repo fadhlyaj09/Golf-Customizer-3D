@@ -4,6 +4,7 @@ export interface Product {
   description: string;
   basePrice: number;
   imageUrl: string;
+  gallery?: string[];
   customizable: boolean;
   colors?: { name: string; hex: string }[];
 }
