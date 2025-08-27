@@ -261,7 +261,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             {/* Side 1 Preview */}
             {customization.side1.type === 'logo' && customization.side1.content && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-                    <Image src={customization.side1.content} alt="Logo Preview" width={80} height={80} className="object-contain" />
+                    <Image src={customization.side1.content} alt="Logo Preview" width={80} height={80} className="object-contain" unoptimized />
                 </div>
             )}
             {customization.side1.type === 'text' && customization.side1.content && (
@@ -274,7 +274,7 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
             {/* Side 2 Preview (smaller, on a corner) */}
             {customization.side2.type === 'logo' && customization.side2.content && (
                 <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 transform">
-                    <Image src={customization.side2.content} alt="Side 2 Logo Preview" width={40} height={40} className="object-contain opacity-80" />
+                    <Image src={customization.side2.content} alt="Side 2 Logo Preview" width={40} height={40} className="object-contain opacity-80" unoptimized/>
                 </div>
             )}
             {customization.side2.type === 'text' && customization.side2.content && (
@@ -417,5 +417,3 @@ export default function ProductCustomizer({ product, startWithCustom }: ProductC
     </div>
   );
 }
-
-    
