@@ -3,14 +3,80 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { auth, db } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+
+
+const registerSchema = z.object({
+    firstName: z.string().min(2, 'First name is too short'),
+    lastName: z.string().min(2, 'Last name is too short'),
+    email: z.string().email('Invalid email address'),
+    phone: z.string().min(10, 'Invalid phone number'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 
 export default function RegisterPage() {
+    const { toast } = useToast();
+    const router = useRouter();
 
-    const handleSignUp = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Sign up form submitted');
+    const form = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            password: '',
+            confirmPassword: '',
+        }
+    });
+
+    const handleSignUp = async (data: RegisterFormValues) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const user = userCredential.user;
+
+            await updateProfile(user, {
+                displayName: `${data.firstName} ${data.lastName}`
+            });
+            
+            // Store additional user information in Firestore
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                displayName: `${data.firstName} ${data.lastName}`,
+                email: data.email,
+                phone: data.phone,
+                createdAt: new Date(),
+            });
+
+
+            toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat.' });
+            router.push('/');
+
+        } catch (error: any) {
+            console.error("Sign up error", error);
+            let errorMessage = 'Terjadi kesalahan saat mendaftar.';
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
+            }
+            toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
+        }
     }
 
     return (
@@ -23,37 +89,35 @@ export default function RegisterPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSignUp} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="first-name">First Name</Label>
-                            <Input id="first-name" placeholder="John" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="last-name">Last Name</Label>
-                            <Input id="last-name" placeholder="Doe" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">E-mail Address</Label>
-                            <Input id="email" type="email" placeholder="example@email.com" defaultValue="fadhlyaj09@gmail.com" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" placeholder="+62 812 3456 7890" />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm-password">Confirm Password</Label>
-                            <Input id="confirm-password" type="password" />
-                        </div>
-                        <div className="md:col-span-2 flex justify-end">
-                             <Button type="submit" className="w-full md:w-auto">
-                                Sign Up
-                            </Button>
-                        </div>
-                    </form>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <FormField control={form.control} name="firstName" render={({ field }) => (
+                                <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} placeholder="John" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="lastName" render={({ field }) => (
+                                <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} placeholder="Doe" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="email" render={({ field }) => (
+                                <FormItem><FormLabel>E-mail Address</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="phone" render={({ field }) => (
+                                <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input {...field} type="tel" placeholder="+62 812 3456 7890" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name="password" render={({ field }) => (
+                                <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                                <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
+                            )} />
+
+                            <div className="md:col-span-2 flex justify-end">
+                                 <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
+                                    {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Sign Up
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
                 </CardContent>
                  <CardFooter className="flex justify-center text-sm">
                     <p>Already have an account?</p>
