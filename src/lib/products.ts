@@ -1,6 +1,6 @@
 import type { Product } from './types';
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy } from 'firebase/firestore';
 
 
 export const ALL_PRODUCTS_CACHE_TAG = 'products';
@@ -14,7 +14,8 @@ export const ALL_PRODUCTS_CACHE_TAG = 'products';
 export async function getProducts(): Promise<Product[]> {
   try {
     const productsCol = collection(db, 'products');
-    const productSnapshot = await getDocs(productsCol);
+    const q = query(productsCol, orderBy('name'));
+    const productSnapshot = await getDocs(q);
     const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
     return productList;
   } catch (error) {
@@ -30,6 +31,7 @@ export async function getProducts(): Promise<Product[]> {
  */
 export async function getProductById(id: string): Promise<Product | undefined> {
   try {
+    if (!id) return undefined;
     const productRef = doc(db, 'products', id);
     const productSnap = await getDoc(productRef);
     

@@ -88,7 +88,7 @@ async function seedDatabase() {
 
   productsToSeed.forEach((productData) => {
     // Create a URL-friendly ID from the product name
-    const productId = productData.name.toLowerCase().replace(/\s+/g, '-');
+    const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const docRef = doc(productsCollection, productId);
     batch.set(docRef, productData);
     console.log(`Preparing to add: ${productData.name} (ID: ${productId})`);

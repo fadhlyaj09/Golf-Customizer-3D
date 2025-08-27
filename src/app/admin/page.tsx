@@ -4,7 +4,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { deleteProduct } from '@/actions/productActions';
+import { revalidatePath } from 'next/cache';
+
+function DeleteProduct({ id }: { id: string }) {
+  const deleteProductWithId = async () => {
+    'use server';
+    try {
+      await deleteProduct(id);
+      revalidatePath('/admin');
+    } catch(e) {
+        console.error(e)
+    }
+  };
+  return (
+    <form action={deleteProductWithId}>
+       <button type="submit" className="w-full text-left">
+          <DropdownMenuItem className="text-red-600 cursor-pointer">
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+       </button>
+    </form>
+  );
+}
 
 export default async function AdminPage() {
     const products = await getProducts();
@@ -20,9 +45,11 @@ export default async function AdminPage() {
                     <h1 className="text-3xl font-bold">Manajemen Produk</h1>
                     <p className="text-muted-foreground">Tambah, edit, atau hapus produk Anda.</p>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Tambah Produk
+                 <Button asChild>
+                    <Link href="/admin/product-form">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Tambah Produk
+                    </Link>
                 </Button>
             </div>
             <Card>
@@ -51,7 +78,21 @@ export default async function AdminPage() {
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>{product.isFloater ? "Hubungi" : formatRupiah(product.basePrice)}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="sm">Edit</Button>
+                                       <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/product-form?id=${product.id}`}>Edit</Link>
+                                                </DropdownMenuItem>
+                                                <DeleteProduct id={product.id} />
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}
