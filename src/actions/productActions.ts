@@ -51,8 +51,8 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
   
   const { id, image, ...productData } = validatedFields.data;
   let imageUrl = formData.get('currentImageUrl') as string || '';
+  const productId = id || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-  const productsCollection = collection(db, 'products');
 
   try {
      if (image && image.size > 0) {
@@ -64,17 +64,15 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
         imageUrl = await getDownloadURL(storageRef);
     }
     
-    const dataToSave = { ...productData, imageUrl };
+    const dataToSave = { ...productData, imageUrl, id: productId };
+    const productRef = doc(db, 'products', productId);
 
     if (id) {
       // Update existing product
-      const productRef = doc(db, 'products', id);
       await updateDoc(productRef, dataToSave);
     } else {
-      // Create new product
-      const productId = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const productRef = doc(productsCollection, productId);
-      await setDoc(productRef, { ...dataToSave, id: productId });
+      // Create new product with a specific ID
+      await setDoc(productRef, dataToSave);
     }
   } catch (e) {
     console.error(e);
@@ -83,6 +81,7 @@ export async function saveProduct(prevState: ProductFormState, formData: FormDat
 
   revalidatePath('/admin');
   revalidatePath('/');
+  revalidatePath(`/product/${productId}`);
   redirect('/admin');
 }
 

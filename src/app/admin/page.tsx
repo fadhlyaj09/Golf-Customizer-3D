@@ -1,3 +1,4 @@
+
 import { getProducts } from '@/lib/products';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +58,7 @@ export default async function AdminPage() {
                                 <TableRow key={product.id}>
                                     <TableCell className="hidden sm:table-cell">
                                         <Image
-                                            src={product.imageUrl}
+                                            src={product.imageUrl || 'https://placehold.co/64x64'}
                                             alt={product.name}
                                             width={64}
                                             height={64}
@@ -77,7 +78,7 @@ export default async function AdminPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem asChild>
-                                                    <Link href={`/admin/product-form?id=${product.id}`} className='flex items-center gap-2'>
+                                                    <Link href={`/admin/product-form?id=${product.id}`} className='flex items-center w-full'>
                                                       <Edit className="mr-2 h-4 w-4" /> Edit
                                                     </Link>
                                                 </DropdownMenuItem>

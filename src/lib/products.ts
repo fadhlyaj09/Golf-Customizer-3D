@@ -6,8 +6,6 @@ import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firesto
 
 export const ALL_PRODUCTS_CACHE_TAG = 'products';
 
-// This file now fetches products from Firestore instead of having a static list.
-
 /**
  * Fetches all products from the 'products' collection in Firestore.
  * @returns {Promise<Product[]>} A promise that resolves to an array of products.
@@ -39,13 +37,6 @@ export async function getProductById(id: string): Promise<Product | undefined> {
       return { id: productSnap.id, ...productSnap.data() } as Product;
     } else {
       console.warn(`Product with id ${id} not found in Firestore.`);
-      // Fallback: search by id field if doc.id doesn't match
-      const q = query(collection(db, 'products'), where('id', '==', id));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Product;
-      }
       return undefined;
     }
   } catch (error) {
