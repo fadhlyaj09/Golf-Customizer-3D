@@ -16,7 +16,7 @@ export default function ShippingPolicyPage() {
                         Kami berkomitmen untuk mengirimkan pesanan bola golf custom Anda secepat mungkin. Berikut adalah kebijakan pengiriman kami:
                     </p>
                     
-                    <h3 className="text-foreground">Same Day Shipping</h3>
+                    <h3 className="text-foreground mt-6">Same Day Shipping</h3>
                     <p>
                         Pesanan <strong>1 hingga 5 box</strong> dengan Custom Print yang pembayarannya telah kami terima dan konfirmasi <strong>sebelum pukul 15:00 WIB</strong> akan diproses dan dikirim pada hari yang sama.
                     </p>
@@ -24,12 +24,12 @@ export default function ShippingPolicyPage() {
                         <li>Pesanan yang masuk setelah pukul 15:00 WIB akan diproses dan dikirim pada hari kerja berikutnya.</li>
                     </ul>
 
-                    <h3 className="text-foreground">Pesanan Jumlah Besar</h3>
+                    <h3 className="text-foreground mt-6">Pesanan Jumlah Besar</h3>
                     <p>
                         Untuk pesanan dengan jumlah <strong>lebih dari 5 box</strong>, estimasi waktu proses dan pengiriman adalah <strong>1 hingga 2 hari kerja</strong>. Kami akan selalu mengusahakan yang tercepat untuk Anda.
                     </p>
 
-                    <h3 className="text-foreground">Jadwal Pengiriman</h3>
+                    <h3 className="text-foreground mt-6">Jadwal Pengiriman</h3>
                     <p>
                         Pengiriman dilakukan setiap hari <strong>Senin hingga Sabtu</strong>.
                     </p>
