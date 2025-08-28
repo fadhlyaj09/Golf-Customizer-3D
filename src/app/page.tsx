@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/lib/products';
 import { ArrowRight } from 'lucide-react';
@@ -23,9 +24,9 @@ export default async function Home() {
     <div className="flex flex-col bg-background">
       <section className="relative h-[70vh] w-full text-black sm:h-[80vh]">
           <Image
-              src={imageUrl || "https://picsum.photos/1920/1080?random=10"}
+              src={imageUrl || "https://picsum.photos/1920/1080?random=1"}
               alt="Aesthetic golf course"
-              data-ai-hint="golf course"
+              data-ai-hint="golf course landscape"
               fill
               className="object-cover"
               priority
@@ -62,9 +63,9 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                         <div className="aspect-[16/9] w-full bg-muted">
                              <Image
-                                src="https://picsum.photos/800/450?random=30"
+                                src="https://picsum.photos/800/450?random=50"
                                 alt="Color Matte Edition Golf Balls"
-                                data-ai-hint="colorful golf"
+                                data-ai-hint="colorful golfball"
                                 fill
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
@@ -81,9 +82,9 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                        <div className="aspect-[16/9] w-full bg-muted">
                             <Image
-                                src="https://picsum.photos/800/450?random=31"
+                                src="https://picsum.photos/800/450?random=51"
                                 alt="Custom Logo Golf Balls"
-                                data-ai-hint="golf ball"
+                                data-ai-hint="golfball logo"
                                 fill
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
