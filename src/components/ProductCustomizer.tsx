@@ -44,27 +44,36 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [decals, setDecals] = useState<Decal[]>([]);
   const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
 
+  // SAFE INITIALIZATION: Initialize with safe, empty defaults.
   const [customization, setCustomization] = useState<Customization>({
-    color: product.colors && product.colors.length > 0 ? product.colors[0] : undefined,
     printSides: 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
   });
-
-  const [totalPrice, setTotalPrice] = useState(product.basePrice);
+  const [totalPrice, setTotalPrice] = useState(0);
   
+  // ROBUST STATE HYDRATION: Use useEffect to safely set state from props.
+  useEffect(() => {
+    if (product) {
+      setCustomization(prev => ({
+        ...prev,
+        color: product.colors && product.colors.length > 0 ? product.colors[0] : undefined,
+      }));
+      setTotalPrice(product.basePrice || 0);
+    }
+  }, [product]);
+
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   }
 
   useEffect(() => {
-    if (!product) return; // Ensure product is loaded
+    if (!product) return; 
 
     let finalPrice = product.basePrice || 0;
-    const currentDecals = decals || []; // Ensure decals is always an array
+    const currentDecals = decals || [];
     
     if (!product.isFloater && currentDecals.length > 0) {
-        // Simplified pricing: 25000 for the first side, 15000 for the second.
         const pricePerSide = currentDecals.length === 1 ? 25000 : (25000 + 15000);
         finalPrice += pricePerSide;
     }
