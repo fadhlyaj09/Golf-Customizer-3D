@@ -17,16 +17,7 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  // By passing a function to the loader, we can configure it.
-  // Setting crossOrigin to 'anonymous' is crucial for loading textures from other domains.
-  const [normalMap] = useTexture(['https://threejs.org/examples/textures/normal_map.png'], (loader) => {
-    if (Array.isArray(loader)) {
-      loader.forEach(l => l.setCrossOrigin('anonymous'));
-    } else {
-      (loader as THREE.TextureLoader).setCrossOrigin('anonymous');
-    }
-  });
-
+  const [normalMap] = useTexture(['https://threejs.org/examples/textures/normal_map.png']);
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -73,8 +64,6 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // The useTexture hook can also be configured for CORS here if needed,
-    // but we'll assume the logo comes from a data URI, which doesn't have CORS issues.
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
