@@ -74,6 +74,49 @@ export default async function Home() {
         }
     ];
 
+    const supportLogos = [
+        { src: "https://picsum.photos/140/70?random=201", alt: "HP Indigo" },
+        { src: "https://picsum.photos/140/70?random=202", alt: "Konica Minolta bizhub" },
+        { src: "https://picsum.photos/140/70?random=203", alt: "Epson" },
+        { src: "https://picsum.photos/140/70?random=204", alt: "Crystal" },
+        { src: "https://picsum.photos/140/70?random=205", alt: "EFI Vutek" },
+        { src: "https://picsum.photos/140/70?random=206", alt: "GCC LaserPro" },
+        { src: "https://picsum.photos/140/70?random=207", alt: "HP Latex" },
+        { src: "https://picsum.photos/140/70?random=208", alt: "Kornit Avalanche DC" },
+        { src: "https://picsum.photos/140/70?random=209", alt: "Raptor" },
+        { src: "https://picsum.photos/140/70?random=210", alt: "Roland" },
+        { src: "https://picsum.photos/140/70?random=211", alt: "Sei Laser" },
+        { src: "https://picsum.photos/140/70?random=212", alt: "swissqprint" },
+        { src: "https://picsum.photos/140/70?random=213", alt: "Trotec" },
+        { src: "https://picsum.photos/140/70?random=214", alt: "Zund G3" },
+    ];
+
+    const clientLogos = [
+        { src: "https://picsum.photos/140/70?random=301", alt: "BCA" },
+        { src: "https://picsum.photos/140/70?random=302", alt: "BFI Finance" },
+        { src: "https://picsum.photos/140/70?random=303", alt: "Bukalapak" },
+        { src: "https://picsum.photos/140/70?random=304", alt: "Bumi Laut" },
+        { src: "https://picsum.photos/140/70?random=305", alt: "Cheil" },
+        { src: "https://picsum.photos/140/70?random=306", alt: "Dana" },
+        { src: "https://picsum.photos/140/70?random=307", alt: "Datascrip" },
+        { src: "https://picsum.photos/140/70?random=308", alt: "Excelso" },
+        { src: "https://picsum.photos/140/70?random=309", alt: "Galenium" },
+        { src: "https://picsum.photos/140/70?random=310", alt: "Gojek" },
+        { src: "https://picsum.photos/140/70?random=311", alt: "Grab" },
+        { src: "https://picsum.photos/140/70?random=312", alt: "Kenalsapa" },
+        { src: "https://picsum.photos/140/70?random=313", alt: "Kino" },
+        { src: "https://picsum.photos/140/70?random=314", alt: "Mandiri" },
+        { src: "https://picsum.photos/140/70?random=315", alt: "Mandom" },
+        { src: "https://picsum.photos/140/70?random=316", alt: "Merry Riana Group" },
+        { src: "https://picsum.photos/140/70?random=317", alt: "MNC" },
+        { src: "https://picsum.photos/140/70?random=318", alt: "OVO" },
+        { src: "https://picsum.photos/140/70?random=319", alt: "Pertamina" },
+        { src: "https://picsum.photos/140/70?random=320", alt: "Pizza Hut" },
+        { src: "https://picsum.photos/140/70?random=321", alt: "Samsung" },
+        { src: "https://picsum.photos/140/70?random=322", alt: "Tokopedia" },
+        { src: "https://picsum.photos/140/70?random=323", alt: "Traveloka" },
+    ];
+
 
   return (
     <div className="flex flex-col bg-background">
@@ -208,6 +251,48 @@ export default async function Home() {
             </div>
          </div>
       </section>
+
+       <section className="w-full bg-background py-16 md:py-24 border-t">
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="mb-12 text-center">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Support</h2>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-8 items-center justify-center">
+                    {supportLogos.map((logo, index) => (
+                        <div key={index} className="flex justify-center items-center">
+                            <Image
+                                src={logo.src}
+                                alt={logo.alt}
+                                width={120}
+                                height={60}
+                                className="object-contain"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        <section className="w-full bg-background pb-16 md:pb-24">
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="mb-12 text-center">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Our Client</h2>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-8 items-center justify-center">
+                    {clientLogos.map((logo, index) => (
+                        <div key={index} className="flex justify-center items-center">
+                            <Image
+                                src={logo.src}
+                                alt={logo.alt}
+                                width={120}
+                                height={60}
+                                className="object-contain"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
     </div>
   );
 }
