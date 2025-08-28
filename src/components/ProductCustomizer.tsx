@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, ChangeEvent, useCallback } from 'react';
@@ -57,6 +58,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   useEffect(() => {
+    if (!decals) return; // Guard clause to prevent crash
     let finalPrice = product.basePrice;
     
     if (!product.isFloater) {
@@ -172,7 +174,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             <Truck className="h-4 w-4" />
             <AlertTitle className="font-semibold">Same Day Shipping</AlertTitle>
             <AlertDescription className="text-xs">
-                Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan &gt;5 box diproses 1-2 hari kerja.
+                Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan >5 box diproses 1-2 hari kerja.
             </AlertDescription>
         </Alert>
 
