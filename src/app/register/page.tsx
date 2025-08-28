@@ -16,10 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 const registerSchema = z.object({
-    firstName: z.string().min(2, 'Nama depan terlalu pendek'),
-    lastName: z.string().min(2, 'Nama belakang terlalu pendek'),
     email: z.string().email('Alamat email tidak valid'),
-    phone: z.string().min(10, 'Nomor telepon tidak valid'),
     password: z.string().min(6, 'Password minimal 6 karakter'),
     confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
@@ -36,10 +33,7 @@ export default function RegisterPage() {
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
-            firstName: '',
-            lastName: '',
             email: '',
-            phone: '',
             password: '',
             confirmPassword: '',
         }
@@ -47,12 +41,8 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            // ONLY create the user. This is the most critical and atomic step.
-            // All other actions (update profile, save to DB/Sheet) are removed
-            // from this critical path to ensure registration reliability.
             await createUserWithEmailAndPassword(auth, data.email, data.password);
             
-            // From the user's perspective, registration is now complete.
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
 
@@ -67,31 +57,22 @@ export default function RegisterPage() {
             
             toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
         }
-    }
+    };
 
     return (
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center bg-background px-4 py-12">
-            <Card className="w-full max-w-2xl">
+            <Card className="w-full max-w-lg">
                  <CardHeader>
                     <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
                     <CardDescription>
                         Daftar untuk mendapatkan kontrol penuh atas pesanan Anda.
-                    </Description>
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <FormField control={form.control} name="firstName" render={({ field }) => (
-                                <FormItem><FormLabel>Nama Depan</FormLabel><FormControl><Input {...field} placeholder="John" /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="lastName" render={({ field }) => (
-                                <FormItem><FormLabel>Nama Belakang</FormLabel><FormControl><Input {...field} placeholder="Doe" /></FormControl><FormMessage /></FormItem>
-                            )} />
+                        <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 gap-6">
                             <FormField control={form.control} name="email" render={({ field }) => (
                                 <FormItem><FormLabel>Alamat E-mail</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="phone" render={({ field }) => (
-                                <FormItem><FormLabel>Nomor Telepon</FormLabel><FormControl><Input {...field} type="tel" placeholder="+62 812 3456 7890" /></FormControl><FormMessage /></FormItem>
                             )} />
                              <FormField control={form.control} name="password" render={({ field }) => (
                                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
@@ -100,7 +81,7 @@ export default function RegisterPage() {
                                 <FormItem><FormLabel>Konfirmasi Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
                             )} />
 
-                            <div className="md:col-span-2 flex justify-end">
+                            <div className="flex justify-end">
                                  <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
                                     {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Daftar
