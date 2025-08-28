@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { OrbitControls, Decal as DreiDecal, Text, useTexture } from '@react-three/drei';
+import { OrbitControls, Decal as DreiDecal, Text } from '@react-three/drei';
 import type { Decal } from '@/lib/types';
 
 // Custom Shader Material for Golf Ball Dimples
@@ -69,9 +70,9 @@ const vertexShader = `
     vNormal = normal;
     vPosition = position;
     
-    // Create dimples using noise
+    // Create dimples using noise. A smaller multiplier creates a more subtle dimple.
     float noise = snoise(position * u_scale);
-    vec3 newPosition = position + normal * noise * 0.04;
+    vec3 newPosition = position + normal * noise * 0.035;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
   }
@@ -91,8 +92,9 @@ const fragmentShader = `
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 
-    vec3 ambient = vec3(0.3);
-    vec3 finalColor = ambient + diffuse * u_color + vec3(0.5) * spec;
+    // Increased ambient light for a brighter overall look, and stronger specular for highlights
+    vec3 ambient = vec3(0.4);
+    vec3 finalColor = ambient + diffuse * u_color + vec3(0.7) * spec;
 
     gl_FragColor = vec4(finalColor, 1.0);
   }
@@ -112,7 +114,7 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
   const uniforms = React.useMemo(() => ({
     u_time: { value: 0.0 },
     u_color: { value: new THREE.Color(ballColor) },
-    u_scale: { value: 30.0 } // Controls the number of dimples
+    u_scale: { value: 40.0 } // Controls the number of dimples
   }), [ballColor]);
 
   useFrame((state) => {
@@ -128,12 +130,12 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1.5} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[10, 10, 5]} intensity={2.0} castShadow />
       
-      <mesh ref={meshRef} onPointerDown={handlePointerDown}>
-        {/* Using Icosahedron for more even vertex distribution */}
-        <icosahedronGeometry args={[0.5, 6]} /> 
+      <mesh ref={meshRef} onPointerDown={handlePointerDown} castShadow>
+        {/* Using a more detailed Icosahedron for smoother dimples */}
+        <icosahedronGeometry args={[0.5, 8]} /> 
         <shaderMaterial
           ref={materialRef}
           vertexShader={vertexShader}
@@ -162,8 +164,7 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // We use useTexture here, but it's only for the logo decal, not the ball itself.
-    const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
+    const texture = (decal.type === 'logo' && decal.content) ? new THREE.TextureLoader().load(decal.content) : null;
 
     return (
         <DreiDecal
@@ -172,6 +173,7 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
+            {/* The decal material is separate from the ball itself */}
             <meshStandardMaterial
                 map={texture || undefined}
                 polygonOffset
@@ -179,7 +181,6 @@ function BallDecal({ decal, isActive, onClick }: {
                 transparent
                 roughness={0.6}
                 toneMapped={false}
-                // Add a border to active decal for better visibility
                 emissive={isActive ? '#00A3FF' : '#000000'}
                 emissiveIntensity={isActive ? 0.3 : 0}
             >
