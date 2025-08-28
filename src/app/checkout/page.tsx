@@ -106,6 +106,7 @@ export default function CheckoutPage() {
             setIsCitiesLoading(false);
         } else {
             setCities([]);
+            form.setValue('city', null);
         }
       }
       fetchCities();
@@ -123,13 +124,18 @@ export default function CheckoutPage() {
             const costs = await getShippingCost({
                 destination: selectedCityId,
                 weight: totalWeight,
-                courier: 'jne'
+                courier: 'jne' // Currently hardcoded to JNE
             });
+
+            // The API returns an array, the first element contains the costs
             const availableCosts = costs[0]?.costs || [];
             setShippingOptions(availableCosts);
+            
+            // Automatically select the first available shipping option
             if(availableCosts.length > 0) {
               setSelectedShipping(availableCosts[0])
             }
+
             setIsShippingLoading(false);
         } else {
             setShippingOptions([]);
@@ -138,6 +144,34 @@ export default function CheckoutPage() {
     }
     fetchShippingCost();
   }, [selectedCityId, totalWeight])
+
+
+  const useAddress = useCallback(async (addr: Address) => {
+    const provinceOption = provinces.find(p => p.label === addr.province) || null;
+    
+    // Set basic fields first
+    form.reset({
+        name: addr.name,
+        phone: addr.phone,
+        address: addr.fullAddress,
+        zip: addr.zip,
+        province: provinceOption,
+        city: null, // Reset city initially
+        saveAddress: false,
+    });
+
+    if (provinceOption) {
+        setIsCitiesLoading(true);
+        const cityData = await getCities(provinceOption.value);
+        const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
+        setCities(cityOptions);
+        setIsCitiesLoading(false);
+        
+        const cityOption = cityOptions.find(c => c.label === addr.city) || null;
+        // Set the city value after the options have been loaded
+        form.setValue('city', cityOption, { shouldValidate: true });
+    }
+  }, [provinces, form]);
 
 
   const loadSavedAddresses = useCallback(async () => {
@@ -150,42 +184,22 @@ export default function CheckoutPage() {
       setSavedAddresses(addressesList);
       const defaultAddress = addressesList.find(addr => addr.isDefault);
       if (defaultAddress) {
-        useAddress(defaultAddress);
+        await useAddress(defaultAddress);
       }
     } catch (error) {
       console.error("Failed to load addresses:", error);
       toast({ title: 'Error', description: 'Gagal memuat alamat tersimpan.', variant: 'destructive' });
     }
     setIsAddressLoading(false);
-  }, [user, toast, form]);
+  }, [user, toast, useAddress]);
+
 
   useEffect(() => {
-    if(user) {
+    if(user && provinces.length > 0) { // Ensure provinces are loaded before using addresses
       loadSavedAddresses();
     }
-  }, [user, loadSavedAddresses]);
+  }, [user, provinces, loadSavedAddresses]);
   
-  const useAddress = (addr: Address) => {
-    const provinceOption = provinces.find(p => p.label === addr.province) || null;
-    form.reset({
-        name: addr.name,
-        phone: addr.phone,
-        address: addr.fullAddress,
-        zip: addr.zip,
-        province: provinceOption,
-        saveAddress: false,
-    });
-    // Need to wait for cities to be loaded based on province
-    if(provinceOption){
-        getCities(provinceOption.value).then(cityData => {
-            const cities = cityData.map(c => ({ value: c.city_id, label: c.city_name }))
-            setCities(cities);
-            const cityOption = cities.find(c => c.label === addr.city) || null;
-            form.setValue('city', cityOption, { shouldValidate: true });
-        });
-    }
-  };
-
 
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + (selectedShipping?.cost[0].value || 0);
@@ -200,7 +214,6 @@ export default function CheckoutPage() {
         const addressesRef = collection(db, 'users', user.uid, 'addresses');
         const batch = writeBatch(db);
         
-        // If saving new address as default, unset other defaults
         const newAddressIsDefault = savedAddresses.length === 0;
         if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
             savedAddresses.forEach(addr => {
@@ -211,8 +224,9 @@ export default function CheckoutPage() {
             })
         }
         
-        const newAddressId = doc(addressesRef).id;
+        const newAddressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
         const newAddressRef = doc(addressesRef, newAddressId);
+        
         const newAddress: Address = { 
             id: newAddressId,
             name: data.name,
@@ -243,7 +257,7 @@ export default function CheckoutPage() {
     clearCart();
     router.push('/');
   };
-  
+
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
@@ -379,7 +393,7 @@ export default function CheckoutPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Ringkasan Pesanan</CardTitle>
-              </CardHeader>
+              </Header>
               <CardContent>
                 {isSameDayEligible(totalQuantity) && (
                     <Badge variant="secondary" className="mb-4 bg-green-100 text-green-800 border-green-300">
