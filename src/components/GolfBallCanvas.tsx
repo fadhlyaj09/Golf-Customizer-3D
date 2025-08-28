@@ -17,15 +17,7 @@ interface GolfBallCanvasProps {
 
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
-  
-  // Ini adalah cara yang benar dan stabil untuk membuat lesung pipit.
-  // 'useTexture' memuat gambar dari folder /public
-  const normalMap = useTexture('/textures/golf_ball_normal.jpg');
-
-  // Mengatur tiling tekstur agar lesung pipitnya berulang di seluruh permukaan
-  normalMap.wrapS = THREE.RepeatWrapping;
-  normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(6, 6); // Menaikkan jumlah lesung pipit
+  const [normalMap] = useTexture(['https://threejs.org/examples/textures/golf.jpg']);
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -37,30 +29,28 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
     e.stopPropagation();
     setActiveDecalId(null);
   };
+  
+  // Ensure the texture repeats across the surface
+  normalMap.wrapS = THREE.RepeatWrapping;
+  normalMap.wrapT = THREE.RepeatWrapping;
+  normalMap.repeat.set(8, 8);
+
 
   return (
     <>
       <ambientLight intensity={1.5} />
       <directionalLight 
         position={[5, 5, 5]} 
-        intensity={2.5}
-        castShadow 
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-       <directionalLight 
-        position={[-5, -5, -5]} 
-        intensity={0.8}
+        intensity={1.0}
+        castShadow
       />
       
       <mesh ref={meshRef} onPointerDown={handlePointerDown} castShadow receiveShadow>
-        {/* Menggunakan sphereGeometry yang lebih sederhana dan stabil */}
-        <sphereGeometry args={[0.5, 64, 64]} /> 
-        {/* Menghapus shader yang rusak dan menggunakan material standar dengan normalMap */}
+        <sphereGeometry args={[0.5, 64, 64]} />
         <meshStandardMaterial
           color={ballColor}
           normalMap={normalMap}
-          normalScale={new THREE.Vector2(0.05, 0.05)} // Menyesuaikan kedalaman lesung
+          normalScale={new THREE.Vector2(0.3, 0.3)}
           roughness={0.4}
           metalness={0.1}
         />
