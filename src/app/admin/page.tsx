@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlusCircle, MoreHorizontal, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Edit, ShoppingBag } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { deleteProduct } from '@/actions/productActions';
 import BannerEditor from '@/components/BannerEditor';
@@ -34,8 +34,14 @@ export default async function AdminPage() {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                    <p className="text-muted-foreground">Manage your website's products and content.</p>
+                    <p className="text-muted-foreground">Manage your website's content, products, and orders.</p>
                 </div>
+                 <Button asChild>
+                    <Link href="/admin/orders">
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        View Orders
+                    </Link>
+                </Button>
             </div>
 
             <div className="grid gap-8">

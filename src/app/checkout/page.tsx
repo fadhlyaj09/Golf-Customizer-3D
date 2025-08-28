@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Select from 'react-select';
 import { getCities, getProvinces, getShippingCost } from '@/actions/shippingActions';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { saveOrderToSheet } from '@/ai/flows/save-order-to-sheet';
 
 
 const checkoutSchema = z.object({
@@ -161,9 +162,9 @@ export default function CheckoutPage() {
         address: addr.fullAddress,
         zip: addr.zip,
         province: provinceOption,
-        city: null, // Set to null initially, will be populated after cities are fetched
-        saveAddress: false, // Don't re-save an existing address by default
-        paymentMethod: form.getValues('paymentMethod'), // Keep the selected payment method
+        city: null,
+        saveAddress: false,
+        paymentMethod: form.getValues('paymentMethod'),
     });
 
     if (provinceOption) {
@@ -172,12 +173,11 @@ export default function CheckoutPage() {
         const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
         setCities(cityOptions);
         
-        // Find the matching city option from the fetched list
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
         
-        // **THE FIX**: Set the city value and immediately trigger validation
+        // This is the key fix: set value and trigger validation
         if (cityOption) {
-            form.setValue('city', cityOption, { shouldValidate: true });
+             form.setValue('city', cityOption, { shouldValidate: true });
         }
         
         setIsCitiesLoading(false);
@@ -206,7 +206,7 @@ export default function CheckoutPage() {
 
 
   useEffect(() => {
-    if(user && provinces.length > 0) { // Ensure provinces are loaded before using addresses
+    if(user && provinces.length > 0) {
       loadSavedAddresses();
     }
   }, [user, provinces, loadSavedAddresses]);
@@ -232,7 +232,6 @@ export default function CheckoutPage() {
         const addressesRef = collection(db, 'users', user.uid, 'addresses');
         const batch = writeBatch(db);
         
-        // If this new address should be default, un-default any existing ones.
         const newAddressIsDefault = savedAddresses.length === 0;
         if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
             savedAddresses.forEach(addr => {
@@ -261,7 +260,7 @@ export default function CheckoutPage() {
             batch.set(newAddressRef, newAddress);
             await batch.commit();
             toast({ title: 'Sukses', description: 'Alamat baru berhasil disimpan.' });
-            setSavedAddresses(prev => [...prev, newAddress]); // Update local state
+            setSavedAddresses(prev => [...prev, newAddress]);
         } catch(e) {
             console.error("Error saving address", e);
             toast({ title: 'Error', description: 'Gagal menyimpan alamat baru.', variant: 'destructive' });
@@ -304,9 +303,21 @@ export default function CheckoutPage() {
     
     try {
         await setDoc(doc(db, 'orders', orderId), orderData);
+
+        // Call Genkit flow to save to Google Sheets (don't block UI)
+        saveOrderToSheet(orderData).then(result => {
+          if (result.success) {
+            console.log('Order successfully saved to Google Sheet');
+          } else {
+            console.error('Failed to save order to Google Sheet:', result.error);
+          }
+        }).catch(error => {
+          console.error('Error calling saveOrderToSheet flow:', error);
+        });
+
         setOrderDetails(orderData);
         setOrderComplete(true);
-        clearCart(); // Clear selected items from cart
+        clearCart();
     } catch(e) {
         console.error("Error saving order:", e);
         toast({ title: 'Error', description: 'Gagal menyimpan pesanan. Silakan coba lagi.', variant: 'destructive' });
@@ -580,5 +591,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    

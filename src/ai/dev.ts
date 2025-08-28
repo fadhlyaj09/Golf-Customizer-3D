@@ -2,4 +2,4 @@ import { config } from 'dotenv';
 config();
 
 import '@/ai/flows/realistic-lighting-simulation.ts';
-// import '@/ai/flows/shipping-flow.ts'; // Temporarily disabled
+import '@/ai/flows/save-order-to-sheet.ts';
