@@ -17,8 +17,8 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  // A public domain normal map texture for golf ball dimples
-  const normalMap = useTexture('https://picsum.photos/1024/1024?grayscale');
+  // A high-quality, public domain normal map texture for golf ball dimples
+  const normalMap = useTexture('https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png');
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -40,8 +40,8 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
         <sphereGeometry args={[0.5, 64, 64]} />
         <meshStandardMaterial 
             color={ballColor} 
-            roughness={0.1} 
-            metalness={0.2}
+            roughness={0.4} 
+            metalness={0.1}
             normalMap={normalMap}
             normalMap-encoding={THREE.LinearEncoding}
          />
@@ -67,21 +67,20 @@ function BallDecal({ decal, isActive, onClick }: {
 }) {
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
-    return (
-        <DreiDecal
-            position={decal.position}
-            rotation={decal.rotation}
-            scale={decal.scale}
-            onPointerDown={(e) => { e.stopPropagation(); onClick();}}
-        >
-            <meshStandardMaterial
-                map={decal.type === 'logo' ? texture : undefined}
-                polygonOffset
-                polygonOffsetFactor={-10}
-                transparent
-                map-anisotropy={16}
+    if (decal.type === 'text' && decal.content) {
+        return (
+             <DreiDecal
+                position={decal.position}
+                rotation={decal.rotation}
+                scale={decal.scale}
+                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
             >
-                {decal.type === 'text' && decal.content && (
+                {/* Text is rendered inside a transparent material decal */}
+                <meshStandardMaterial
+                    polygonOffset
+                    polygonOffsetFactor={-20} // Push text forward to prevent z-fighting
+                    transparent
+                >
                     <Text
                         fontSize={0.25}
                         color={decal.color}
@@ -90,10 +89,31 @@ function BallDecal({ decal, isActive, onClick }: {
                     >
                         {decal.content}
                     </Text>
-                )}
-            </meshStandardMaterial>
-        </DreiDecal>
-    );
+                </meshStandardMaterial>
+            </DreiDecal>
+        )
+    }
+    
+    if (decal.type === 'logo' && texture) {
+        return (
+            <DreiDecal
+                position={decal.position}
+                rotation={decal.rotation}
+                scale={decal.scale}
+                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
+            >
+                <meshStandardMaterial
+                    map={texture}
+                    polygonOffset
+                    polygonOffsetFactor={-10}
+                    transparent
+                    map-anisotropy={16}
+                />
+            </DreiDecal>
+        );
+    }
+    
+    return null;
 }
 
 export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
