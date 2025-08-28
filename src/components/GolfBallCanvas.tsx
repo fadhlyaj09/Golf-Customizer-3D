@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, Suspense, useMemo } from 'react';
@@ -17,17 +18,13 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  // Load the normal map texture from the public directory.
-  // This is the most reliable way to avoid CORS and loading issues.
   const normalMap = useTexture('/textures/golf_ball_normal.jpg');
 
-  // Ensure the texture repeats correctly over the sphere
   normalMap.wrapS = THREE.RepeatWrapping;
   normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(4, 4); // Adjust this value to control dimple density
+  normalMap.repeat.set(4, 4); 
 
   useFrame((state, delta) => {
-    // Optional: Add a slow rotation for presentation
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.1;
     }
@@ -58,7 +55,7 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
         <meshStandardMaterial
           color={ballColor}
           normalMap={normalMap}
-          normalScale={new THREE.Vector2(0.3, 0.3)} // Adjust the strength of the dimples
+          normalScale={new THREE.Vector2(0.3, 0.3)}
           roughness={0.4}
           metalness={0.1}
         />
@@ -78,18 +75,56 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
   );
 }
 
-
+// Parent Decal Component for conditional rendering
 function BallDecal({ decal, isActive, onClick }: { 
     decal: Decal; 
     isActive: boolean;
     onClick: () => void;
 }) {
-    const texture = useMemo(() => {
-        if (decal.type === 'logo' && decal.content) {
-            return new THREE.TextureLoader().load(decal.content);
-        }
-        return null;
-    }, [decal.type, decal.content]);
+    if (decal.type === 'logo') {
+        return <LogoDecal decal={decal} isActive={isActive} onClick={onClick} />;
+    }
+    return <TextDecal decal={decal} isActive={isActive} onClick={onClick} />;
+}
+
+// Specific component for rendering Text decals
+function TextDecal({ decal, isActive, onClick }: { decal: Decal; isActive: boolean; onClick: () => void; }) {
+    return (
+        <DreiDecal
+            position={decal.position}
+            rotation={decal.rotation}
+            scale={decal.scale}
+            onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
+        >
+            <meshStandardMaterial
+                polygonOffset
+                polygonOffsetFactor={-10}
+                transparent
+                roughness={0.6}
+                toneMapped={false}
+                emissive={isActive ? '#00A3FF' : '#000000'}
+                emissiveIntensity={isActive ? 0.3 : 0}
+            >
+                <Text
+                    fontSize={0.25}
+                    color={decal.color || '#000000'}
+                    anchorX="center"
+                    anchorY="middle"
+                    maxWidth={1}
+                    textAlign='center'
+                >
+                    {decal.content}
+                </Text>
+            </meshStandardMaterial>
+        </DreiDecal>
+    );
+}
+
+// Specific component for rendering Logo decals, ensuring useTexture is not called conditionally
+function LogoDecal({ decal, isActive, onClick }: { decal: Decal; isActive: boolean; onClick: () => void; }) {
+    const texture = useTexture(decal.content || ''); // useTexture is now called unconditionally
+
+    if (!decal.content) return null;
 
     return (
         <DreiDecal
@@ -98,33 +133,20 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
-            {/* The material for the decal */}
             <meshStandardMaterial
+                map={texture}
                 polygonOffset
-                polygonOffsetFactor={-10} // Prevents z-fighting
+                polygonOffsetFactor={-10}
                 transparent
                 roughness={0.6}
                 toneMapped={false}
-                map={texture}
                 emissive={isActive ? '#00A3FF' : '#000000'}
                 emissiveIntensity={isActive ? 0.3 : 0}
-            >
-                {decal.type === 'text' && decal.content && (
-                     <Text
-                        fontSize={0.25}
-                        color={decal.color || '#000000'}
-                        anchorX="center"
-                        anchorY="middle"
-                        maxWidth={1}
-                        textAlign='center'
-                    >
-                        {decal.content}
-                    </Text>
-                )}
-            </meshStandardMaterial>
+            />
         </DreiDecal>
     );
 }
+
 
 export function GolfBallCanvas(props: GolfBallCanvasProps) {
   return (
