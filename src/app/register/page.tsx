@@ -50,26 +50,24 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            // Step 1: Create user in Firebase Auth.
+            // Step 1: Create user in Firebase Auth. This is the primary operation.
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             
             // Step 2: Update the user's profile immediately.
             const displayName = `${data.firstName} ${data.lastName}`;
             await updateProfile(userCredential.user, { displayName });
             
-            // Step 3: Asynchronously save data to Google Sheet without blocking the UI.
+            // Step 3 (Secondary operation): Asynchronously save data to Google Sheet.
+            // This is "fire and forget". We don't wait for its result or handle its errors here.
+            // This ensures that if the Sheets API fails, the user's registration is still successful.
             saveNewUser({
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
                 phone: data.phone,
-            }).then(sheetResult => {
-                if (!sheetResult.success) {
-                    // Log the error, but don't bother the user since registration was successful.
-                    console.error("Could not save to Google Sheet:", sheetResult.message);
-                }
             });
             
+            // From the user's perspective, registration is now complete.
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
 
