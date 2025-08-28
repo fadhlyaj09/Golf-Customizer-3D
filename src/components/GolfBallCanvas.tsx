@@ -17,7 +17,16 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  const normalMap = useTexture('https://threejs.org/examples/textures/normal_map.png');
+  // By passing a function to the loader, we can configure it.
+  // Setting crossOrigin to 'anonymous' is crucial for loading textures from other domains.
+  const [normalMap] = useTexture(['https://threejs.org/examples/textures/normal_map.png'], (loader) => {
+    if (Array.isArray(loader)) {
+      loader.forEach(l => l.setCrossOrigin('anonymous'));
+    } else {
+      (loader as THREE.TextureLoader).setCrossOrigin('anonymous');
+    }
+  });
+
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -64,22 +73,25 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
+    // The useTexture hook can also be configured for CORS here if needed,
+    // but we'll assume the logo comes from a data URI, which doesn't have CORS issues.
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
-    if (decal.type === 'text' && decal.content) {
-        return (
-             <DreiDecal
-                position={decal.position}
-                rotation={decal.rotation}
-                scale={decal.scale}
-                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
+    return (
+        <DreiDecal
+            position={decal.position}
+            rotation={decal.rotation}
+            scale={decal.scale}
+            onPointerDown={(e) => { e.stopPropagation(); onClick();}}
+        >
+            <meshStandardMaterial
+                map={texture || undefined}
+                polygonOffset
+                polygonOffsetFactor={-10}
+                transparent
+                map-anisotropy={16}
             >
-                {/* Text is rendered inside a transparent material decal */}
-                <meshStandardMaterial
-                    polygonOffset
-                    polygonOffsetFactor={-20} // Push text forward to prevent z-fighting
-                    transparent
-                >
+                {decal.type === 'text' && decal.content && (
                     <Text
                         fontSize={0.25}
                         color={decal.color}
@@ -88,31 +100,10 @@ function BallDecal({ decal, isActive, onClick }: {
                     >
                         {decal.content}
                     </Text>
-                </meshStandardMaterial>
-            </DreiDecal>
-        )
-    }
-    
-    if (decal.type === 'logo' && texture) {
-        return (
-            <DreiDecal
-                position={decal.position}
-                rotation={decal.rotation}
-                scale={decal.scale}
-                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
-            >
-                <meshStandardMaterial
-                    map={texture}
-                    polygonOffset
-                    polygonOffsetFactor={-10}
-                    transparent
-                    map-anisotropy={16}
-                />
-            </DreiDecal>
-        );
-    }
-    
-    return null;
+                )}
+            </meshStandardMaterial>
+        </DreiDecal>
+    );
 }
 
 export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
