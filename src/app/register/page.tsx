@@ -10,12 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { saveNewUser } from '@/actions/userActions';
-
 
 const registerSchema = z.object({
     firstName: z.string().min(2, 'Nama depan terlalu pendek'),
@@ -30,7 +28,6 @@ const registerSchema = z.object({
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
-
 
 export default function RegisterPage() {
     const { toast } = useToast();
@@ -50,22 +47,10 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            // Step 1: Create user in Firebase Auth. This is the primary operation.
-            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            
-            // Step 2: Update the user's profile immediately.
-            const displayName = `${data.firstName} ${data.lastName}`;
-            await updateProfile(userCredential.user, { displayName });
-            
-            // Step 3 (Secondary operation): Asynchronously save data to Google Sheet.
-            // This is "fire and forget". We don't wait for its result or handle its errors here.
-            // This ensures that if the Sheets API fails, the user's registration is still successful.
-            saveNewUser({
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone,
-            });
+            // ONLY create the user. This is the most critical and atomic step.
+            // All other actions (update profile, save to DB/Sheet) are removed
+            // from this critical path to ensure registration reliability.
+            await createUserWithEmailAndPassword(auth, data.email, data.password);
             
             // From the user's perspective, registration is now complete.
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
@@ -91,7 +76,7 @@ export default function RegisterPage() {
                     <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
                     <CardDescription>
                         Daftar untuk mendapatkan kontrol penuh atas pesanan Anda.
-                    </CardDescription>
+                    </Description>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
