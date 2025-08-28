@@ -63,7 +63,7 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                         <div className="aspect-[16/9] w-full bg-muted">
                              <Image
-                                src="https://picsum.photos/800/450?random=99"
+                                src="https://storage.googleapis.com/articogolf-assets/special-offer-1.jpg"
                                 alt="Color Matte Edition Golf Balls"
                                 data-ai-hint="colorful golfball"
                                 width={800}
