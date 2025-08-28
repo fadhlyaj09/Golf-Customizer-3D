@@ -24,7 +24,7 @@ export default async function Home() {
     <div className="flex flex-col bg-background">
       <section className="relative h-[70vh] w-full text-black sm:h-[80vh]">
           <Image
-              src={imageUrl || "https://storage.googleapis.com/articogolf-assets/hero-banner.jpg"}
+              src={imageUrl || "/images/hero-banner.jpg"}
               alt="Aesthetic golf course"
               data-ai-hint="golf course landscape"
               fill
@@ -63,7 +63,7 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                         <div className="aspect-[16/9] w-full bg-muted">
                              <Image
-                                src="https://storage.googleapis.com/articogolf-assets/special-offer-1.jpg"
+                                src="/images/special-offer-1.jpg"
                                 alt="Color Matte Edition Golf Balls"
                                 data-ai-hint="colorful golfball"
                                 width={800}
@@ -83,7 +83,7 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                        <div className="aspect-[16/9] w-full bg-muted">
                             <Image
-                                src="https://storage.googleapis.com/articogolf-assets/special-offer-2.jpg"
+                                src="/images/special-offer-2.jpg"
                                 alt="Custom Logo Golf Balls"
                                 data-ai-hint="golfball logo"
                                 width={800}
