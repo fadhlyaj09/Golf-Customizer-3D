@@ -17,8 +17,8 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  // A free normal map texture for golf ball dimples
-  const normalMap = useTexture('https://storage.googleapis.com/studioprod-bucket/cb5c8297-c1d4-4b53-939a-5f33336f78e4.jpg');
+  // A public domain normal map texture for golf ball dimples
+  const normalMap = useTexture('https://picsum.photos/1024/1024?grayscale');
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -65,7 +65,6 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // Only load texture if it's a logo and has content
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
@@ -75,13 +74,14 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick();}}
         >
-            {decal.type === 'text' && decal.content ? (
-                // For text, we render a transparent material with Text on top
-                 <meshStandardMaterial
-                    polygonOffset
-                    polygonOffsetFactor={-10}
-                    transparent
-                >
+            <meshStandardMaterial
+                map={decal.type === 'logo' ? texture : undefined}
+                polygonOffset
+                polygonOffsetFactor={-10}
+                transparent
+                map-anisotropy={16}
+            >
+                {decal.type === 'text' && decal.content && (
                     <Text
                         fontSize={0.25}
                         color={decal.color}
@@ -90,17 +90,8 @@ function BallDecal({ decal, isActive, onClick }: {
                     >
                         {decal.content}
                     </Text>
-                </meshStandardMaterial>
-            ) : decal.type === 'logo' && texture ? (
-                // For logos, we use the loaded texture
-                <meshStandardMaterial
-                    map={texture}
-                    polygonOffset
-                    polygonOffsetFactor={-10}
-                    transparent
-                    map-anisotropy={16}
-                />
-            ) : null}
+                )}
+            </meshStandardMaterial>
         </DreiDecal>
     );
 }
