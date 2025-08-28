@@ -8,13 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -36,6 +31,11 @@ const textColors = [
     { name: 'Green', value: '#008000'},
 ];
 
+const decalPositions = [
+    { position: new Vector3(0, 0, 0.5), rotation: new Euler(0, 0, 0) }, // Front
+    { position: new Vector3(0, 0, -0.5), rotation: new Euler(0, Math.PI, 0) } // Back
+]
+
 export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -47,16 +47,17 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     printSides: 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
+    color: undefined,
   });
   const [totalPrice, setTotalPrice] = useState(0);
   
   useEffect(() => {
     if (product) {
-      setCustomization(prev => ({
-        ...prev,
-        color: product.colors && product.colors.length > 0 ? product.colors[0] : undefined,
-      }));
-      setTotalPrice(product.basePrice || 0);
+        setCustomization(prev => ({
+            ...prev,
+            color: product.colors && product.colors.length > 0 ? product.colors[0] : undefined,
+        }));
+        setTotalPrice(product.basePrice || 0);
     }
   }, [product]);
 
@@ -65,31 +66,44 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   useEffect(() => {
-    if (!product || !decals) return; 
+    if (!product) return; 
 
     let finalPrice = product.basePrice || 0;
     
-    if (!product.isFloater && decals.length > 0) {
-        const pricePerSide = 25000 + (decals.length - 1) * 15000;
-        finalPrice += pricePerSide;
+    if (!product.isFloater) {
+        if (customization.printSides === 1) {
+            finalPrice += 25000;
+        } else if (customization.printSides === 2) {
+            finalPrice += 40000; // 25000 for 1st side + 15000 for 2nd
+        }
     }
 
     setTotalPrice(finalPrice * quantity);
-  }, [decals, quantity, product]);
+  }, [customization.printSides, quantity, product]);
 
 
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
     setCustomization((prev) => ({ ...prev, color: selectedColor }));
   };
+
+  const handlePrintSideChange = (value: string) => {
+    const sides = parseInt(value, 10);
+    setCustomization(prev => ({...prev, printSides: sides as 0 | 1 | 2 }));
+    
+    // Trim decals if user reduces print sides
+    setDecals(prev => prev.slice(0, sides));
+    setActiveDecalId(null);
+  }
   
   const handleAddDecal = (type: 'logo' | 'text') => {
+    if (decals.length >= customization.printSides) return;
+
     const newDecal: Decal = {
       id: MathUtils.generateUUID(),
       type: type,
-      content: type === 'text' ? 'Your Text' : '', // Placeholder for text, empty for logo until uploaded
-      position: new Vector3(0, 0, 0.5), // Default position on the front
-      rotation: new Euler(0,0,0),
+      content: type === 'text' ? 'Your Text' : '', 
+      ...decalPositions[decals.length], // Assign position based on order
       scale: 0.15,
       font: 'Inter',
       color: '#000000',
@@ -116,6 +130,8 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   };
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+     if (decals.length >= customization.printSides) return;
+
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -125,8 +141,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
           id: MathUtils.generateUUID(),
           type: 'logo',
           content: result,
-          position: new Vector3(0, 0, 0.5),
-          rotation: new Euler(0,0,0),
+          ...decalPositions[decals.length],
           scale: 0.15,
         };
         setDecals(prev => [...prev, newDecal]);
@@ -146,12 +161,8 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     
     const finalCustomization: Customization = {
         ...customization,
-        printSides: decals.length > 0 ? (decals.length > 1 ? 2 : 1) : 0,
-        side1: { 
-            type: decals.find(d => d.type === 'logo')?.type || 'none',
-            content: decals.find(d => d.type === 'logo')?.content || ''
-        },
-        side2: { type: 'none', content: ''}, // simplified for now
+        side1: decals[0] ? { type: decals[0].type, content: decals[0].content, font: decals[0].font, color: decals[0].color } : { type: 'none', content: '' },
+        side2: decals[1] ? { type: decals[1].type, content: decals[1].content, font: decals[1].font, color: decals[1].color } : { type: 'none', content: '' },
     };
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
     router.push('/cart');
@@ -198,6 +209,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             <div className="flex flex-col gap-4">
                 <Separator />
                 <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
+                
                 {product.colors && product.colors.length > 0 && (
                 <div className="flex flex-col gap-3">
                     <Label className="text-base font-medium">Warna Bola</Label>
@@ -220,23 +232,53 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 )}
                 
                 <div className="flex flex-col gap-3">
-                    <Label className="text-base font-medium">Tambah Desain</Label>
-                     <div className="grid grid-cols-2 gap-4">
-                        <Button onClick={() => handleAddDecal('text')} variant="outline"><Type className='mr-2'/> Tambah Teks</Button>
-                        <Button onClick={() => handleAddDecal('logo')} variant="outline"><ImageIcon className='mr-2'/> Tambah Logo</Button>
-                     </div>
-                     <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
+                    <Label className="text-base font-medium">Jumlah Sisi Print</Label>
+                    <RadioGroup 
+                        value={String(customization.printSides)} 
+                        onValueChange={handlePrintSideChange} 
+                        className="grid grid-cols-3 gap-4"
+                    >
+                        <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                            <RadioGroupItem value="0" id="print-0" className="sr-only" />
+                            Tanpa Print
+                            <span className="font-normal text-muted-foreground text-xs mt-1">Rp 0</span>
+                        </Label>
+                        <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                             <RadioGroupItem value="1" id="print-1" className="sr-only" />
+                            1 Sisi
+                            <span className="font-normal text-muted-foreground text-xs mt-1">+ Rp 25.000</span>
+                        </Label>
+                        <Label className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                            <RadioGroupItem value="2" id="print-2" className="sr-only" />
+                            2 Sisi
+                            <span className="font-normal text-muted-foreground text-xs mt-1">+ Rp 40.000</span>
+                        </Label>
+                    </RadioGroup>
                 </div>
+                
+                {customization.printSides > 0 && (
+                    <div className="flex flex-col gap-3">
+                        <Label className="text-base font-medium">Desain Anda</Label>
+                        {decals.length < customization.printSides && (
+                         <div className="grid grid-cols-2 gap-4">
+                            <Button onClick={() => handleAddDecal('text')} variant="outline"><Type className='mr-2'/> Tambah Teks</Button>
+                            <Button onClick={() => handleAddDecal('logo')} variant="outline"><ImageIcon className='mr-2'/> Tambah Logo</Button>
+                         </div>
+                        )}
+                         <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
+                    </div>
+                )}
+
 
                 {decals.length > 0 && (
                     <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/20">
-                        <Label>Daftar Desain</Label>
+                        <Label>Daftar Desain ({decals.length}/{customization.printSides})</Label>
                         <div className="flex flex-col gap-2">
                         {decals.map((decal, index) => (
                             <div key={decal.id} 
                                  className={`p-2 border rounded-lg flex justify-between items-center cursor-pointer ${activeDecalId === decal.id ? 'border-primary bg-primary/10' : 'bg-background'}`}
                                  onClick={() => setActiveDecalId(decal.id)}>
-                                <span>{decal.type === 'logo' ? `Logo ${index + 1}` : `Teks: "${decal.content}"`}</span>
+                                <span>{`Sisi ${index + 1}: ${decal.type === 'logo' ? 'Logo' : `Teks "${decal.content}"`}`}</span>
                                 <Button size="icon" variant="ghost" className='h-7 w-7' onClick={(e) => { e.stopPropagation(); handleRemoveDecal(decal.id); }}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -309,3 +351,4 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     </div>
   );
 }
+

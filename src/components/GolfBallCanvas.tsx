@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Canvas } from '@react-three/fiber';
@@ -82,7 +83,7 @@ function BallDecal({ decal, isActive, onClick }: {
                   <Text
                       fontSize={0.5}
                       color={decal.color}
-                      font="sans-serif"
+                      font={decal.font || 'sans-serif'}
                       anchorX="center"
                       anchorY="middle"
                   >
