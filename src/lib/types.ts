@@ -41,8 +41,8 @@ export interface Address {
     name: string;
     phone: string;
     fullAddress: string;
-    province?: string; // Made optional
-    city?: string; // Made optional
+    province: string;
+    city: string;
     zip: string;
     isDefault?: boolean;
 }
@@ -64,7 +64,7 @@ export interface Decal {
   color?: string;
 }
 
-// Types for disabled shipping flow
+// Types for shipping flow
 export interface Province {
     province_id: string;
     province: string;

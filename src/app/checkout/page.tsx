@@ -10,27 +10,30 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Sparkles, Truck } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useTransition } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
-import type { Address } from '@/lib/types';
+import type { Address, City, Province, ShippingCost } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import type { ShippingCost } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
+import Select from 'react-select';
+import { getCities, getProvinces, getShippingCost } from '@/actions/shippingActions';
 
 
 const checkoutSchema = z.object({
   name: z.string().min(2, 'Name is too short'),
   phone: z.string().min(10, 'Invalid phone number'),
+  province: z.object({ value: z.string(), label: z.string() }).nullable(),
+  city: z.object({ value: z.string(), label: z.string() }).nullable(),
   address: z.string().min(10, 'Address is too short'),
   zip: z.string().min(5, 'Invalid ZIP code'),
   saveAddress: z.boolean().default(false),
@@ -57,17 +60,20 @@ export default function CheckoutPage() {
   const selectedItems = cart.filter(item => item.selected);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>({
-      service: 'REG',
-      description: 'Layanan Reguler',
-      cost: [{ value: 20000, etd: '2-3', note: '' }]
-  });
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [isCitiesLoading, setIsCitiesLoading] = useState(false);
+  
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [isShippingLoading, setIsShippingLoading] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       name: '', phone: '', address: '', zip: '',
+      province: null, city: null,
       saveAddress: true,
     }
   });
@@ -83,6 +89,49 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [user, userLoading, router, cart.length, selectedItems.length, toast]);
+
+  useEffect(() => {
+    getProvinces().then(setProvinces);
+  }, [])
+  
+  const selectedProvinceId = form.watch('province')?.value;
+  useEffect(() => {
+    if (selectedProvinceId) {
+      setIsCitiesLoading(true);
+      setCities([]);
+      form.setValue('city', null);
+      getCities(selectedProvinceId).then(res => {
+          setCities(res);
+          setIsCitiesLoading(false);
+      });
+    } else {
+        setCities([]);
+    }
+  }, [selectedProvinceId, form]);
+
+  const selectedCityId = form.watch('city')?.value;
+  useEffect(() => {
+    const fetchShippingCost = async () => {
+        if(selectedCityId && totalWeight > 0) {
+            setIsShippingLoading(true);
+            setShippingOptions([]);
+            setSelectedShipping(null);
+            const costs = await getShippingCost({
+                destination: selectedCityId,
+                weight: totalWeight,
+                courier: 'jne'
+            });
+            setShippingOptions(costs[0]?.costs || []);
+            // auto select first option
+            if(costs[0]?.costs.length > 0) {
+              setSelectedShipping(costs[0].costs[0])
+            }
+            setIsShippingLoading(false);
+        }
+    }
+    fetchShippingCost();
+  }, [selectedCityId, totalQuantity])
+
 
   const loadSavedAddresses = useCallback(async () => {
     if (!user) return;
@@ -119,19 +168,21 @@ export default function CheckoutPage() {
   const total = subtotal + (selectedShipping?.cost[0].value || 0);
 
   const onSubmit = async (data: CheckoutFormValues) => {
-    if (!user || !selectedShipping) {
-        toast({ title: 'Error', description: 'Informasi tidak lengkap.', variant: 'destructive' });
+    if (!user || !selectedShipping || !data.city) {
+        toast({ title: 'Error', description: 'Harap lengkapi alamat dan pilih opsi pengiriman.', variant: 'destructive' });
         return;
     }
 
     if(data.saveAddress) {
         const addressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
         const addressRef = doc(db, 'users', user.uid, 'addresses', addressId);
-        const newAddress: Omit<Address, 'province' | 'city'> = { // Province and city are removed
+        const newAddress: Address = { 
             id: addressId,
             name: data.name,
             phone: data.phone,
             fullAddress: data.address,
+            province: data.province!.label,
+            city: data.city!.label,
             zip: data.zip,
             isDefault: savedAddresses.length === 0,
         };
@@ -152,7 +203,7 @@ export default function CheckoutPage() {
     clearCart();
     router.push('/');
   };
-
+  
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
@@ -202,6 +253,42 @@ export default function CheckoutPage() {
                         <FormItem><FormLabel>Kode Pos</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                     <Controller
+                        name="province"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Provinsi</FormLabel>
+                                <Select
+                                    {...field}
+                                    placeholder="Pilih Provinsi"
+                                    options={provinces.map(p => ({ value: p.province_id, label: p.province }))}
+                                    isClearable
+                                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <Controller
+                        name="city"
+                        control={form.control}
+                        render={({ field }) => (
+                             <FormItem>
+                                <FormLabel>Kota/Kabupaten</FormLabel>
+                                <Select
+                                    {...field}
+                                    placeholder="Pilih Kota"
+                                    options={cities.map(c => ({ value: c.city_id, label: c.city_name }))}
+                                    isClearable
+                                    isLoading={isCitiesLoading}
+                                    isDisabled={!selectedProvinceId || isCitiesLoading}
+                                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem><FormLabel>Alamat Lengkap</FormLabel><FormControl><Textarea {...field} placeholder="Nama jalan, nomor rumah, kelurahan, kecamatan..." /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -228,16 +315,20 @@ export default function CheckoutPage() {
                 
                 <h3 className="text-lg font-semibold pt-4 border-t">Opsi Pengiriman</h3>
                  <div className="flex flex-col gap-2">
-                    <div className={cn(
-                        "flex justify-between items-center p-3 border rounded-lg",
-                        "border-primary ring-2 ring-primary"
-                    )}>
-                        <div>
-                            <p className="font-semibold">{selectedShipping?.service} ({selectedShipping?.description})</p>
-                            <p className="text-sm text-muted-foreground">Estimasi {selectedShipping?.cost[0].etd} hari</p>
+                    {isShippingLoading && <div className='flex items-center gap-2'><Loader2 className="h-4 w-4 animate-spin" /><span>Menghitung ongkir...</span></div>}
+                    {!isShippingLoading && shippingOptions.length === 0 && selectedCityId && <p className='text-sm text-muted-foreground'>Tidak ada opsi pengiriman untuk tujuan ini.</p>}
+                    {!isShippingLoading && shippingOptions.map((opt: ShippingCost) => (
+                         <div key={opt.service} onClick={() => setSelectedShipping(opt)} className={cn(
+                            "flex justify-between items-center p-3 border rounded-lg cursor-pointer",
+                            selectedShipping?.service === opt.service ? "border-primary ring-2 ring-primary" : "hover:border-slate-400"
+                        )}>
+                            <div>
+                                <p className="font-semibold">{opt.service} ({opt.description})</p>
+                                <p className="text-sm text-muted-foreground">Estimasi {opt.cost[0].etd} hari</p>
+                            </div>
+                            <p className="font-bold">{formatRupiah(opt.cost[0].value || 0)}</p>
                         </div>
-                        <p className="font-bold">{formatRupiah(selectedShipping?.cost[0].value || 0)}</p>
-                    </div>
+                    ))}
                 </div>
             </CardContent>
           </Card>
