@@ -254,7 +254,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-      <div className="flex flex-col items-center gap-4 sticky top-24 h-[calc(100vh-8rem)] min-h-[300px] lg:h-auto lg:min-h-[500px]">
+      <div className="lg:sticky top-24 relative flex h-[50vh] min-h-[300px] w-full items-center justify-center lg:h-auto lg:min-h-[500px]">
          <GolfBallCanvas 
             ballColor={customization.color?.hex || '#ffffff'}
             decals={decals}
@@ -298,15 +298,19 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                         onValueChange={(value) => setCustomization(prev => ({...prev, packaging: value as 'box' | 'mesh' }))}
                         className="grid grid-cols-2 gap-4"
                     >
-                        <Label className="flex items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                        <Label className="flex flex-row items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
                             <RadioGroupItem value="box" id="pkg-box" />
-                            <Package className="h-5 w-5" />
-                            <span>Box Premium</span>
+                            <div className='flex items-center gap-2'>
+                               <Package className="h-5 w-5" />
+                               <span>Box Premium</span>
+                            </div>
                         </Label>
-                        <Label className="flex items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                        <Label className="flex flex-row items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
                              <RadioGroupItem value="mesh" id="pkg-mesh" />
-                             <Package className="h-5 w-5" />
-                            <span>Mesh Bag</span>
+                              <div className='flex items-center gap-2'>
+                                 <Package className="h-5 w-5" />
+                                <span>Mesh Bag</span>
+                             </div>
                         </Label>
                     </RadioGroup>
                 </div>
