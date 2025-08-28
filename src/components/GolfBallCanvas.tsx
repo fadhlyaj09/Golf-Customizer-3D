@@ -4,15 +4,13 @@
 import React, { useRef, Suspense, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { OrbitControls, Decal as DreiDecal, Text, useTexture } from '@react-three/drei';
+import { OrbitControls, Decal as DreiDecal, Text } from '@react-three/drei';
 import type { Decal } from '@/lib/types';
 
-// Custom Shader Material for Golf Ball Dimples
 const vertexShader = `
   varying vec3 vNormal;
   varying vec3 vPosition;
   
-  // Simplex Noise function by Stefan Gustavson
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -50,7 +48,7 @@ const vertexShader = `
     vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
     vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
     vec3 p0 = vec3(a0.xy,h.x);
-    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p1 = vec.3(a0.zw,h.y);
     vec3 p2 = vec3(a1.xy,h.z);
     vec3 p3 = vec3(a1.zw,h.w);
     vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
@@ -91,12 +89,13 @@ const fragmentShader = `
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 
-    vec3 ambient = vec3(0.5);
-    vec3 finalColor = ambient + diffuse * u_color + vec3(0.7) * spec;
+    vec3 ambient = vec3(0.7); // Increased ambient light
+    vec3 finalColor = ambient + diffuse * u_color + vec3(0.9) * spec;
 
     gl_FragColor = vec4(finalColor, 1.0);
   }
 `;
+
 
 interface GolfBallCanvasProps {
   ballColor: string;
@@ -163,7 +162,8 @@ function BallDecal({ decal, isActive, onClick }: {
 }) {
     const texture = useMemo(() => {
         if (decal.type === 'logo' && decal.content) {
-            return new THREE.TextureLoader().load(decal.content);
+            const loader = new THREE.TextureLoader();
+            return loader.load(decal.content);
         }
         return null;
     }, [decal.type, decal.content]);

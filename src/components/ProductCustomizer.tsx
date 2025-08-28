@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package, RotateCw, Scaling, Redo, Undo } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
@@ -203,10 +203,13 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
     const handlePositionChange = (axis: 'x' | 'y', value: number) => {
       const currentPos = activeDecalData.position;
+      // We need to keep the z-position from the original side placement
+      const originalDecal = initialDecalPositions.find(p => p.position.z === currentPos.z) || { position: currentPos };
+
       const newPos = new Vector3(
         axis === 'x' ? value : currentPos.x,
         axis === 'y' ? value : currentPos.y,
-        currentPos.z
+        originalDecal.position.z
       );
       handleUpdateDecal(activeDecalData.id, { position: newPos });
     };
