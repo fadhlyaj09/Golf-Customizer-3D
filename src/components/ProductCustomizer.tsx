@@ -98,13 +98,14 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const handleAddDecal = (type: 'logo' | 'text') => {
     if (decals.length >= customization.printSides) return;
 
+    // Use the next available position, place second decal on opposite side
+    const positionIndex = decals.length > 0 ? 1 : 0;
     const newDecal: Decal = {
       id: MathUtils.generateUUID(),
       type: type,
       content: type === 'text' ? 'Your Text' : '', 
-      ...decalPositions[decals.length], // Assign position based on order
+      ...decalPositions[positionIndex],
       scale: 0.15,
-      font: 'Inter',
       color: '#000000',
     };
     
@@ -114,7 +115,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     } else {
        setDecals(prev => {
          const newDecals = [...prev, newDecal];
-         // Set active decal AFTER state has been updated
          setActiveDecalId(newDecal.id);
          return newDecals;
        });
@@ -140,11 +140,13 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
+        // Use the next available position
+        const positionIndex = decals.length > 0 ? 1 : 0;
         const newDecal: Decal = {
           id: MathUtils.generateUUID(),
           type: 'logo',
           content: result,
-          ...decalPositions[decals.length],
+          ...decalPositions[positionIndex],
           scale: 0.15,
         };
         setDecals(prev => [...prev, newDecal]);

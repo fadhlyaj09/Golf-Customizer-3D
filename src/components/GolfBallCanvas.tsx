@@ -60,44 +60,52 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
-
-    return (
-         <DreiDecal
-            position={decal.position}
-            rotation={decal.rotation}
-            scale={decal.scale}
-            onPointerDown={(e) => { e.stopPropagation(); onClick();}}
-        >
-              <meshStandardMaterial
-                map={texture || undefined}
-                polygonOffset
-                polygonOffsetFactor={-10}
-                transparent
-                depthTest={true}
-                depthWrite={false}
-                toneMapped={false}
-                opacity={1}
-                color={isActive ? '#000000' : 'white'} 
-              />
-              {(decal.type === 'text' && decal.content) && (
-                  <Text
-                      fontSize={0.25}
-                      color={decal.color}
-                      anchorX="center"
-                      anchorY="middle"
-                  >
-                      {decal.content}
-                      <meshStandardMaterial 
-                        polygonOffset 
-                        polygonOffsetFactor={-10} 
-                        color={decal.color}
+    // useTexture must be called conditionally inside a component that has Suspense
+    const DecalContent = () => {
+        const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
+        
+        return (
+            <DreiDecal
+                position={decal.position}
+                rotation={decal.rotation}
+                scale={decal.scale}
+                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
+            >
+                {decal.type === 'logo' && texture && (
+                     <meshStandardMaterial
+                        map={texture}
+                        polygonOffset
+                        polygonOffsetFactor={-10}
+                        transparent
+                        depthTest={true}
+                        depthWrite={false}
+                        toneMapped={false}
+                        opacity={1}
+                        color={isActive ? '#000000' : 'white'} 
                       />
-                  </Text>
-              )}
-        </DreiDecal>
-    )
+                )}
+                {decal.type === 'text' && decal.content && (
+                     <Text
+                        fontSize={0.25}
+                        color={decal.color}
+                        anchorX="center"
+                        anchorY="middle"
+                      >
+                          {decal.content}
+                          <meshStandardMaterial 
+                            polygonOffset 
+                            polygonOffsetFactor={-10} 
+                            color={decal.color}
+                          />
+                      </Text>
+                )}
+            </DreiDecal>
+        );
+    }
+    
+    return <DecalContent />;
 }
+
 
 export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   return (
