@@ -70,16 +70,21 @@ function BallDecal({ decal, isActive, onClick }: {
                 scale={decal.scale}
                 onPointerDown={(e) => { e.stopPropagation(); onClick();}}
             >
-                <Text
-                    fontSize={0.25}
-                    color={decal.color}
-                    anchorX="center"
-                    anchorY="middle"
+                {/* This material is a transparent plane that the text will be rendered on top of */}
+                <meshStandardMaterial
                     polygonOffset
-                    polygonOffsetFactor={-20} // Increased offset to prevent z-fighting
+                    polygonOffsetFactor={-10}
+                    transparent
                 >
-                    {decal.content}
-                </Text>
+                    <Text
+                        fontSize={0.25}
+                        color={decal.color}
+                        anchorX="center"
+                        anchorY="middle"
+                    >
+                        {decal.content}
+                    </Text>
+                </meshStandardMaterial>
             </DreiDecal>
         );
     }
@@ -101,8 +106,6 @@ function BallDecal({ decal, isActive, onClick }: {
                     depthWrite={false}
                     toneMapped={false}
                     opacity={1}
-                    // Optional: highlight active logo
-                    // color={isActive ? '#cccccc' : 'white'} 
                 />
             </DreiDecal>
         );

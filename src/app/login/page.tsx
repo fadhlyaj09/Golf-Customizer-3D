@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,7 @@ export default function LoginPage() {
     });
 
     useEffect(() => {
-        if(!loading && user) {
+        if (!loading && user) {
             const from = searchParams.get('from') || '/';
             router.replace(from);
         }

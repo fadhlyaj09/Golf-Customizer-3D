@@ -10,18 +10,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 const registerSchema = z.object({
+    displayName: z.string().min(1, 'Nama tidak boleh kosong'),
     email: z.string().email('Alamat email tidak valid'),
     password: z.string().min(6, 'Password minimal 6 karakter'),
-    confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-    message: "Password tidak cocok",
-    path: ["confirmPassword"],
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -29,26 +28,40 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { user, loading } = useAuth();
+
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
+            displayName: '',
             email: '',
             password: '',
-            confirmPassword: '',
         }
     });
 
+    useEffect(() => {
+        if (!loading && user) {
+            const from = searchParams.get('from') || '/';
+            router.replace(from);
+        }
+    }, [user, loading, router, searchParams]);
+
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            
+            // Update profile immediately after creation
+            await updateProfile(userCredential.user, {
+                displayName: data.displayName
+            });
             
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
 
         } catch (error: any) {
-            console.error("Sign up error code:", error.code);
-            console.error("Sign up error message:", error.message);
+            console.error("Sign up error:", error);
             
             let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
             if (error.code === 'auth/email-already-in-use') {
@@ -71,14 +84,14 @@ export default function RegisterPage() {
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 gap-6">
+                            <FormField control={form.control} name="displayName" render={({ field }) => (
+                                <FormItem><FormLabel>Nama Lengkap</FormLabel><FormControl><Input {...field} placeholder="Nama Anda" /></FormControl><FormMessage /></FormItem>
+                            )} />
                             <FormField control={form.control} name="email" render={({ field }) => (
                                 <FormItem><FormLabel>Alamat E-mail</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
                             )} />
                              <FormField control={form.control} name="password" render={({ field }) => (
                                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-                                <FormItem><FormLabel>Konfirmasi Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
                             )} />
 
                             <div className="flex justify-end">
