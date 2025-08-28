@@ -48,7 +48,7 @@ const vertexShader = `
     vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
     vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
     vec3 p0 = vec3(a0.xy,h.x);
-    vec3 p1 = vec.3(a0.zw,h.y);
+    vec3 p1 = vec3(a0.zw,h.y);
     vec3 p2 = vec3(a1.xy,h.z);
     vec3 p3 = vec3(a1.zw,h.w);
     vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
@@ -202,7 +202,7 @@ function BallDecal({ decal, isActive, onClick }: {
     );
 }
 
-export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
+export function GolfBallCanvas(props: GolfBallCanvasProps) {
   return (
     <Canvas
       shadows
@@ -216,12 +216,7 @@ export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDeca
         scene.background = null;
       }}
     >
-      <GolfBall 
-        ballColor={ballColor}
-        decals={decals}
-        activeDecalId={activeDecalId}
-        setActiveDecalId={setActiveDecalId}
-      />
+      <GolfBall {...props} />
       <OrbitControls minDistance={1.2} maxDistance={3} enablePan={false} />
     </Canvas>
   );
