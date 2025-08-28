@@ -14,6 +14,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { saveNewUser } from '@/actions/userActions';
 
 
 const registerSchema = z.object({
@@ -55,6 +56,19 @@ export default function RegisterPage() {
             // Step 2: Update the user's profile immediately.
             const displayName = `${data.firstName} ${data.lastName}`;
             await updateProfile(userCredential.user, { displayName });
+            
+            // Step 3: Asynchronously save data to Google Sheet without blocking the UI.
+            saveNewUser({
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone,
+            }).then(sheetResult => {
+                if (!sheetResult.success) {
+                    // Log the error, but don't bother the user since registration was successful.
+                    console.error("Could not save to Google Sheet:", sheetResult.message);
+                }
+            });
             
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
