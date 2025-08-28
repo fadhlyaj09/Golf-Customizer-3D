@@ -22,7 +22,6 @@ interface ProductCustomizerProps {
   product: Product;
 }
 
-const fonts = ["Inter", "Roboto", "Montserrat", "Poppins", "Merriweather"];
 const textColors = [
     { name: 'Black', value: '#000000'},
     { name: 'White', value: '#FFFFFF'},
@@ -113,8 +112,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
       fileInput?.click(); 
     } else {
-       setDecals(prev => [...prev, newDecal]);
-       setActiveDecalId(newDecal.id);
+       setDecals(prev => {
+         const newDecals = [...prev, newDecal];
+         // Set active decal AFTER state has been updated
+         setActiveDecalId(newDecal.id);
+         return newDecals;
+       });
     }
   }
 
@@ -295,20 +298,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                             value={activeDecalData.content}
                             onChange={(e) => handleUpdateDecal(activeDecalData.id, { content: e.target.value })}
                         />
-                        <div className='grid grid-cols-2 gap-4'>
-                            <Select value={activeDecalData.font} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { font: v })}>
-                                 <SelectTrigger><SelectValue placeholder="Pilih Font" /></SelectTrigger>
-                                 <SelectContent>
-                                     {fonts.map(f => <SelectItem key={f} value={f} style={{fontFamily: f}}>{f}</SelectItem>)}
-                                 </SelectContent>
-                            </Select>
-                            <Select value={activeDecalData.color} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { color: v })}>
-                                 <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
-                                 <SelectContent>
-                                     {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
-                                 </SelectContent>
-                            </Select>
-                        </div>
+                         <Select value={activeDecalData.color} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { color: v })}>
+                             <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
+                             <SelectContent>
+                                 {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
+                             </SelectContent>
+                         </Select>
                     </div>
                 )}
 
@@ -351,4 +346,3 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     </div>
   );
 }
-

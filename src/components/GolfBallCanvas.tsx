@@ -3,7 +3,7 @@
 
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Decal as DreiDecal, useTexture, Text } from '@react-three/drei';
-import { useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import type { Decal } from '@/lib/types';
 import * as THREE from 'three';
 
@@ -40,15 +40,16 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
             roughness={0.1} 
             metalness={0.2}
          />
-
-        {decals.map((decal) => (
-          <BallDecal
-            key={decal.id}
-            decal={decal}
-            isActive={activeDecalId === decal.id}
-            onClick={() => setActiveDecalId(decal.id)}
-          />
-        ))}
+        <Suspense fallback={null}>
+          {decals.map((decal) => (
+            <BallDecal
+              key={decal.id}
+              decal={decal}
+              isActive={activeDecalId === decal.id}
+              onClick={() => setActiveDecalId(decal.id)}
+            />
+          ))}
+        </Suspense>
       </mesh>
     </>
   );
@@ -68,7 +69,7 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick();}}
         >
-              <meshBasicMaterial
+              <meshStandardMaterial
                 map={texture || undefined}
                 polygonOffset
                 polygonOffsetFactor={-10}
@@ -79,11 +80,10 @@ function BallDecal({ decal, isActive, onClick }: {
                 opacity={1}
                 color={isActive ? '#000000' : 'white'} 
               />
-              {decal.type === 'text' && (
+              {(decal.type === 'text' && decal.content) && (
                   <Text
-                      fontSize={0.5}
+                      fontSize={0.25}
                       color={decal.color}
-                      font={decal.font || 'sans-serif'}
                       anchorX="center"
                       anchorY="middle"
                   >
