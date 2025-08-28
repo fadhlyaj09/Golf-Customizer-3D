@@ -9,8 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -48,27 +47,17 @@ export default function RegisterPage() {
     });
 
     const handleSignUp = async (data: RegisterFormValues) => {
-        let user;
         try {
             // 1. Create user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            user = userCredential.user;
+            const user = userCredential.user;
 
             // 2. Update the user's profile in Firebase Auth
+            // This is a reliable operation and sufficient for basic user data.
             await updateProfile(user, {
                 displayName: `${data.firstName} ${data.lastName}`
             });
             
-            // 3. Store additional user info in Firestore
-            // THIS MUST BE IN THE TRY BLOCK.
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                displayName: `${data.firstName} ${data.lastName}`,
-                email: data.email,
-                phone: data.phone,
-                createdAt: new Date(),
-            });
-
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
 
@@ -76,23 +65,12 @@ export default function RegisterPage() {
             console.error("Sign up error code:", error.code);
             console.error("Sign up error message:", error.message);
             
-            // If any step fails, especially writing to Firestore, we must delete the created Auth user
-            // to allow the user to retry registration without their email being "stuck".
-            if (user) {
-                await deleteUser(user).catch(deleteErr => {
-                    console.error("Failed to delete partially created user:", deleteErr);
-                });
-                console.log("Partially created user was deleted from Auth due to an error.");
-            }
-
             let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login.';
-            } else if (error.code === 'permission-denied') {
-                errorMessage = 'Gagal menyimpan data pengguna. Pastikan Firestore API telah diaktifkan dan aturan keamanan memperbolehkan penulisan.';
             }
             
-            toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive', duration: 9000 });
+            toast({ title: 'Pendaftaran Gagal', description: errorMessage, variant: 'destructive' });
         }
     }
 
