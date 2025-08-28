@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -49,13 +49,12 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            // Step 1: Create user in Firebase Auth. This is the only critical step here.
-            await createUserWithEmailAndPassword(auth, data.email, data.password);
+            // Step 1: Create user in Firebase Auth.
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             
-            // Step 2: Store display name in localStorage to be handled by AuthProvider.
-            // This decouples the profile update from the critical registration path.
+            // Step 2: Update the user's profile immediately.
             const displayName = `${data.firstName} ${data.lastName}`;
-            localStorage.setItem('pendingDisplayName', displayName);
+            await updateProfile(userCredential.user, { displayName });
             
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');
