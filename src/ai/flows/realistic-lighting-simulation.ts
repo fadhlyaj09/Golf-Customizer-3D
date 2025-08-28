@@ -16,7 +16,7 @@ const GenerateRealisticPreviewInputSchema = z.object({
   ballDesignDataUri: z
     .string()
     .describe(
-      "A data URI of the golf ball design, including custom prints and text. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A data URI of the golf ball design, which can be an image (logo) or a text data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>' or 'data:text/plain;charset=utf-8,TEXT'."
     ),
   lightingCondition: z
     .string()
@@ -49,12 +49,25 @@ const generateRealisticPreviewFlow = ai.defineFlow(
     outputSchema: GenerateRealisticPreviewOutputSchema,
   },
   async input => {
+    let promptText: string;
+    let mediaPart: { media: { url: string } } | undefined;
+
+    if (input.ballDesignDataUri.startsWith('data:image')) {
+        promptText = `Generate a photorealistic image of a custom golf ball with the provided logo on it. The lighting should be ${input.lightingCondition}, and the viewing angle should be ${input.angle}.`;
+        mediaPart = { media: { url: input.ballDesignDataUri } };
+    } else {
+        const textContent = decodeURIComponent(input.ballDesignDataUri.split(',')[1] || '');
+        promptText = `Generate a photorealistic image of a custom golf ball. The ball has the text "${textContent}" printed on it. The lighting should be ${input.lightingCondition}, and the viewing angle should be ${input.angle}.`;
+    }
+
+    const promptParts = [
+        { text: promptText },
+        ...(mediaPart ? [mediaPart] : [])
+    ];
+    
     const {media} = await ai.generate({
       model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: [
-        {text: `Generate a photorealistic image of a custom golf ball. Use the provided design. The lighting should be ${input.lightingCondition}, and the viewing angle should be ${input.angle}.`},
-        {media: {url: input.ballDesignDataUri}},
-      ]
+      prompt: promptParts,
     });
 
     if (!media) {

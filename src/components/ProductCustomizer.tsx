@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, ChangeEvent, useCallback } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import type { Product, Customization, Decal } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { GolfBallCanvas } from './GolfBallCanvas';
 import { Euler, MathUtils, Vector3 } from 'three';
+import { RealisticPreview } from './RealisticPreview';
 
 
 interface ProductCustomizerProps {
@@ -164,16 +165,43 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         return;
     }
     
+    const decalToSide = (decal?: Decal): SideCustomization => {
+        if (!decal) return { type: 'none', content: '' };
+        return {
+            type: decal.type,
+            content: decal.content,
+            font: decal.font,
+            color: decal.color,
+        }
+    }
+    
     const finalCustomization: Customization = {
         ...customization,
-        side1: decals[0] ? { type: decals[0].type, content: decals[0].content, font: decals[0].font, color: decals[0].color } : { type: 'none', content: '' },
-        side2: decals[1] ? { type: decals[1].type, content: decals[1].content, font: decals[1].font, color: decals[1].color } : { type: 'none', content: '' },
+        side1: decalToSide(decals[0]),
+        side2: decalToSide(decals[1]),
     };
+    
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
     router.push('/cart');
   };
   
   const activeDecalData = decals.find(d => d.id === activeDecalId);
+
+  const getDecalDataForPreview = () => {
+    const side1 = decals.find(d => d.position.z > 0); // Front
+    const side2 = decals.find(d => d.position.z < 0); // Back
+    
+    const getTextContent = (decal?: Decal) => (decal?.type === 'text' ? decal.content : undefined);
+    const getLogoContent = (decal?: Decal) => (decal?.type === 'logo' ? decal.content : '');
+
+    return {
+        logoDataUri: getLogoContent(side1),
+        textData: getTextContent(side1),
+        side2Data: side2 ? { type: side2.type, content: side2.content, color: side2.color, font: side2.font } : { type: 'none', content: ''}
+    }
+  }
+
+  const { logoDataUri, textData, side2Data } = getDecalDataForPreview();
 
 
   return (
@@ -357,12 +385,24 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             </Button>
            )}
            
-             <Button size="lg" variant="secondary" asChild>
+            <RealisticPreview
+                ballDesignDataUri={logoDataUri}
+                customText={textData}
+                side2Data={side2Data}
+                isCustomizationAdded={decals.length > 0}
+            >
+                <Button size="lg" variant="outline" disabled={decals.length === 0}>
+                    <Wand2 className="mr-2 h-5 w-5" />
+                    Generate Realistic Preview
+                </Button>
+            </RealisticPreview>
+
+            <Button size="lg" variant="secondary" asChild>
                 <a href="https://wa.me/6285723224918?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Konsultasi via WA
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Konsultasi via WA
                 </a>
-              </Button>
+            </Button>
         </div>
       </div>
     </div>
