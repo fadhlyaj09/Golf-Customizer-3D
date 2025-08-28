@@ -30,7 +30,6 @@ export function Footer() {
                   Contact
                 </a>
                 <Link href="/shipping-policy" className="text-sm text-muted-foreground hover:text-foreground">Shipping Policy</Link>
-                <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">Admin</Link>
             </div>
             <div className="flex flex-col gap-3">
                 <h4 className="font-semibold">Stay Connected</h4>
