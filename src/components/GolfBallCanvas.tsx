@@ -88,6 +88,11 @@ function BallDecal({ decal, isActive, onClick }: {
                       anchorY="middle"
                   >
                       {decal.content}
+                      <meshStandardMaterial 
+                        polygonOffset 
+                        polygonOffsetFactor={-10} 
+                        color={decal.color}
+                      />
                   </Text>
               )}
         </DreiDecal>
