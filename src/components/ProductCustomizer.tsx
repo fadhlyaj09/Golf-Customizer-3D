@@ -45,7 +45,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
 
   const [customization, setCustomization] = useState<Customization>({
-    color: product.colors?.[0],
+    color: product.colors && product.colors.length > 0 ? product.colors[0] : undefined,
     printSides: 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
@@ -190,7 +190,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             <div className="flex flex-col gap-4">
                 <Separator />
                 <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
-                {product.colors && (
+                {product.colors && product.colors.length > 0 && (
                 <div className="flex flex-col gap-3">
                     <Label className="text-base font-medium">Warna Bola</Label>
                     <div className='flex flex-wrap gap-2'>

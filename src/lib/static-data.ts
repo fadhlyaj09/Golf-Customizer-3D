@@ -15,6 +15,9 @@ export function getDefaultProducts(): Product[] {
                 'https://picsum.photos/400/400?random=4'
             ],
             customizable: true,
+            colors: [
+                { name: 'White', hex: '#FFFFFF', imageUrl: 'https://picsum.photos/400/400?random=1' }
+            ],
         },
         {
             id: 'ag-1-polos',
@@ -28,6 +31,9 @@ export function getDefaultProducts(): Product[] {
                 'https://picsum.photos/400/400?random=8'
             ],
             customizable: true,
+            colors: [
+                { name: 'White', hex: '#FFFFFF', imageUrl: 'https://picsum.photos/400/400?random=5' }
+            ],
         },
         {
             id: 'ag-2-color-matte',
@@ -61,6 +67,9 @@ export function getDefaultProducts(): Product[] {
                 'https://picsum.photos/400/400?random=16'
             ],
             customizable: true,
+            colors: [
+                { name: 'White', hex: '#FFFFFF', imageUrl: 'https://picsum.photos/400/400?random=13' }
+            ],
         },
         {
             id: 'articogolf-floater',
@@ -75,6 +84,9 @@ export function getDefaultProducts(): Product[] {
             ],
             customizable: true,
             isFloater: true,
+            colors: [
+                { name: 'White', hex: '#FFFFFF', imageUrl: 'https://picsum.photos/400/400?random=20' }
+            ],
         }
     ];
 }
