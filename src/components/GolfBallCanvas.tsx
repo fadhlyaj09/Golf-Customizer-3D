@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useRef, useEffect, Suspense } from 'react';
-import { Canvas, useLoader } from '@react-three/fiber';
+import React, { useRef, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls, Decal as DreiDecal, useTexture, Text } from '@react-three/drei';
 import type { Decal } from '@/lib/types';
@@ -16,7 +16,8 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  const normalMap = useTexture('https://threejs.org/examples/textures/golf_ball_normal.jpg');
+  // Load texture locally from the public folder to avoid CORS issues.
+  const normalMap = useTexture('/textures/golf_ball_normal.jpg');
   normalMap.wrapS = THREE.RepeatWrapping;
   normalMap.wrapT = THREE.RepeatWrapping;
   normalMap.repeat.set(4, 4);
@@ -67,6 +68,7 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
+    // Only try to load a texture if it's a logo and has content
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
@@ -76,17 +78,18 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
+            {/* The material for the decal. It receives a texture if it's a logo. */}
+            {/* For text, we'll render a <Text> component inside. */}
             <meshStandardMaterial
                 map={texture || undefined}
                 polygonOffset
-                polygonOffsetFactor={-10}
+                polygonOffsetFactor={-10} // Prevents z-fighting
                 transparent
                 roughness={0.6}
-                map-anisotropy={16}
                 toneMapped={false}
             >
                 {decal.type === 'text' && decal.content && (
-                    <Text
+                     <Text
                         fontSize={0.25}
                         color={decal.color || '#000000'}
                         anchorX="center"
@@ -109,11 +112,11 @@ export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDeca
       gl={{ 
         antialias: true, 
         alpha: true,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: true // Required for exporting toDataURL
       }}
       camera={{ position: [0, 0, 1.5], fov: 50 }}
       onCreated={({ scene }) => {
-        scene.background = null;
+        scene.background = null; // Transparent background
       }}
     >
       <GolfBall 
