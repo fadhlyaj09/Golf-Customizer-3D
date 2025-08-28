@@ -17,8 +17,7 @@ interface GolfBallCanvasProps {
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
-  // A high-quality, public domain normal map texture for golf ball dimples
-  const normalMap = useTexture('https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png');
+  const normalMap = useTexture('https://threejs.org/examples/textures/normal_map.png');
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
