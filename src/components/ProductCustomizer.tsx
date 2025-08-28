@@ -58,16 +58,19 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   useEffect(() => {
-    if (!decals) return; // Guard clause to prevent crash
-    let finalPrice = product.basePrice;
+    if (!product) return; // Ensure product is loaded
+
+    let finalPrice = product.basePrice || 0;
+    const currentDecals = decals || []; // Ensure decals is always an array
     
-    if (!product.isFloater) {
-        const pricePerSide = decals.length > 0 ? 25000 + (decals.length - 1) * 15000 : 0;
+    if (!product.isFloater && currentDecals.length > 0) {
+        // Simplified pricing: 25000 for the first side, 15000 for the second.
+        const pricePerSide = currentDecals.length === 1 ? 25000 : (25000 + 15000);
         finalPrice += pricePerSide;
     }
 
     setTotalPrice(finalPrice * quantity);
-  }, [decals, quantity, product.basePrice, product.isFloater]);
+  }, [decals, quantity, product]);
 
 
   const handleColorChange = (colorName: string) => {
