@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getRealisticPreview } from '@/actions/aiActions';
 import Image from 'next/image';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Loader2, Wand2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Customization } from '@/lib/types';
 
@@ -31,119 +31,104 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
   const [lighting, setLighting] = useState('sunny');
   const [angle, setAngle] = useState('top-down');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [errorPreparing, setErrorPreparing] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [compositeImage, setCompositeImage] = useState<string>('');
   
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isGeneratingRef = useRef(false);
 
-  const generateCompositeImage = useCallback(() => {
+  const generateCompositeImage = useCallback(async () => {
+    if (isGeneratingRef.current) return;
+
+    setIsPreparing(true);
+    setErrorPreparing(null);
+    setCompositeImage('');
+    isGeneratingRef.current = true;
+    
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-
-    // Set a flag to indicate that we are generating the image
-    canvas.dataset.generating = "true";
-
-    const baseImage = new window.Image();
-    baseImage.crossOrigin = "Anonymous"; 
-    baseImage.src = 'https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png';
-    
-    const drawText = (text: string, font: string, color: string, yPos: number) => {
-      ctx.fillStyle = color;
-      ctx.font = `bold 24px "${font}"`;
-      ctx.textAlign = 'center';
-      ctx.fillText(text, canvas.width / 2, yPos);
-    }
-    
-    const drawLogo = (dataUri: string, yPos: number, size: number) => {
-        return new Promise<void>((resolve) => {
-            const logoImage = new window.Image();
-            logoImage.src = dataUri;
-            logoImage.onload = () => {
-                const x = (canvas.width - size) / 2;
-                ctx.drawImage(logoImage, x, yPos, size, size);
-                resolve();
-            }
-            logoImage.onerror = () => resolve(); // continue even if logo fails
-        });
+    if (!canvas || !ctx) {
+      setErrorPreparing("Gagal menginisialisasi canvas.");
+      isGeneratingRef.current = false;
+      setIsPreparing(false);
+      return;
     }
 
-    baseImage.onload = async () => {
-      canvas.width = baseImage.width;
-      canvas.height = baseImage.height;
-      ctx.drawImage(baseImage, 0, 0);
+    const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
+        const img = new window.Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(new Error(`Gagal memuat gambar: ${src.substring(0, 50)}...`));
+        img.src = src;
+    });
 
-      // Handle side 1
-      if (ballDesignDataUri.startsWith('data:image')) {
-        await drawLogo(ballDesignDataUri, (canvas.height/2) - 100, 100);
-      } else if (customText) {
-        drawText(customText, 'Arial', 'black', (canvas.height / 2) - 20);
-      }
-      
-      // Handle side 2, visible only in 'side view'
-      if (angle === 'side view') {
-        if(side2Data.type === 'logo' && side2Data.content) {
-            // We can't actually show two logos correctly without a 3D model, 
-            // so we'll just place it somewhere else as a placeholder representation
-             await drawLogo(side2Data.content, (canvas.height/2) + 50, 50);
-        } else if (side2Data.type === 'text' && side2Data.content && side2Data.font && side2Data.color) {
-            drawText(side2Data.content, side2Data.font, side2Data.color, canvas.height * 0.7);
+    try {
+        const baseImage = await loadImage('https://storage.googleapis.com/studioprod-bucket/d0139369-1a40-4a87-97d8-301124483713.png');
+        canvas.width = baseImage.width;
+        canvas.height = baseImage.height;
+        ctx.drawImage(baseImage, 0, 0);
+
+        const drawText = (text: string, font: string, color: string, yPos: number) => {
+            ctx.fillStyle = color;
+            ctx.font = `bold 24px "${font}"`;
+            ctx.textAlign = 'center';
+            ctx.fillText(text, canvas.width / 2, yPos);
+        };
+
+        const drawLogo = async (dataUri: string, yPos: number, size: number) => {
+            const logoImage = await loadImage(dataUri);
+            const x = (canvas.width - size) / 2;
+            ctx.drawImage(logoImage, x, yPos, size, size);
+        };
+        
+        // Handle side 1
+        if (ballDesignDataUri.startsWith('data:image')) {
+            await drawLogo(ballDesignDataUri, (canvas.height/2) - 100, 100);
+        } else if (customText) {
+            drawText(customText, 'Arial', 'black', (canvas.height / 2) - 20);
         }
-      }
+        
+        // Handle side 2, visible only in 'side view'
+        if (angle === 'side view') {
+            if (side2Data.type === 'logo' && side2Data.content) {
+                await drawLogo(side2Data.content, (canvas.height/2) + 50, 50);
+            } else if (side2Data.type === 'text' && side2Data.content && side2Data.font && side2Data.color) {
+                drawText(side2Data.content, side2Data.font, side2Data.color, canvas.height * 0.7);
+            }
+        }
 
-      setCompositeImage(canvas.toDataURL('image/png'));
-      delete canvas.dataset.generating;
-    };
-    
-    baseImage.onerror = () => {
-      toast({
-        title: 'Gagal Memuat Gambar Dasar',
-        description: 'Tidak dapat memuat gambar bola golf. Silakan coba lagi.',
-        variant: 'destructive'
-      })
-      delete canvas.dataset.generating;
+        setCompositeImage(canvas.toDataURL('image/png'));
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tidak diketahui.';
+        setErrorPreparing(errorMessage);
+        toast({ title: 'Gagal Menyiapkan Preview', description: errorMessage, variant: 'destructive' });
+    } finally {
+        isGeneratingRef.current = false;
+        setIsPreparing(false);
     }
   }, [ballDesignDataUri, customText, side2Data, angle, toast]);
 
 
+  // Effect to generate image when dialog opens or angle changes
   useEffect(() => {
     if (open) {
-      setPreviewImage(null);
-      // Only set loading to false and regenerate image if it's not already loading
-      if(!isLoading) {
-        setIsLoading(false);
-        setCompositeImage('');
-        generateCompositeImage();
-      }
+      setPreviewImage(null); // Clear previous AI image
+      generateCompositeImage();
     }
-  }, [open, generateCompositeImage, isLoading]);
-
-  useEffect(() => {
-    // When angle changes, regenerate the composite image
-    if(open) {
-        generateCompositeImage();
-    }
-  }, [angle, open, generateCompositeImage]);
+  }, [open, angle, generateCompositeImage]);
 
 
   const handleGeneratePreview = async () => {
-    // A small delay to ensure the canvas has finished generating the image
-    if (canvasRef.current?.dataset.generating === "true") {
-      toast({
-        title: 'Harap Tunggu',
-        description: 'Gambar desain dasar sedang disiapkan. Silakan coba sesaat lagi.',
-        variant: 'default'
-      })
-      return;
-    }
-    
-    if (!compositeImage) {
-        toast({
-            title: 'Gambar Belum Siap',
-            description: 'Gambar pratinjau belum siap. Mohon tunggu sebentar.',
-            variant: 'destructive'
-        });
+    if (isLoading || isPreparing || !compositeImage) {
+        let description = 'Harap tunggu proses saat ini selesai.';
+        if (!compositeImage) description = 'Gambar dasar belum siap. Coba lagi sesaat lagi.';
+        if (errorPreparing) description = 'Tidak bisa generate karena ada error: ' + errorPreparing;
+
+        toast({ title: 'Tidak Dapat Generate', description, variant: 'destructive' });
         return;
     }
 
@@ -185,15 +170,15 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
             </Label>
              <RadioGroup defaultValue="sunny" className="col-span-3 flex gap-4" onValueChange={setLighting} value={lighting}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sunny" id="r1" />
+                <RadioGroupItem value="sunny" id="r1" disabled={isPreparing || isLoading}/>
                 <Label htmlFor="r1">Cerah</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="overcast" id="r2" />
+                <RadioGroupItem value="overcast" id="r2" disabled={isPreparing || isLoading}/>
                 <Label htmlFor="r2">Mendung</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="indoor" id="r3" />
+                <RadioGroupItem value="indoor" id="r3" disabled={isPreparing || isLoading}/>
                 <Label htmlFor="r3">Indoor</Label>
               </div>
             </RadioGroup>
@@ -204,25 +189,31 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
             </Label>
             <RadioGroup defaultValue="top-down" className="col-span-3 flex gap-4" onValueChange={setAngle} value={angle}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="top-down" id="a1" />
+                <RadioGroupItem value="top-down" id="a1" disabled={isPreparing || isLoading}/>
                 <Label htmlFor="a1">Atas</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="side view" id="a2" />
+                <RadioGroupItem value="side view" id="a2" disabled={isPreparing || isLoading}/>
                 <Label htmlFor="a2">Samping</Label>
               </div>
             </RadioGroup>
           </div>
           <div className="mt-4 flex h-64 w-full items-center justify-center rounded-lg border bg-muted/50">
-            {isLoading ? (
+            {isLoading || isPreparing ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <p>Membuat preview Anda...</p>
+                <p>{isLoading ? 'Membuat preview Anda...' : 'Menyiapkan gambar...'}</p>
+              </div>
+            ) : errorPreparing ? (
+               <div className="flex flex-col items-center gap-2 text-destructive p-4 text-center">
+                <AlertTriangle className="h-8 w-8" />
+                <p className='font-semibold'>Gagal Menyiapkan Gambar</p>
+                <p className='text-xs'>{errorPreparing}</p>
               </div>
             ) : previewImage ? (
               <Image src={previewImage} alt="Realistic preview" width={256} height={256} className="h-full w-full object-contain" />
             ) : (
-                <div className="text-center text-muted-foreground">
+                <div className="text-center text-muted-foreground p-4">
                     <Wand2 className="mx-auto h-8 w-8" />
                     <p className="mt-2">Preview yang di-generate AI akan muncul di sini.</p>
                 </div>
@@ -230,7 +221,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || canvasRef.current?.dataset.generating === "true"}>
+          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || isPreparing || !!errorPreparing}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
             Generate
           </Button>
@@ -240,3 +231,5 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
     </Dialog>
   );
 }
+
+    
