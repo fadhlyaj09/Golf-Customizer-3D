@@ -107,16 +107,19 @@ export function Footer() {
             <div className="flex flex-col gap-3">
                 <h4 className="font-semibold">Stay Connected</h4>
                 <p className="text-sm text-muted-foreground">Join our mailing list for updates and special offers.</p>
-                <div className="flex w-full max-w-sm items-center space-x-2">
+                 <div className="flex w-full max-w-sm items-center space-x-2">
                     <Input type="email" placeholder="Email" className="bg-secondary" />
                     <Button type="submit">Subscribe</Button>
                 </div>
             </div>
+             <div className="md:col-span-4 lg:col-span-4 mt-8 text-sm text-muted-foreground">
+                <p className='font-medium text-foreground'>Articogolf Headquarter</p>
+                <p>Jalan Sunter raya kemayoran No.53, RT.1/RW.3, Sunter Jaya, Kec. Tj. Priok, Jkt Utara, Daerah Khusus Ibukota Jakarta 14350</p>
+            </div>
         </div>
         <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground">
-           <div className='flex flex-col gap-2 text-center sm:text-left'>
+           <div className='text-center sm:text-left'>
                 <p>© {new Date().getFullYear()} Articogolf. All Rights Reserved.</p>
-                <p className='text-xs'>Jalan Sunter raya kemayoran No.53, RT.1/RW.3, Sunter Jaya, Kec. Tj. Priok, Jkt Utara, Daerah Khusus Ibukota Jakarta 14350</p>
             </div>
             <div className="flex gap-4 mt-4 sm:mt-0">
                 <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
@@ -127,5 +130,3 @@ export function Footer() {
     </footer>
   );
 }
-
-    

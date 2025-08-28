@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBanner } from '@/lib/banner';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 export default async function Home() {
     const products = await getProducts();
@@ -19,37 +20,100 @@ export default async function Home() {
         return (str.length > n) ? str.slice(0, n-1) + '...' : str;
     };
 
+    const slides = [
+        {
+            title: title || 'Precision Meets Elegance',
+            subtitle: subtitle || 'Discover golf balls engineered for peak performance and designed for the modern player.',
+            imageUrl: imageUrl || "/images/hero-banner.jpg",
+            alt: "Aesthetic golf course",
+            hint: "golf course landscape",
+            buttons: [
+                { href: "#products", text: "Explore Collection", variant: "default" },
+                { href: "/product/ag-1-standard?custom=true", text: "Customize Your Own", variant: "outline" }
+            ]
+        },
+        {
+            title: "New Arrival: AG-3 Pro Urethane",
+            subtitle: "Experience tour-level spin and control with our most advanced ball yet.",
+            imageUrl: "https://picsum.photos/1920/1080?random=1",
+            alt: "Close up of a new golf ball",
+            hint: "golf ball texture",
+            buttons: [
+                { href: "/product/ag-3-pro-urethane", text: "Shop AG-3 Pro", variant: "default" }
+            ]
+        },
+        {
+            title: "Vibrant Colors, Matte Finish",
+            subtitle: "High visibility meets premium feel with the AG-2 Color Matte edition.",
+            imageUrl: "https://picsum.photos/1920/1080?random=2",
+            alt: "Colorful golf balls in a row",
+            hint: "colorful golfball",
+            buttons: [
+                { href: "/product/ag-2-color-matte", text: "See All Colors", variant: "default" }
+            ]
+        },
+        {
+            title: "Your Brand, Your Ball",
+            subtitle: "Create the perfect custom golf balls for your company, event, or personal collection.",
+            imageUrl: "https://picsum.photos/1920/1080?random=3",
+            alt: "A golf ball with a custom logo",
+            hint: "golfball logo",
+            buttons: [
+                { href: "/product/ag-1-standard?custom=true", text: "Start Customizing", variant: "default" }
+            ]
+        },
+        {
+            title: "Free Shipping On Orders Over Rp 500.000",
+            subtitle: "Stock up on your favorite golf balls and enjoy free delivery to your door.",
+            imageUrl: "https://picsum.photos/1920/1080?random=4",
+            alt: "Delivery truck on a road",
+            hint: "delivery truck",
+            buttons: [
+                { href: "#products", text: "Start Shopping", variant: "default" }
+            ]
+        }
+    ];
+
 
   return (
     <div className="flex flex-col bg-background">
-      <section className="relative h-[70vh] w-full text-black sm:h-[80vh]">
-          <Image
-              src={imageUrl || "/images/hero-banner.jpg"}
-              alt="Aesthetic golf course"
-              data-ai-hint="golf course landscape"
-              fill
-              className="object-cover"
-              priority
-            />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 text-center container mx-auto px-4 md:px-6">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl max-w-3xl text-foreground">
-              {title || 'Precision Meets Elegance'}
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-foreground/80">
-                {subtitle || 'Discover golf balls engineered for peak performance and designed for the modern player.'}
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className='bg-primary text-primary-foreground hover:bg-primary/90'>
-                   <Link href="#products">Explore Collection</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className='border-foreground/20 text-foreground bg-background/50 backdrop-blur-sm hover:bg-background'>
-                  <Link href="/product/ag-1-standard?custom=true">
-                    Customize Your Own
-                  </Link>
-                </Button>
-            </div>
-        </div>
+      <section className="relative w-full text-black">
+        <Carousel className="w-full" opts={{ loop: true }} plugins={[]}>
+            <CarouselContent>
+                {slides.map((slide, index) => (
+                    <CarouselItem key={index}>
+                        <div className="relative h-[70vh] w-full sm:h-[80vh]">
+                            <Image
+                                src={slide.imageUrl}
+                                alt={slide.alt}
+                                data-ai-hint={slide.hint}
+                                fill
+                                className="object-cover"
+                                priority={index === 0}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                            <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 text-center container mx-auto px-4 md:px-6">
+                                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl max-w-3xl text-foreground">
+                                    {slide.title}
+                                </h1>
+                                <p className="mt-6 max-w-xl text-lg text-foreground/80">
+                                    {slide.subtitle}
+                                </p>
+                                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                                    {slide.buttons.map(button => (
+                                        <Button key={button.href} asChild size="lg" variant={button.variant as any} className={button.variant === 'outline' ? 'border-foreground/20 text-foreground bg-background/50 backdrop-blur-sm hover:bg-background' : 'bg-primary text-primary-foreground hover:bg-primary/90'}>
+                                            <Link href={button.href}>{button.text}</Link>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
+            <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden md:flex" />
+        </Carousel>
       </section>
 
       <section className="w-full bg-background py-16 md:py-24">

@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, ChangeEvent, useMemo, useCallback } from 'react';
+import { useState, useEffect, ChangeEvent, useMemo, useCallback, useRef } from 'react';
 import type { Product, Customization, Decal, SideCustomization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package, Wand2, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { GolfBallCanvas } from './GolfBallCanvas';
 import { Euler, MathUtils, Vector3 } from 'three';
 import { Slider } from './ui/slider';
+import { realisticLightingSimulation } from '@/ai/flows/realistic-lighting-simulation';
 
 
 interface ProductCustomizerProps {
@@ -41,9 +42,13 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const router = useRouter();
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [quantity, setQuantity] = useState(1);
   const [decals, setDecals] = useState<Decal[]>([]);
   const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
+  const [isGeneratingRender, setIsGeneratingRender] = useState(false);
+  const [realisticRender, setRealisticRender] = useState<string | null>(null);
+
   const [customization, setCustomization] = useState<Customization>({
     packaging: 'box',
     printSides: 0,
@@ -85,6 +90,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const handleColorChange = (colorName: string) => {
     const selectedColor = product.colors?.find((c) => c.name === colorName);
     setCustomization((prev) => ({ ...prev, color: selectedColor }));
+    setRealisticRender(null); // Reset render when color changes
   };
 
   const handlePrintSideChange = (value: string) => {
@@ -98,6 +104,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         }
         return newDecals;
     });
+     setRealisticRender(null); // Reset render
   }
   
   const handleAddDecal = useCallback((type: 'logo' | 'text') => {
@@ -118,6 +125,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         };
        setDecals(prev => [...prev, newDecal]);
        setActiveDecalId(newDecal.id);
+       setRealisticRender(null); // Reset render
     }
   }, [decals.length, customization.printSides]);
   
@@ -126,10 +134,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     if (activeDecalId === id) {
       setActiveDecalId(null);
     }
+     setRealisticRender(null); // Reset render
   };
   
   const handleUpdateDecal = (id: string, newProps: Partial<Omit<Decal, 'id' | 'type'>>) => {
     setDecals(prev => prev.map(d => d.id === id ? { ...d, ...newProps } : d));
+    setRealisticRender(null); // Reset render
   };
 
 
@@ -152,6 +162,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         };
         setDecals(prev => [...prev, newDecal]);
         setActiveDecalId(newDecal.id);
+        setRealisticRender(null); // Reset render
       };
       reader.readAsDataURL(file);
       e.target.value = ''; 
@@ -183,6 +194,37 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     
     addToCart(product, finalCustomization, quantity, totalPrice / quantity);
     router.push('/cart');
+  };
+
+  const handleGenerateRender = async () => {
+      if (!canvasRef.current) return;
+      
+      const canvas = canvasRef.current.querySelector('canvas');
+      if (!canvas) return;
+
+      setIsGeneratingRender(true);
+      try {
+          // Temporarily set active decal to null to remove outline
+          const currentActiveId = activeDecalId;
+          setActiveDecalId(null);
+          
+          // Allow canvas to re-render without outline
+          await new Promise(resolve => setTimeout(resolve, 50)); 
+          
+          const imageUri = canvas.toDataURL('image/png');
+          
+          // Restore active decal
+          setActiveDecalId(currentActiveId);
+          
+          const result = await realisticLightingSimulation({ productImageUri: imageUri });
+          setRealisticRender(result.imageUri);
+
+      } catch (error) {
+          console.error("Failed to generate realistic render:", error);
+          // Optionally show a toast message to the user
+      } finally {
+          setIsGeneratingRender(false);
+      }
   };
   
   const activeDecalData = useMemo(() => decals.find(d => d.id === activeDecalId), [decals, activeDecalId]);
@@ -254,16 +296,29 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
   return (
     <div className="grid grid-cols-1 gap-x-12 lg:grid-cols-2">
-      <div className="h-[50vh] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24">
-         <GolfBallCanvas 
-            ballColor={customization.color?.hex || '#ffffff'}
-            decals={decals}
-            activeDecalId={activeDecalId}
-            setActiveDecalId={setActiveDecalId}
-        />
+      <div className="h-[50vh] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24 flex flex-col gap-4">
+         <div ref={canvasRef} className="w-full h-full border rounded-lg overflow-hidden relative bg-gray-100">
+            {realisticRender ? (
+                <div className='w-full h-full relative'>
+                     <img src={realisticRender} alt="Realistic Render" className='w-full h-full object-cover' />
+                     <Button onClick={() => setRealisticRender(null)} variant="outline" size="sm" className="absolute top-2 left-2">Back to Editor</Button>
+                </div>
+            ) : (
+                <GolfBallCanvas 
+                    ballColor={customization.color?.hex || '#ffffff'}
+                    decals={decals}
+                    activeDecalId={activeDecalId}
+                    setActiveDecalId={setActiveDecalId}
+                />
+            )}
+         </div>
+         <Button onClick={handleGenerateRender} disabled={isGeneratingRender} variant="outline">
+             {isGeneratingRender ? <Loader2 className="mr-2 animate-spin" /> : <Wand2 className="mr-2"/>}
+             {isGeneratingRender ? 'Generating...' : 'Create Realistic Render (AI)'}
+         </Button>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 mt-8 lg:mt-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.description}</p>
