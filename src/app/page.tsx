@@ -24,7 +24,7 @@ export default async function Home() {
     <div className="flex flex-col bg-background">
       <section className="relative h-[70vh] w-full text-black sm:h-[80vh]">
           <Image
-              src={imageUrl || "https://picsum.photos/1920/1080?random=1"}
+              src={imageUrl || "https://storage.googleapis.com/articogolf-assets/hero-banner.jpg"}
               alt="Aesthetic golf course"
               data-ai-hint="golf course landscape"
               fill
@@ -63,10 +63,11 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                         <div className="aspect-[16/9] w-full bg-muted">
                              <Image
-                                src="https://picsum.photos/800/450?random=50"
+                                src="https://picsum.photos/800/450?random=99"
                                 alt="Color Matte Edition Golf Balls"
                                 data-ai-hint="colorful golfball"
-                                fill
+                                width={800}
+                                height={450}
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                         </div>
@@ -82,10 +83,11 @@ export default async function Home() {
                     <Card className="relative overflow-hidden rounded-lg border-0 shadow-none">
                        <div className="aspect-[16/9] w-full bg-muted">
                             <Image
-                                src="https://picsum.photos/800/450?random=51"
+                                src="https://storage.googleapis.com/articogolf-assets/special-offer-2.jpg"
                                 alt="Custom Logo Golf Balls"
                                 data-ai-hint="golfball logo"
-                                fill
+                                width={800}
+                                height={450}
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                         </div>
