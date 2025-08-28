@@ -1,12 +1,13 @@
+
 'use client';
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent, useMemo } from 'react';
 import type { Product, Customization, Decal, SideCustomization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package, Wand2 } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package, RotateCw, Scaling, Redo, Undo } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
@@ -15,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { GolfBallCanvas } from './GolfBallCanvas';
 import { Euler, MathUtils, Vector3 } from 'three';
+import { Slider } from './ui/slider';
 
 
 interface ProductCustomizerProps {
@@ -29,11 +31,11 @@ const textColors = [
     { name: 'Green', value: '#008000'},
 ];
 
-// Positions for the first and second decal
-const decalPositions = [
+
+const initialDecalPositions = [
     { position: new Vector3(0, 0, 0.5), rotation: new Euler(0, 0, 0) }, // Front
     { position: new Vector3(0, 0, -0.5), rotation: new Euler(0, Math.PI, 0) } // Back
-]
+];
 
 export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
@@ -89,40 +91,34 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     const sides = parseInt(value, 10);
     setCustomization(prev => ({...prev, printSides: sides as 0 | 1 | 2 }));
     
-    // Trim decals if user reduces print sides
-    setDecals(prev => prev.slice(0, sides));
-    if (sides < 2 && decals.length > 1) {
-      if (activeDecalId === decals[1]?.id) setActiveDecalId(null);
-    }
-    if (sides < 1 && decals.length > 0) {
-      setActiveDecalId(null);
-    }
+    setDecals(prev => {
+        const newDecals = prev.slice(0, sides);
+        if (activeDecalId && !newDecals.find(d => d.id === activeDecalId)) {
+            setActiveDecalId(null);
+        }
+        return newDecals;
+    });
   }
   
   const handleAddDecal = (type: 'logo' | 'text') => {
     if (decals.length >= customization.printSides) return;
 
-    // Use the next available position, place second decal on opposite side
     const positionIndex = decals.length;
     const newDecal: Decal = {
       id: MathUtils.generateUUID(),
       type: type,
       content: type === 'text' ? 'Your Text' : '', 
-      ...decalPositions[positionIndex],
+      ...initialDecalPositions[positionIndex],
       scale: 0.15,
       color: '#000000',
     };
     
     if (type === 'logo') {
-      // Trigger hidden file input for logo upload
       const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
       fileInput?.click(); 
     } else {
-       setDecals(prev => {
-         const newDecals = [...prev, newDecal];
-         setActiveDecalId(newDecal.id);
-         return newDecals;
-       });
+       setDecals(prev => [...prev, newDecal]);
+       setActiveDecalId(newDecal.id);
     }
   }
   
@@ -146,13 +142,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        // Use the next available position
         const positionIndex = decals.length;
         const newDecal: Decal = {
           id: MathUtils.generateUUID(),
           type: 'logo',
           content: result,
-          ...decalPositions[positionIndex],
+          ...initialDecalPositions[positionIndex],
           scale: 0.15,
           color: '#000000',
         };
@@ -160,7 +155,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         setActiveDecalId(newDecal.id);
       };
       reader.readAsDataURL(file);
-      e.target.value = ''; // Reset file input
+      e.target.value = ''; 
     }
   };
 
@@ -191,7 +186,69 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     router.push('/cart');
   };
   
-  const activeDecalData = decals.find(d => d.id === activeDecalId);
+  const activeDecalData = useMemo(() => decals.find(d => d.id === activeDecalId), [decals, activeDecalId]);
+  
+  const DecalEditor = () => {
+    if (!activeDecalData) return null;
+
+    const handleRotationChange = (newRotation: number) => {
+        handleUpdateDecal(activeDecalData.id, {
+            rotation: new Euler(activeDecalData.rotation.x, activeDecalData.rotation.y, MathUtils.degToRad(newRotation))
+        });
+    }
+
+    const handleScaleChange = (newScale: number) => {
+        handleUpdateDecal(activeDecalData.id, { scale: newScale });
+    }
+
+    const handlePositionChange = (axis: 'x' | 'y', value: number) => {
+      const currentPos = activeDecalData.position;
+      const newPos = new Vector3(
+        axis === 'x' ? value : currentPos.x,
+        axis === 'y' ? value : currentPos.y,
+        currentPos.z
+      );
+      handleUpdateDecal(activeDecalData.id, { position: newPos });
+    };
+
+    return (
+        <div className="flex flex-col gap-4 p-3 border rounded-lg bg-muted/30">
+            <h3 className='font-medium'>Edit Desain Aktif</h3>
+            {activeDecalData.type === 'text' && (
+                <>
+                <Label>Teks</Label>
+                <Input 
+                    value={activeDecalData.content}
+                    onChange={(e) => handleUpdateDecal(activeDecalData.id, { content: e.target.value })}
+                />
+                 <Label>Warna Teks</Label>
+                 <Select value={activeDecalData.color} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { color: v })}>
+                     <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
+                     <SelectContent>
+                         {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
+                     </SelectContent>
+                 </Select>
+                </>
+            )}
+            <div className='flex flex-col gap-2'>
+                <Label>Posisi X</Label>
+                <Slider defaultValue={[activeDecalData.position.x]} min={-0.3} max={0.3} step={0.01} onValueChange={(v) => handlePositionChange('x', v[0])} />
+            </div>
+             <div className='flex flex-col gap-2'>
+                <Label>Posisi Y</Label>
+                <Slider defaultValue={[activeDecalData.position.y]} min={-0.3} max={0.3} step={0.01} onValueChange={(v) => handlePositionChange('y', v[0])} />
+            </div>
+            <div className='flex flex-col gap-2'>
+                <Label>Ukuran</Label>
+                <Slider defaultValue={[activeDecalData.scale]} min={0.05} max={0.3} step={0.01} onValueChange={(v) => handleScaleChange(v[0])} />
+            </div>
+            <div className='flex flex-col gap-2'>
+                <Label>Rotasi</Label>
+                <Slider defaultValue={[MathUtils.radToDeg(activeDecalData.rotation.z)]} min={-180} max={180} step={1} onValueChange={(v) => handleRotationChange(v[0])} />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
@@ -318,7 +375,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                         <div className="flex flex-col gap-2">
                         {decals.map((decal, index) => (
                             <div key={decal.id} 
-                                 className={`p-2 border rounded-lg flex justify-between items-center cursor-pointer ${activeDecalId === decal.id ? 'border-primary bg-primary/10' : 'bg-background'}`}
+                                 className={`p-2 border rounded-lg flex justify-between items-center cursor-pointer transition-colors ${activeDecalId === decal.id ? 'border-primary bg-primary/10' : 'bg-background hover:bg-accent'}`}
                                  onClick={() => setActiveDecalId(decal.id)}>
                                 <span>{`Sisi ${index + 1}: ${decal.type === 'logo' ? 'Logo' : `Teks "${decal.content}"`}`}</span>
                                 <Button size="icon" variant="ghost" className='h-7 w-7' onClick={(e) => { e.stopPropagation(); handleRemoveDecal(decal.id); }}>
@@ -330,21 +387,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                     </div>
                 )}
 
-                {activeDecalData?.type === 'text' && (
-                     <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/30">
-                        <Label>Edit Teks Aktif</Label>
-                        <Input 
-                            value={activeDecalData.content}
-                            onChange={(e) => handleUpdateDecal(activeDecalData.id, { content: e.target.value })}
-                        />
-                         <Select value={activeDecalData.color} onValueChange={(v) => handleUpdateDecal(activeDecalData.id, { color: v })}>
-                             <SelectTrigger><SelectValue placeholder="Warna Teks" /></SelectTrigger>
-                             <SelectContent>
-                                 {textColors.map(c => <SelectItem key={c.name} value={c.value}>{c.name}</SelectItem>)}
-                             </SelectContent>
-                         </Select>
-                    </div>
-                )}
+                <DecalEditor />
 
             </div>
         )}

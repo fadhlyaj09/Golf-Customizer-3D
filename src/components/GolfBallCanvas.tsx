@@ -1,10 +1,10 @@
 
 'use client';
 
-import React, { useRef, Suspense } from 'react';
+import React, { useRef, Suspense, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { OrbitControls, Decal as DreiDecal, Text } from '@react-three/drei';
+import { OrbitControls, Decal as DreiDecal, Text, useTexture } from '@react-three/drei';
 import type { Decal } from '@/lib/types';
 
 // Custom Shader Material for Golf Ball Dimples
@@ -12,7 +12,6 @@ const vertexShader = `
   varying vec3 vNormal;
   varying vec3 vPosition;
   
-  // Perlin noise function for pseudo-random dimples
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -70,7 +69,6 @@ const vertexShader = `
     vNormal = normal;
     vPosition = position;
     
-    // Create dimples using noise. A smaller multiplier creates a more subtle dimple.
     float noise = snoise(position * u_scale);
     vec3 newPosition = position + normal * noise * 0.035;
 
@@ -92,7 +90,6 @@ const fragmentShader = `
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 
-    // Increased ambient light for a brighter overall look, and stronger specular for highlights
     vec3 ambient = vec3(0.4);
     vec3 finalColor = ambient + diffuse * u_color + vec3(0.7) * spec;
 
@@ -107,19 +104,19 @@ interface GolfBallCanvasProps {
   setActiveDecalId: (id: string | null) => void;
 }
 
-function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
+function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: Omit<GolfBallCanvasProps, 'onCanvasReady'>) {
   const meshRef = useRef<THREE.Mesh>(null!);
-  const materialRef = useRef<THREE.ShaderMaterial>(null!);
 
-  const uniforms = React.useMemo(() => ({
+  const uniforms = useMemo(() => ({
     u_time: { value: 0.0 },
     u_color: { value: new THREE.Color(ballColor) },
-    u_scale: { value: 40.0 } // Controls the number of dimples
+    u_scale: { value: 40.0 }
   }), [ballColor]);
 
   useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.u_time.value = state.clock.getElapsedTime();
+    if (meshRef.current) {
+        const material = meshRef.current.material as THREE.ShaderMaterial;
+        material.uniforms.u_time.value = state.clock.getElapsedTime();
     }
   });
 
@@ -134,10 +131,9 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
       <directionalLight position={[10, 10, 5]} intensity={2.0} castShadow />
       
       <mesh ref={meshRef} onPointerDown={handlePointerDown} castShadow>
-        {/* Using a more detailed Icosahedron for smoother dimples */}
         <icosahedronGeometry args={[0.5, 8]} /> 
         <shaderMaterial
-          ref={materialRef}
+          key={THREE.ShaderMaterial.key}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
           uniforms={uniforms}
@@ -164,7 +160,12 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    const texture = (decal.type === 'logo' && decal.content) ? new THREE.TextureLoader().load(decal.content) : null;
+    const texture = useMemo(() => {
+        if (decal.type === 'logo' && decal.content) {
+            return new THREE.TextureLoader().load(decal.content);
+        }
+        return null;
+    }, [decal.type, decal.content]);
 
     return (
         <DreiDecal
@@ -173,14 +174,13 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
-            {/* The decal material is separate from the ball itself */}
             <meshStandardMaterial
-                map={texture || undefined}
                 polygonOffset
                 polygonOffsetFactor={-10}
                 transparent
                 roughness={0.6}
                 toneMapped={false}
+                map={texture}
                 emissive={isActive ? '#00A3FF' : '#000000'}
                 emissiveIntensity={isActive ? 0.3 : 0}
             >
