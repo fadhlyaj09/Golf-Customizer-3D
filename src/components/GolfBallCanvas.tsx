@@ -15,12 +15,6 @@ interface GolfBallCanvasProps {
 
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
-  
-  // Load texture locally from the public folder to avoid CORS issues.
-  const normalMap = useTexture('/textures/golf_ball_normal.jpg');
-  normalMap.wrapS = THREE.RepeatWrapping;
-  normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(4, 4);
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -45,7 +39,6 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
           color={ballColor}
           roughness={0.4}
           metalness={0.1}
-          normalMap={normalMap}
         />
 
         <Suspense fallback={null}>
@@ -68,7 +61,6 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // Only try to load a texture if it's a logo and has content
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
@@ -78,12 +70,10 @@ function BallDecal({ decal, isActive, onClick }: {
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
-            {/* The material for the decal. It receives a texture if it's a logo. */}
-            {/* For text, we'll render a <Text> component inside. */}
             <meshStandardMaterial
                 map={texture || undefined}
                 polygonOffset
-                polygonOffsetFactor={-10} // Prevents z-fighting
+                polygonOffsetFactor={-10}
                 transparent
                 roughness={0.6}
                 toneMapped={false}
@@ -112,11 +102,11 @@ export function GolfBallCanvas({ ballColor, decals, activeDecalId, setActiveDeca
       gl={{ 
         antialias: true, 
         alpha: true,
-        preserveDrawingBuffer: true // Required for exporting toDataURL
+        preserveDrawingBuffer: true 
       }}
       camera={{ position: [0, 0, 1.5], fov: 50 }}
       onCreated={({ scene }) => {
-        scene.background = null; // Transparent background
+        scene.background = null;
       }}
     >
       <GolfBall 
