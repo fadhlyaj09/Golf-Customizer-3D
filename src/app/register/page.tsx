@@ -118,15 +118,15 @@ export default function RegisterPage() {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSignUp)}>
                         <CardContent className="grid grid-cols-1 gap-6">
-                             <div className="relative my-2">
-                                <Button variant="outline" className="w-full" type="button" onClick={handleGoogleSignIn}>
-                                    <GoogleIcon className="mr-2 h-5 w-5" />
-                                    Daftar dengan Google
-                                </Button>
-                                <div className="absolute inset-0 flex items-center -z-10 mt-12">
+                             <Button variant="outline" className="w-full" type="button" onClick={handleGoogleSignIn}>
+                                <GoogleIcon className="mr-2 h-5 w-5" />
+                                Daftar dengan Google
+                            </Button>
+                            <div className="relative my-2">
+                                <div className="absolute inset-0 flex items-center">
                                     <span className="w-full border-t" />
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase mt-4">
+                                <div className="relative flex justify-center text-xs uppercase">
                                     <span className="bg-background px-2 text-muted-foreground">Atau daftar dengan email</span>
                                 </div>
                             </div>

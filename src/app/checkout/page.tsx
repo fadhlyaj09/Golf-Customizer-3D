@@ -154,16 +154,16 @@ export default function CheckoutPage() {
   const useAddress = useCallback(async (addr: Address) => {
     const provinceOption = provinces.find(p => p.label === addr.province) || null;
     
-    // Reset form with new address data
+    // Reset form values to reflect the chosen address
     form.reset({
         name: addr.name,
         phone: addr.phone,
         address: addr.fullAddress,
         zip: addr.zip,
         province: provinceOption,
-        // We will set the city separately after fetching
-        city: null, 
-        saveAddress: false, // Don't re-save an existing address
+        city: null, // Set to null initially, will be populated after cities are fetched
+        saveAddress: false, // Don't re-save an existing address by default
+        paymentMethod: form.getValues('paymentMethod'), // Keep the selected payment method
     });
 
     if (provinceOption) {
@@ -172,16 +172,15 @@ export default function CheckoutPage() {
         const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
         setCities(cityOptions);
         
-        // Find the city option that matches the saved address
+        // Find the matching city option from the fetched list
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
         
-        // IMPORTANT: Set the city value and trigger validation
-        form.setValue('city', cityOption, { shouldValidate: true });
+        // **THE FIX**: Set the city value and immediately trigger validation
+        if (cityOption) {
+            form.setValue('city', cityOption, { shouldValidate: true });
+        }
         
         setIsCitiesLoading(false);
-    } else {
-        // If province is not found, clear city as well
-        form.setValue('city', null, { shouldValidate: true });
     }
   }, [provinces, form]);
 
@@ -581,3 +580,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
