@@ -12,6 +12,7 @@ const vertexShader = `
   varying vec3 vNormal;
   varying vec3 vPosition;
   
+  // Simplex Noise function by Stefan Gustavson
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -90,7 +91,7 @@ const fragmentShader = `
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 
-    vec3 ambient = vec3(0.4);
+    vec3 ambient = vec3(0.5);
     vec3 finalColor = ambient + diffuse * u_color + vec3(0.7) * spec;
 
     gl_FragColor = vec4(finalColor, 1.0);
@@ -127,11 +128,11 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: Omit<G
 
   return (
     <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[10, 10, 5]} intensity={2.0} castShadow />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[10, 10, 5]} intensity={2.5} castShadow />
       
       <mesh ref={meshRef} onPointerDown={handlePointerDown} castShadow>
-        <icosahedronGeometry args={[0.5, 8]} /> 
+        <icosahedronGeometry args={[0.5, 12]} /> 
         <shaderMaterial
           key={THREE.ShaderMaterial.key}
           vertexShader={vertexShader}
