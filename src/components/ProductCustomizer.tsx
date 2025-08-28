@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, ChangeEvent } from 'react';
-import type { Product, Customization, Decal } from '@/lib/types';
+import type { Product, Customization, Decal, SideCustomization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,11 @@ const decalPositions = [
     { position: new Vector3(0, 0, 0.5), rotation: new Euler(0, 0, 0) }, // Front
     { position: new Vector3(0, 0, -0.5), rotation: new Euler(0, Math.PI, 0) } // Back
 ]
+
+function textToDataUri(text: string) {
+    return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+}
+
 
 export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
@@ -187,21 +192,21 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   
   const activeDecalData = decals.find(d => d.id === activeDecalId);
 
-  const getDecalDataForPreview = () => {
-    const side1 = decals.find(d => d.position.z > 0); // Front
-    const side2 = decals.find(d => d.position.z < 0); // Back
-    
-    const getTextContent = (decal?: Decal) => (decal?.type === 'text' ? decal.content : undefined);
-    const getLogoContent = (decal?: Decal) => (decal?.type === 'logo' ? decal.content : '');
-
-    return {
-        logoDataUri: getLogoContent(side1),
-        textData: getTextContent(side1),
-        side2Data: side2 ? { type: side2.type, content: side2.content, color: side2.color, font: side2.font } : { type: 'none', content: ''}
+  const getDesignDataForPreview = () => {
+    const firstDecal = decals[0];
+    if (!firstDecal) {
+      return '';
     }
+    if (firstDecal.type === 'logo') {
+      return firstDecal.content;
+    }
+    if (firstDecal.type === 'text') {
+      return textToDataUri(firstDecal.content);
+    }
+    return '';
   }
 
-  const { logoDataUri, textData, side2Data } = getDecalDataForPreview();
+  const designDataUri = getDesignDataForPreview();
 
 
   return (
@@ -386,12 +391,9 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
            )}
            
             <RealisticPreview
-                ballDesignDataUri={logoDataUri}
-                customText={textData}
-                side2Data={side2Data}
-                isCustomizationAdded={decals.length > 0}
+                ballDesignDataUri={designDataUri}
             >
-                <Button size="lg" variant="outline" disabled={decals.length === 0}>
+                <Button size="lg" variant="outline" disabled={!designDataUri}>
                     <Wand2 className="mr-2 h-5 w-5" />
                     Generate Realistic Preview
                 </Button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,17 +17,13 @@ import { getRealisticPreview } from '@/actions/aiActions';
 import Image from 'next/image';
 import { Loader2, Wand2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Customization } from '@/lib/types';
 
 interface RealisticPreviewProps {
   children: React.ReactNode;
   ballDesignDataUri: string;
-  customText?: string;
-  side2Data: Customization['side2'];
-  isCustomizationAdded: boolean;
 }
 
-export function RealisticPreview({ children, ballDesignDataUri, customText, side2Data, isCustomizationAdded }: RealisticPreviewProps) {
+export function RealisticPreview({ children, ballDesignDataUri }: RealisticPreviewProps) {
   const [open, setOpen] = useState(false);
   const [lighting, setLighting] = useState('sunny');
   const [angle, setAngle] = useState('top-down');
@@ -39,7 +35,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
 
   const handleGeneratePreview = async () => {
     if (isLoading) return;
-    if (!isCustomizationAdded) {
+    if (!ballDesignDataUri) {
         toast({ title: 'Kustomisasi Kosong', description: 'Tambahkan logo atau teks untuk membuat preview.', variant: 'destructive'});
         return;
     }
@@ -48,10 +44,8 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
     setPreviewImage(null);
     setError(null);
     try {
-      const designUri = ballDesignDataUri || `data:text/plain;charset=utf-8,${encodeURIComponent(customText || '')}`;
-
       const result = await getRealisticPreview({
-        ballDesignDataUri: designUri, // This should now always be valid if button is enabled
+        ballDesignDataUri: ballDesignDataUri,
         lightingCondition: lighting,
         angle: angle,
       });
@@ -147,7 +141,7 @@ export function RealisticPreview({ children, ballDesignDataUri, customText, side
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !isCustomizationAdded}>
+          <Button type="button" onClick={handleGeneratePreview} disabled={isLoading || !ballDesignDataUri}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
             Generate
           </Button>
