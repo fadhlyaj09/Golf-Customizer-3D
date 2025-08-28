@@ -27,6 +27,10 @@ export function Header() {
   const { cart } = useCart();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Explicitly get the admin email from environment variables
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isAdmin = user?.email === adminEmail;
 
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -36,7 +40,6 @@ export function Header() {
   }
 
   const userInitial = user?.displayName?.charAt(0).toUpperCase() || '?';
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const navLinks = [
     { href: "/product/ag-1-standard", label: "Products" },
