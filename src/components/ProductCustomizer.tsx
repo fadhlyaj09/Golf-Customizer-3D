@@ -198,10 +198,10 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       return '';
     }
     if (firstDecal.type === 'logo') {
-      return firstDecal.content;
+      return firstDecal.content; // This is already a data URI
     }
     if (firstDecal.type === 'text') {
-      return textToDataUri(firstDecal.content);
+      return textToDataUri(firstDecal.content); // Convert text to data URI
     }
     return '';
   }
