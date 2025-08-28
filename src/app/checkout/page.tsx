@@ -202,7 +202,9 @@ export default function CheckoutPage() {
   
 
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + (selectedShipping?.cost[0].value || 0);
+  const shippingCost = selectedShipping?.cost[0].value || 0;
+  const total = subtotal + shippingCost;
+
 
   const onSubmit = async (data: CheckoutFormValues) => {
     if (!user || !selectedShipping || !data.city) {
@@ -257,7 +259,7 @@ export default function CheckoutPage() {
     clearCart();
     router.push('/');
   };
-
+  
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
@@ -393,7 +395,7 @@ export default function CheckoutPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Ringkasan Pesanan</CardTitle>
-              </Header>
+              </CardHeader>
               <CardContent>
                 {isSameDayEligible(totalQuantity) && (
                     <Badge variant="secondary" className="mb-4 bg-green-100 text-green-800 border-green-300">
@@ -430,7 +432,7 @@ export default function CheckoutPage() {
                    </div>
                    <div className="flex justify-between">
                         <span>Pengiriman</span>
-                        <span>{selectedShipping ? formatRupiah(selectedShipping.cost[0].value) : 'Pilih alamat'}</span>
+                        <span>{selectedShipping ? formatRupiah(shippingCost) : 'Pilih alamat'}</span>
                    </div>
                    <div className="flex justify-between text-lg font-bold border-t pt-4 mt-2">
                         <span>Total</span>
