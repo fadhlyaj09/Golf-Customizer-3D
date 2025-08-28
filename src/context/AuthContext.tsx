@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -19,8 +20,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // Check if there is a pending display name to set.
+        const pendingDisplayName = localStorage.getItem('pendingDisplayName');
+        if (pendingDisplayName && !currentUser.displayName) {
+          try {
+            await updateProfile(currentUser, { displayName: pendingDisplayName });
+            // Manually update the user object with the new display name
+            setUser({ ...currentUser, displayName: pendingDisplayName });
+            localStorage.removeItem('pendingDisplayName');
+          } catch (error) {
+            console.error("Failed to update display name:", error);
+            setUser(currentUser); // Still set the user, even if update fails
+          }
+        } else {
+          setUser(currentUser);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -48,15 +49,13 @@ export default function RegisterPage() {
 
     const handleSignUp = async (data: RegisterFormValues) => {
         try {
-            // 1. Create user in Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const user = userCredential.user;
-
-            // 2. Update the user's profile in Firebase Auth
-            // This is a reliable operation and sufficient for basic user data.
-            await updateProfile(user, {
-                displayName: `${data.firstName} ${data.lastName}`
-            });
+            // Step 1: Create user in Firebase Auth. This is the only critical step here.
+            await createUserWithEmailAndPassword(auth, data.email, data.password);
+            
+            // Step 2: Store display name in localStorage to be handled by AuthProvider.
+            // This decouples the profile update from the critical registration path.
+            const displayName = `${data.firstName} ${data.lastName}`;
+            localStorage.setItem('pendingDisplayName', displayName);
             
             toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah berhasil dibuat. Anda akan dialihkan.' });
             router.push('/');

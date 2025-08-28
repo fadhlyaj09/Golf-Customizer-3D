@@ -11,7 +11,7 @@ export function Footer() {
             <div className="flex flex-col gap-4">
                 <Logo />
                 <p className="text-muted-foreground text-sm">
-                    Premium golf balls for the modern player.
+                    Perfect Ball For Your Game.
                 </p>
             </div>
             <div className="flex flex-col gap-3">
