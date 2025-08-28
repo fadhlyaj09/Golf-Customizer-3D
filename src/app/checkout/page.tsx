@@ -118,10 +118,6 @@ export default function CheckoutPage() {
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + (selectedShipping?.cost[0].value || 0);
 
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-  }
-
   const onSubmit = async (data: CheckoutFormValues) => {
     if (!user || !selectedShipping) {
         toast({ title: 'Error', description: 'Informasi tidak lengkap.', variant: 'destructive' });
@@ -155,6 +151,10 @@ export default function CheckoutPage() {
     });
     clearCart();
     router.push('/');
+  };
+
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
   if (userLoading) {
