@@ -84,6 +84,14 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {/* --- DEBUGGING CODE START --- */}
+            <DropdownMenuItem disabled>
+              <span className='text-xs text-muted-foreground'>User: {user?.email || 'Not logged in'}</span>
+            </DropdownMenuItem>
+             <DropdownMenuItem disabled>
+              <span className='text-xs text-muted-foreground'>Admin: {adminEmail || 'Not set'}</span>
+            </DropdownMenuItem>
+             {/* --- DEBUGGING CODE END --- */}
             {isAdmin && (
               <DropdownMenuItem onClick={() => router.push('/admin')}>
                 <UserCog className="mr-2 h-4 w-4" />
