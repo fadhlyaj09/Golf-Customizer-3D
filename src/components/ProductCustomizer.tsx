@@ -254,7 +254,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
   return (
     <div className="grid grid-cols-1 gap-x-12 lg:grid-cols-2">
-      <div className="lg:sticky top-24 h-[50vh] lg:h-auto lg:min-h-[calc(100vh-6rem)]">
+      <div className="h-[50vh] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24">
          <GolfBallCanvas 
             ballColor={customization.color?.hex || '#ffffff'}
             decals={decals}
