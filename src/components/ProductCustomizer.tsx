@@ -15,7 +15,6 @@ import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { GolfBallCanvas } from './GolfBallCanvas';
 import { Euler, MathUtils, Vector3 } from 'three';
-import { RealisticPreview } from './RealisticPreview';
 
 
 interface ProductCustomizerProps {
@@ -30,15 +29,11 @@ const textColors = [
     { name: 'Green', value: '#008000'},
 ];
 
+// Positions for the first and second decal
 const decalPositions = [
     { position: new Vector3(0, 0, 0.5), rotation: new Euler(0, 0, 0) }, // Front
     { position: new Vector3(0, 0, -0.5), rotation: new Euler(0, Math.PI, 0) } // Back
 ]
-
-function textToDataUri(text: string) {
-    return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
-}
-
 
 export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const { user } = useAuth();
@@ -71,16 +66,14 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   useEffect(() => {
-    if (!product) return; 
+    if (!product || product.isFloater) return; 
 
     let finalPrice = product.basePrice || 0;
     
-    if (!product.isFloater) {
-        if (customization.printSides === 1) {
-            finalPrice += 25000;
-        } else if (customization.printSides === 2) {
-            finalPrice += 40000; // 25000 for 1st side + 15000 for 2nd
-        }
+    if (customization.printSides === 1) {
+        finalPrice += 25000;
+    } else if (customization.printSides === 2) {
+        finalPrice += 40000; // 25000 for 1st side + 15000 for 2nd
     }
 
     setTotalPrice(finalPrice * quantity);
@@ -98,14 +91,19 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     
     // Trim decals if user reduces print sides
     setDecals(prev => prev.slice(0, sides));
-    setActiveDecalId(null);
+    if (sides < 2 && decals.length > 1) {
+      if (activeDecalId === decals[1]?.id) setActiveDecalId(null);
+    }
+    if (sides < 1 && decals.length > 0) {
+      setActiveDecalId(null);
+    }
   }
   
   const handleAddDecal = (type: 'logo' | 'text') => {
     if (decals.length >= customization.printSides) return;
 
     // Use the next available position, place second decal on opposite side
-    const positionIndex = decals.length > 0 ? 1 : 0;
+    const positionIndex = decals.length;
     const newDecal: Decal = {
       id: MathUtils.generateUUID(),
       type: type,
@@ -116,6 +114,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     };
     
     if (type === 'logo') {
+      // Trigger hidden file input for logo upload
       const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
       fileInput?.click(); 
     } else {
@@ -126,10 +125,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
        });
     }
   }
-
-  const handleUpdateDecal = (id: string, newProps: Partial<Omit<Decal, 'id' | 'type'>>) => {
-    setDecals(prev => prev.map(d => d.id === id ? { ...d, ...newProps } : d));
-  };
   
   const handleRemoveDecal = (id: string) => {
     setDecals(prev => prev.filter(d => d.id !== id));
@@ -137,6 +132,11 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       setActiveDecalId(null);
     }
   };
+  
+  const handleUpdateDecal = (id: string, newProps: Partial<Omit<Decal, 'id' | 'type'>>) => {
+    setDecals(prev => prev.map(d => d.id === id ? { ...d, ...newProps } : d));
+  };
+
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
      if (decals.length >= customization.printSides) return;
@@ -147,19 +147,20 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
       reader.onloadend = () => {
         const result = reader.result as string;
         // Use the next available position
-        const positionIndex = decals.length > 0 ? 1 : 0;
+        const positionIndex = decals.length;
         const newDecal: Decal = {
           id: MathUtils.generateUUID(),
           type: 'logo',
           content: result,
           ...decalPositions[positionIndex],
           scale: 0.15,
+          color: '#000000',
         };
         setDecals(prev => [...prev, newDecal]);
         setActiveDecalId(newDecal.id);
       };
       reader.readAsDataURL(file);
-      e.target.value = '';
+      e.target.value = ''; // Reset file input
     }
   };
 
@@ -192,26 +193,9 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   
   const activeDecalData = decals.find(d => d.id === activeDecalId);
 
-  const getDesignDataForPreview = () => {
-    const firstDecal = decals[0];
-    if (!firstDecal) {
-      return '';
-    }
-    if (firstDecal.type === 'logo') {
-      return firstDecal.content; // This is already a data URI
-    }
-    if (firstDecal.type === 'text') {
-      return textToDataUri(firstDecal.content); // Convert text to data URI
-    }
-    return '';
-  }
-
-  const designDataUri = getDesignDataForPreview();
-
-
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-      <div className="flex flex-col items-center gap-4 sticky top-24 h-[80vh]">
+      <div className="flex flex-col items-center gap-4 sticky top-24 h-[calc(100vh-8rem)] min-h-[300px] lg:h-auto lg:min-h-[500px]">
          <GolfBallCanvas 
             ballColor={customization.color?.hex || '#ffffff'}
             decals={decals}
@@ -362,7 +346,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                     </div>
                 )}
 
-
             </div>
         )}
 
@@ -390,15 +373,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
             </Button>
            )}
            
-            <RealisticPreview
-                ballDesignDataUri={designDataUri}
-            >
-                <Button size="lg" variant="outline" disabled={!designDataUri}>
-                    <Wand2 className="mr-2 h-5 w-5" />
-                    Generate Realistic Preview
-                </Button>
-            </RealisticPreview>
-
             <Button size="lg" variant="secondary" asChild>
                 <a href="https://wa.me/6285723224918?text=Halo%20Articogolf,%20saya%20tertarik%20dengan%20bola%20golf%20custom." target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-5 w-5" />
