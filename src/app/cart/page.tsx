@@ -104,7 +104,6 @@ export default function CartPage() {
                                     src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl}
                                     alt={item.product.name}
                                     fill
-                                    unoptimized
                                     className="object-cover"
                                 />
                                 </div>

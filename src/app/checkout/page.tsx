@@ -402,7 +402,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className='relative w-16 h-16 rounded-md bg-muted overflow-hidden'>
-                           <Image src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl} alt={item.product.name} fill unoptimized className="object-cover" />
+                           <Image src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl} alt={item.product.name} fill className="object-cover" />
                         </div>
                         <div>
                           <p className="font-medium">{item.product.name} x {item.quantity}</p>
@@ -438,7 +438,7 @@ export default function CheckoutPage() {
             <Alert className="bg-muted/50 border-dashed text-xs">
                 <Truck className="h-4 w-4" />
                 <AlertDescription>
-                    <b>Same Day Shipping:</b> Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan &gt;5 box diproses 1-2 hari kerja.
+                    <b>Same Day Shipping:</b> Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan >5 box diproses 1-2 hari kerja.
                 </AlertDescription>
             </Alert>
              <Button type="submit" size="lg" className="w-full" disabled={!selectedShipping || form.formState.isSubmitting}>
