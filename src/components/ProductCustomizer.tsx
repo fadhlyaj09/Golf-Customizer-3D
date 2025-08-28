@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, ChangeEvent, useCallback } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
-import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Type, Image as ImageIcon, MessageCircle, Trash2, Truck, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from './ui/separator';
@@ -43,6 +42,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [decals, setDecals] = useState<Decal[]>([]);
   const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
   const [customization, setCustomization] = useState<Customization>({
+    packaging: 'box',
     printSides: 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
@@ -191,7 +191,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.description}</p>
-          {!product.isFloater && <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / box (12 bola)</p>}
+          {!product.isFloater && <p className="mt-4 text-2xl font-bold">{formatRupiah(product.basePrice)} / {customization.packaging === 'mesh' ? 'bag' : 'box'} (12 bola)</p>}
         </div>
         
         <Alert className="bg-muted/50 border-dashed">
@@ -215,6 +215,26 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                 <Separator />
                 <h2 className="text-xl font-semibold">Customisasi Bola Anda</h2>
                 
+                <div className="flex flex-col gap-3">
+                    <Label className="text-base font-medium">Packaging</Label>
+                    <RadioGroup 
+                        value={customization.packaging} 
+                        onValueChange={(value) => setCustomization(prev => ({...prev, packaging: value as 'box' | 'mesh' }))}
+                        className="grid grid-cols-2 gap-4"
+                    >
+                        <Label className="flex items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                            <RadioGroupItem value="box" id="pkg-box" />
+                            <Package className="h-5 w-5" />
+                            <span>Box Premium</span>
+                        </Label>
+                        <Label className="flex items-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                             <RadioGroupItem value="mesh" id="pkg-mesh" />
+                             <Package className="h-5 w-5" />
+                            <span>Mesh Bag</span>
+                        </Label>
+                    </RadioGroup>
+                </div>
+
                 {product.colors && product.colors.length > 0 && (
                 <div className="flex flex-col gap-3">
                     <Label className="text-base font-medium">Warna Bola</Label>

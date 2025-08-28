@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Minus, Plus, Trash2, XCircle, Truck } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, XCircle, Truck, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Customization } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +33,9 @@ export default function CartPage() {
   
   const renderCustomizationDetails = (customization: Customization) => {
     const details = [];
+    if (customization.packaging) {
+      details.push(`Packaging: ${customization.packaging === 'box' ? 'Box Premium' : 'Mesh Bag'}`);
+    }
     if (customization.color) details.push(`Warna: ${customization.color.name}`);
 
     if (customization.printSides > 0) {

@@ -407,7 +407,7 @@ export default function CheckoutPage() {
                         <div>
                           <p className="font-medium">{item.product.name} x {item.quantity}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatRupiah(item.price)} per box
+                            {formatRupiah(item.price)} per {item.customization.packaging === 'mesh' ? 'bag' : 'box'}
                           </p>
                         </div>
                       </div>
@@ -417,7 +417,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="mt-6 border-t pt-6 space-y-2">
                    <div className="flex justify-between">
-                        <span>Subtotal ({totalQuantity} box)</span>
+                        <span>Subtotal ({totalQuantity} item)</span>
                         <span>{formatRupiah(subtotal)}</span>
                    </div>
                     <div className="flex justify-between">

@@ -20,6 +20,7 @@ export interface SideCustomization {
 }
 
 export interface Customization {
+  packaging: 'box' | 'mesh';
   color?: { name: string; hex: string; imageUrl?: string };
   printSides: 0 | 1 | 2;
   side1: SideCustomization;

@@ -38,7 +38,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Product, customization: Customization, quantity: number, price: number) => {
     setCart((prevCart) => {
-      const customId = JSON.stringify(customization);
+      // Make ID more specific by including packaging
+      const customId = JSON.stringify({
+        color: customization.color,
+        printSides: customization.printSides,
+        side1: customization.side1,
+        side2: customization.side2,
+        packaging: customization.packaging,
+      });
       const itemId = `${product.id}-${customId}`;
 
       const existingItem = prevCart.find((item) => item.id === itemId);
