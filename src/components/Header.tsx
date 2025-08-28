@@ -1,7 +1,8 @@
+
 'use client';
 
 import { cn } from '@/lib/utils';
-import { LogOut, ShoppingCart, User as UserIcon, X, Menu } from 'lucide-react';
+import { LogOut, ShoppingCart, User as UserIcon, X, Menu, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './Logo';
@@ -35,6 +36,7 @@ export function Header() {
   }
 
   const userInitial = user?.displayName?.charAt(0).toUpperCase() || '?';
+  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const navLinks = [
     { href: "/product/ag-1-standard", label: "Products" },
@@ -100,6 +102,12 @@ export function Header() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => router.push('/admin')}>
+                    <UserCog className="mr-2 h-4 w-4" />
+                    <span>Admin</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -132,6 +140,11 @@ export function Header() {
                     {user ? (
                       <div className='text-center'>
                         <p>Welcome, {user.displayName}</p>
+                         {isAdmin && (
+                            <Button onClick={() => { router.push('/admin'); setMobileMenuOpen(false); }} className='w-full mt-2' variant="secondary">
+                                Admin
+                            </Button>
+                         )}
                         <Button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className='w-full mt-2'>Logout</Button>
                       </div>
                     ) : (
