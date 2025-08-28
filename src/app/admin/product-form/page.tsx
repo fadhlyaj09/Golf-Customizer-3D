@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -28,14 +29,9 @@ const ProductSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   basePrice: z.coerce.number().min(0, 'Price must be a positive number'),
   image: z.any()
-    .refine((files) => {
-        if (!files || files.length === 0) return true; // Allow no file on edit
-        return files?.[0]?.size <= MAX_FILE_SIZE;
-    }, `Max image size is 5MB.`)
-    .refine((files) => {
-        if (!files || files.length === 0) return true;
-        return ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type);
-    }, "Only .jpg, .jpeg, .png and .webp formats are supported."),
+    .optional()
+    .refine((files) => !files || files.length === 0 || files?.[0]?.size <= MAX_FILE_SIZE, `Max image size is 5MB.`)
+    .refine((files) => !files || files.length === 0 || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
   isFloater: z.boolean().default(false),
 });
 

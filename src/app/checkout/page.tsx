@@ -226,46 +226,6 @@ export default function CheckoutPage() {
     }
 
     const orderId = `AG-${Date.now()}`;
-
-    // --- Save Address Logic ---
-    if(data.saveAddress) {
-        const addressesRef = collection(db, 'users', user.uid, 'addresses');
-        const batch = writeBatch(db);
-        
-        const newAddressIsDefault = savedAddresses.length === 0;
-        if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
-            savedAddresses.forEach(addr => {
-                if(addr.isDefault) {
-                    const oldDefaultRef = doc(addressesRef, addr.id);
-                    batch.update(oldDefaultRef, { isDefault: false });
-                }
-            })
-        }
-        
-        const newAddressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
-        const newAddressRef = doc(addressesRef, newAddressId);
-        
-        const newAddress: Address = { 
-            id: newAddressId,
-            name: data.name,
-            phone: data.phone,
-            fullAddress: data.address,
-            province: data.province!.label,
-            city: data.city!.label,
-            zip: data.zip,
-            isDefault: newAddressIsDefault,
-        };
-        
-        try {
-            batch.set(newAddressRef, newAddress);
-            await batch.commit();
-            toast({ title: 'Sukses', description: 'Alamat baru berhasil disimpan.' });
-            setSavedAddresses(prev => [...prev, newAddress]);
-        } catch(e) {
-            console.error("Error saving address", e);
-            toast({ title: 'Error', description: 'Gagal menyimpan alamat baru.', variant: 'destructive' });
-        }
-    }
     
     // --- Save Order Logic ---
     const orderData = {
@@ -304,7 +264,7 @@ export default function CheckoutPage() {
     try {
         await setDoc(doc(db, 'orders', orderId), orderData);
 
-        // Call Genkit flow to save to Google Sheets (don't block UI)
+        // Call Genkit flow to save to Google Sheets (fire-and-forget)
         saveOrderToSheet(orderData).then(result => {
           if (result.success) {
             console.log('Order successfully saved to Google Sheet');
@@ -315,12 +275,47 @@ export default function CheckoutPage() {
           console.error('Error calling saveOrderToSheet flow:', error);
         });
 
+        // --- Save Address Logic (only after order is successful) ---
+        if(data.saveAddress) {
+            const addressesRef = collection(db, 'users', user.uid, 'addresses');
+            const batch = writeBatch(db);
+            
+            const newAddressIsDefault = savedAddresses.length === 0;
+            if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
+                savedAddresses.forEach(addr => {
+                    if(addr.isDefault) {
+                        const oldDefaultRef = doc(addressesRef, addr.id);
+                        batch.update(oldDefaultRef, { isDefault: false });
+                    }
+                })
+            }
+            
+            const newAddressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
+            const newAddressRef = doc(addressesRef, newAddressId);
+            
+            const newAddress: Address = { 
+                id: newAddressId,
+                name: data.name,
+                phone: data.phone,
+                fullAddress: data.address,
+                province: data.province!.label,
+                city: data.city!.label,
+                zip: data.zip,
+                isDefault: newAddressIsDefault,
+            };
+            
+            batch.set(newAddressRef, newAddress);
+            await batch.commit();
+            toast({ title: 'Sukses', description: 'Alamat baru berhasil disimpan.' });
+            setSavedAddresses(prev => [...prev, newAddress]);
+        }
+
         setOrderDetails(orderData);
         setOrderComplete(true);
         clearCart();
     } catch(e) {
-        console.error("Error saving order:", e);
-        toast({ title: 'Error', description: 'Gagal menyimpan pesanan. Silakan coba lagi.', variant: 'destructive' });
+        console.error("Error during checkout process:", e);
+        toast({ title: 'Error', description: 'Gagal memproses pesanan. Silakan coba lagi.', variant: 'destructive' });
     } finally {
         setIsSubmitting(false);
     }
