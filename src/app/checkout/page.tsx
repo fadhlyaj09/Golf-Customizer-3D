@@ -18,7 +18,7 @@ import { useEffect, useState, useCallback, useTransition } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { doc, setDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection, getDocs, writeBatch } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Address, City, Province, ShippingCost } from '@/lib/types';
 import { Label } from '@/components/ui/label';
@@ -32,8 +32,8 @@ import { getCities, getProvinces, getShippingCost } from '@/actions/shippingActi
 const checkoutSchema = z.object({
   name: z.string().min(2, 'Name is too short'),
   phone: z.string().min(10, 'Invalid phone number'),
-  province: z.object({ value: z.string(), label: z.string() }).nullable(),
-  city: z.object({ value: z.string(), label: z.string() }).nullable(),
+  province: z.object({ value: z.string(), label: z.string() }).nullable().refine(val => val, { message: "Province is required." }),
+  city: z.object({ value: z.string(), label: z.string() }).nullable().refine(val => val, { message: "City is required." }),
   address: z.string().min(10, 'Address is too short'),
   zip: z.string().min(5, 'Invalid ZIP code'),
   saveAddress: z.boolean().default(false),
@@ -60,14 +60,15 @@ export default function CheckoutPage() {
   const selectedItems = cart.filter(item => item.selected);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const [provinces, setProvinces] = useState<{value: string, label: string}[]>([]);
+  const [cities, setCities] = useState<{value: string, label: string}[]>([]);
   const [isCitiesLoading, setIsCitiesLoading] = useState(false);
   
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [isShippingLoading, setIsShippingLoading] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [isAddressLoading, setIsAddressLoading] = useState(true);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -78,7 +79,6 @@ export default function CheckoutPage() {
     }
   });
   
-  // Redirect if not logged in or cart is empty
   useEffect(() => {
     if (!userLoading && !user) {
       toast({title: "Harap Login", description: "Anda harus login untuk melanjutkan ke checkout.", variant: "destructive"});
@@ -91,25 +91,29 @@ export default function CheckoutPage() {
   }, [user, userLoading, router, cart.length, selectedItems.length, toast]);
 
   useEffect(() => {
-    getProvinces().then(setProvinces);
+    getProvinces().then(p => setProvinces(p.map(prov => ({value: prov.province_id, label: prov.province}))));
   }, [])
   
   const selectedProvinceId = form.watch('province')?.value;
   useEffect(() => {
-    if (selectedProvinceId) {
-      setIsCitiesLoading(true);
-      setCities([]);
-      form.setValue('city', null);
-      getCities(selectedProvinceId).then(res => {
-          setCities(res);
-          setIsCitiesLoading(false);
-      });
-    } else {
-        setCities([]);
-    }
+      const fetchCities = async () => {
+        if (selectedProvinceId) {
+            setIsCitiesLoading(true);
+            setCities([]);
+            form.setValue('city', null, { shouldValidate: true });
+            const cityData = await getCities(selectedProvinceId);
+            setCities(cityData.map(c => ({ value: c.city_id, label: c.city_name })));
+            setIsCitiesLoading(false);
+        } else {
+            setCities([]);
+        }
+      }
+      fetchCities();
   }, [selectedProvinceId, form]);
 
   const selectedCityId = form.watch('city')?.value;
+  const totalWeight = selectedItems.reduce((sum, item) => sum + (item.quantity * 600), 0);
+  
   useEffect(() => {
     const fetchShippingCost = async () => {
         if(selectedCityId && totalWeight > 0) {
@@ -121,20 +125,24 @@ export default function CheckoutPage() {
                 weight: totalWeight,
                 courier: 'jne'
             });
-            setShippingOptions(costs[0]?.costs || []);
-            // auto select first option
-            if(costs[0]?.costs.length > 0) {
-              setSelectedShipping(costs[0].costs[0])
+            const availableCosts = costs[0]?.costs || [];
+            setShippingOptions(availableCosts);
+            if(availableCosts.length > 0) {
+              setSelectedShipping(availableCosts[0])
             }
             setIsShippingLoading(false);
+        } else {
+            setShippingOptions([]);
+            setSelectedShipping(null);
         }
     }
     fetchShippingCost();
-  }, [selectedCityId, totalQuantity])
+  }, [selectedCityId, totalWeight])
 
 
   const loadSavedAddresses = useCallback(async () => {
     if (!user) return;
+    setIsAddressLoading(true);
     try {
       const addressesCol = collection(db, 'users', user.uid, 'addresses');
       const addressSnapshot = await getDocs(addressesCol);
@@ -142,28 +150,43 @@ export default function CheckoutPage() {
       setSavedAddresses(addressesList);
       const defaultAddress = addressesList.find(addr => addr.isDefault);
       if (defaultAddress) {
-        form.reset({
-            name: defaultAddress.name,
-            phone: defaultAddress.phone,
-            address: defaultAddress.fullAddress,
-            zip: defaultAddress.zip,
-            saveAddress: false,
-        });
+        useAddress(defaultAddress);
       }
     } catch (error) {
       console.error("Failed to load addresses:", error);
       toast({ title: 'Error', description: 'Gagal memuat alamat tersimpan.', variant: 'destructive' });
     }
-  }, [user, form, toast]);
+    setIsAddressLoading(false);
+  }, [user, toast, form]);
 
   useEffect(() => {
     if(user) {
       loadSavedAddresses();
     }
   }, [user, loadSavedAddresses]);
+  
+  const useAddress = (addr: Address) => {
+    const provinceOption = provinces.find(p => p.label === addr.province) || null;
+    form.reset({
+        name: addr.name,
+        phone: addr.phone,
+        address: addr.fullAddress,
+        zip: addr.zip,
+        province: provinceOption,
+        saveAddress: false,
+    });
+    // Need to wait for cities to be loaded based on province
+    if(provinceOption){
+        getCities(provinceOption.value).then(cityData => {
+            const cities = cityData.map(c => ({ value: c.city_id, label: c.city_name }))
+            setCities(cities);
+            const cityOption = cities.find(c => c.label === addr.city) || null;
+            form.setValue('city', cityOption, { shouldValidate: true });
+        });
+    }
+  };
 
 
-  const totalWeight = totalQuantity * 600; // 600g per box
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + (selectedShipping?.cost[0].value || 0);
 
@@ -174,21 +197,38 @@ export default function CheckoutPage() {
     }
 
     if(data.saveAddress) {
-        const addressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
-        const addressRef = doc(db, 'users', user.uid, 'addresses', addressId);
+        const addressesRef = collection(db, 'users', user.uid, 'addresses');
+        const batch = writeBatch(db);
+        
+        // If saving new address as default, unset other defaults
+        const newAddressIsDefault = savedAddresses.length === 0;
+        if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
+            savedAddresses.forEach(addr => {
+                if(addr.isDefault) {
+                    const oldDefaultRef = doc(addressesRef, addr.id);
+                    batch.update(oldDefaultRef, { isDefault: false });
+                }
+            })
+        }
+        
+        const newAddressId = doc(addressesRef).id;
+        const newAddressRef = doc(addressesRef, newAddressId);
         const newAddress: Address = { 
-            id: addressId,
+            id: newAddressId,
             name: data.name,
             phone: data.phone,
             fullAddress: data.address,
             province: data.province!.label,
             city: data.city!.label,
             zip: data.zip,
-            isDefault: savedAddresses.length === 0,
+            isDefault: newAddressIsDefault,
         };
+        
         try {
-            await setDoc(addressRef, newAddress);
+            batch.set(newAddressRef, newAddress);
+            await batch.commit();
             toast({ title: 'Sukses', description: 'Alamat baru berhasil disimpan.' });
+            setSavedAddresses(prev => [...prev, newAddress]); // Update local state
         } catch(e) {
             console.error("Error saving address", e);
             toast({ title: 'Error', description: 'Gagal menyimpan alamat baru.', variant: 'destructive' });
@@ -208,7 +248,7 @@ export default function CheckoutPage() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
-  if (userLoading) {
+  if (userLoading || isAddressLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
@@ -228,15 +268,9 @@ export default function CheckoutPage() {
                     <Label>Gunakan Alamat Tersimpan</Label>
                     <div className='flex gap-2 overflow-x-auto pb-2'>
                     {savedAddresses.map(addr => (
-                      <Card key={addr.id} className='p-4 min-w-[250px] cursor-pointer hover:border-primary' onClick={() => form.reset({
-                          name: addr.name,
-                          phone: addr.phone,
-                          address: addr.fullAddress,
-                          zip: addr.zip,
-                          saveAddress: false,
-                      })}>
-                        <p className='font-bold'>{addr.name} {addr.isDefault && <span className='text-xs text-primary'>(Utama)</span>}</p>
-                        <p className='text-sm text-muted-foreground'>{addr.fullAddress}</p>
+                      <Card key={addr.id} className='p-4 min-w-[250px] cursor-pointer hover:border-primary' onClick={() => useAddress(addr)}>
+                        <p className='font-bold'>{addr.name} {addr.isDefault && <Badge variant="outline" className="ml-2 border-green-600 text-green-600">Utama</Badge>}</p>
+                        <p className='text-sm text-muted-foreground line-clamp-2'>{addr.fullAddress}</p>
                       </Card>
                     ))}
                     </div>
@@ -254,36 +288,44 @@ export default function CheckoutPage() {
                     )} />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
-                     <Controller
+                     <FormField
                         name="province"
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Provinsi</FormLabel>
-                                <Select
-                                    {...field}
-                                    placeholder="Pilih Provinsi"
-                                    options={provinces.map(p => ({ value: p.province_id, label: p.province }))}
-                                    isClearable
-                                />
+                                <FormControl>
+                                    <Select
+                                        {...field}
+                                        placeholder="Pilih Provinsi"
+                                        options={provinces}
+                                        isClearable
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    <Controller
+                    <FormField
                         name="city"
                         control={form.control}
                         render={({ field }) => (
                              <FormItem>
                                 <FormLabel>Kota/Kabupaten</FormLabel>
-                                <Select
-                                    {...field}
-                                    placeholder="Pilih Kota"
-                                    options={cities.map(c => ({ value: c.city_id, label: c.city_name }))}
-                                    isClearable
-                                    isLoading={isCitiesLoading}
-                                    isDisabled={!selectedProvinceId || isCitiesLoading}
-                                />
+                                <FormControl>
+                                    <Select
+                                        {...field}
+                                        placeholder="Pilih Kota"
+                                        options={cities}
+                                        isClearable
+                                        isLoading={isCitiesLoading}
+                                        isDisabled={!selectedProvinceId || isCitiesLoading}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -374,7 +416,7 @@ export default function CheckoutPage() {
                    </div>
                    <div className="flex justify-between">
                         <span>Pengiriman</span>
-                        <span>{selectedShipping ? formatRupiah(selectedShipping.cost[0].value) : 'Pilih kurir'}</span>
+                        <span>{selectedShipping ? formatRupiah(selectedShipping.cost[0].value) : 'Pilih alamat'}</span>
                    </div>
                    <div className="flex justify-between text-lg font-bold border-t pt-4 mt-2">
                         <span>Total</span>

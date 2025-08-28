@@ -2,7 +2,10 @@
 
 import type { City, Province, ShippingCost, GetShippingCostInput } from '@/lib/types';
 
-// Mock data, as we don't have a real API
+// This is a mock implementation of a shipping API.
+// In a real application, you would call a service like RajaOngkir, etc.
+// The origin city is set in the .env file.
+
 const provinces: Province[] = [
     { province_id: '1', province: 'Bali' },
     { province_id: '9', province: 'Jawa Barat' },
@@ -22,30 +25,55 @@ const cities: { [key: string]: City[] } = {
 };
 
 export async function getProvinces(): Promise<Province[]> {
+    // In a real app, this would fetch from an API
     return provinces;
 }
 
 export async function getCities(provinceId: string): Promise<City[]> {
+    // In a real app, this would fetch from an API
     return cities[provinceId] || [];
 }
 
 export async function getShippingCost(input: GetShippingCostInput): Promise<any> {
-    // Return a fixed shipping cost as a placeholder, maybe slightly different based on input
-    const baseCost = 20000 + (parseInt(input.destination, 10) % 10) * 1000;
-    return [{
+    const { destination, weight, courier } = input;
+    const origin = process.env.NEXT_PUBLIC_SHIPPING_ORIGIN_CITY_ID || '22'; // Default to Bandung
+
+    if (!destination || !weight || !courier) {
+        return [];
+    }
+
+    // This is a mock API call.
+    // We'll return some static data that mimics the real API response structure.
+    console.log(`Calculating shipping from ${origin} to ${destination} for ${weight}g using ${courier}`);
+
+    // Generate a semi-random cost based on destination ID and weight
+    const baseCost = 10000 + (parseInt(destination, 10) % 100) * 100;
+    const weightInKg = Math.ceil(weight / 1000);
+    const finalCost = baseCost * weightInKg;
+
+    // Simulate different services from JNE
+    const shippingOptions = {
         code: 'jne',
         name: 'Jalur Nugraha Ekakurir (JNE)',
         costs: [
             {
                 service: 'REG',
                 description: 'Layanan Reguler',
-                cost: [{ value: baseCost, etd: '2-3', note: '' }]
+                cost: [{ value: finalCost, etd: '2-3', note: '' }]
             },
             {
                 service: 'YES',
                 description: 'Yakin Esok Sampai',
-                cost: [{ value: baseCost * 2, etd: '1-1', note: '' }]
+                cost: [{ value: finalCost * 1.5, etd: '1-1', note: '' }]
+            },
+            {
+                service: 'OKE',
+                description: 'Ongkos Kirim Ekonomis',
+                cost: [{ value: finalCost * 0.8, etd: '3-5', note: '' }]
             }
         ]
-    }];
+    };
+
+    // Return the response inside an array, as the original structure expected it.
+    return [shippingOptions];
 }
