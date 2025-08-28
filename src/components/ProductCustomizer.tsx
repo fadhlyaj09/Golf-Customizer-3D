@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, ChangeEvent, useMemo } from 'react';
+import { useState, useEffect, ChangeEvent, useMemo, useCallback } from 'react';
 import type { Product, Customization, Decal, SideCustomization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -88,8 +88,8 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   };
 
   const handlePrintSideChange = (value: string) => {
-    const sides = parseInt(value, 10);
-    setCustomization(prev => ({...prev, printSides: sides as 0 | 1 | 2 }));
+    const sides = parseInt(value, 10) as 0 | 1 | 2;
+    setCustomization(prev => ({...prev, printSides: sides }));
     
     setDecals(prev => {
         const newDecals = prev.slice(0, sides);
@@ -100,27 +100,26 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
     });
   }
   
-  const handleAddDecal = (type: 'logo' | 'text') => {
+  const handleAddDecal = useCallback((type: 'logo' | 'text') => {
     if (decals.length >= customization.printSides) return;
 
-    const positionIndex = decals.length;
-    const newDecal: Decal = {
-      id: MathUtils.generateUUID(),
-      type: type,
-      content: type === 'text' ? 'Your Text' : '', 
-      ...initialDecalPositions[positionIndex],
-      scale: 0.15,
-      color: '#000000',
-    };
-    
     if (type === 'logo') {
       const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
       fileInput?.click(); 
     } else {
+        const positionIndex = decals.length;
+        const newDecal: Decal = {
+            id: MathUtils.generateUUID(),
+            type: 'text',
+            content: 'Your Text',
+            ...initialDecalPositions[positionIndex],
+            scale: 0.15,
+            color: '#000000',
+        };
        setDecals(prev => [...prev, newDecal]);
        setActiveDecalId(newDecal.id);
     }
-  }
+  }, [decals.length, customization.printSides]);
   
   const handleRemoveDecal = (id: string) => {
     setDecals(prev => prev.filter(d => d.id !== id));
