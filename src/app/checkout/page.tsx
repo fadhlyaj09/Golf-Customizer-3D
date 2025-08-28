@@ -134,11 +134,9 @@ export default function CheckoutPage() {
                 courier: 'jne' // Currently hardcoded to JNE
             });
 
-            // The API returns an array, the first element contains the costs
             const availableCosts = costs[0]?.costs || [];
             setShippingOptions(availableCosts);
             
-            // Automatically select the first available shipping option
             if(availableCosts.length > 0) {
               setSelectedShipping(availableCosts[0])
             }
@@ -156,24 +154,24 @@ export default function CheckoutPage() {
   const useAddress = useCallback(async (addr: Address) => {
     const provinceOption = provinces.find(p => p.label === addr.province) || null;
     
-    // Set province and basic fields first
-    form.setValue('province', provinceOption, { shouldValidate: true });
-    form.setValue('name', addr.name);
-    form.setValue('phone', addr.phone);
-    form.setValue('address', addr.fullAddress);
-    form.setValue('zip', addr.zip);
-    form.setValue('saveAddress', false);
+    form.reset({
+        name: addr.name,
+        phone: addr.phone,
+        address: addr.fullAddress,
+        zip: addr.zip,
+        province: provinceOption,
+        saveAddress: false, // Don't re-save an existing address
+    });
 
-    // After setting the province, fetch and set the city
     if (provinceOption) {
         setIsCitiesLoading(true);
         const cityData = await getCities(provinceOption.value);
         const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
         setCities(cityOptions);
-        setIsCitiesLoading(false);
         
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
         form.setValue('city', cityOption, { shouldValidate: true });
+        setIsCitiesLoading(false);
     } else {
         form.setValue('city', null, { shouldValidate: true });
     }
@@ -220,10 +218,14 @@ export default function CheckoutPage() {
         return;
     }
 
+    const orderId = `AG-${Date.now()}`;
+
+    // --- Save Address Logic ---
     if(data.saveAddress) {
         const addressesRef = collection(db, 'users', user.uid, 'addresses');
         const batch = writeBatch(db);
         
+        // If this new address should be default, un-default any existing ones.
         const newAddressIsDefault = savedAddresses.length === 0;
         if(newAddressIsDefault && savedAddresses.some(a => a.isDefault)) {
             savedAddresses.forEach(addr => {
@@ -259,28 +261,52 @@ export default function CheckoutPage() {
         }
     }
     
-    // Simulate order creation
+    // --- Save Order Logic ---
     const orderData = {
-        ...data,
+        orderId,
+        userId: user.uid,
+        customerDetails: {
+            name: data.name,
+            phone: data.phone,
+            address: data.address,
+            city: data.city.label,
+            province: data.province!.label,
+            zip: data.zip,
+        },
         items: selectedItems,
-        subtotal,
-        shippingCost,
-        total,
-        totalWeight,
-        shippingService: selectedShipping,
-        orderId: `AG-${Date.now()}`,
+        summary: {
+            subtotal,
+            shippingCost,
+            total,
+            totalWeight,
+        },
+        shippingDetails: {
+            courier: 'JNE',
+            service: selectedShipping.service,
+            description: selectedShipping.description,
+            etd: selectedShipping.cost[0].etd,
+        },
         paymentDetails: {
             method: 'BCA Virtual Account',
             vaNumber: `12345${Math.floor(Math.random() * 10000000)}`,
             status: 'PENDING'
-        }
+        },
+        orderStatus: 'PENDING_PAYMENT',
+        createdAt: new Date().toISOString(),
     };
     
-    console.log('Order created:', orderData);
-    setOrderDetails(orderData);
-    setOrderComplete(true);
-    clearCart(); // Clear selected items from cart
-    setIsSubmitting(false);
+    try {
+        await setDoc(doc(db, 'orders', orderId), orderData);
+        console.log('Order created:', orderData);
+        setOrderDetails(orderData);
+        setOrderComplete(true);
+        clearCart(); // Clear selected items from cart
+    } catch(e) {
+        console.error("Error saving order:", e);
+        toast({ title: 'Error', description: 'Gagal menyimpan pesanan. Silakan coba lagi.', variant: 'destructive' });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const formatRupiah = (amount: number) => {
@@ -306,7 +332,7 @@ export default function CheckoutPage() {
                  <div className="border rounded-lg p-4 grid gap-2">
                     <p className="text-sm text-muted-foreground flex justify-between">
                         <span>Total Pembayaran</span>
-                        <span className="font-bold text-lg text-foreground">{formatRupiah(orderDetails.total)}</span>
+                        <span className="font-bold text-lg text-foreground">{formatRupiah(orderDetails.summary.total)}</span>
                     </p>
                 </div>
                 <Alert>
@@ -552,3 +578,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
