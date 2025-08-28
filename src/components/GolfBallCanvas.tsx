@@ -15,7 +15,6 @@ interface GolfBallCanvasProps {
 
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
-  const [normalMap] = useTexture(['/golf-normal.jpg']);
 
   const handlePointerDown = (e: any) => {
     e.stopPropagation();
@@ -39,9 +38,6 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
             color={ballColor} 
             roughness={0.1} 
             metalness={0.2}
-            normalMap={normalMap}
-            normalMap-anisotropy={16}
-            normalScale={new THREE.Vector2(0.3, 0.3)}
          />
 
         {decals.map((decal) => (
