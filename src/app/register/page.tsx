@@ -52,7 +52,6 @@ export default function RegisterPage() {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             
-            // Update profile immediately after creation
             await updateProfile(userCredential.user, {
                 displayName: data.displayName
             });
@@ -75,36 +74,33 @@ export default function RegisterPage() {
     return (
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center bg-background px-4 py-12">
             <Card className="w-full max-w-lg">
-                 <CardHeader>
-                    <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
-                    <CardDescription>
-                        Daftar untuk mendapatkan kontrol penuh atas pesanan Anda.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSignUp)} className="grid grid-cols-1 gap-6">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSignUp)}>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
+                            <CardDescription>
+                                Daftar untuk mendapatkan kontrol penuh atas pesanan Anda.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 gap-6">
                             <FormField control={form.control} name="displayName" render={({ field }) => (
                                 <FormItem><FormLabel>Nama Lengkap</FormLabel><FormControl><Input {...field} placeholder="Nama Anda" /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="email" render={({ field }) => (
                                 <FormItem><FormLabel>Alamat E-mail</FormLabel><FormControl><Input {...field} type="email" placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>
                             )} />
-                             <FormField control={form.control} name="password" render={({ field }) => (
+                            <FormField control={form.control} name="password" render={({ field }) => (
                                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} type="password" /></FormControl><FormMessage /></FormItem>
                             )} />
-
-                            <div className="flex justify-end">
-                                 <Button type="submit" className="w-full md:w-auto" disabled={form.formState.isSubmitting}>
-                                    {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Daftar
-                                </Button>
-                            </div>
-                        </form>
-                    </Form>
-                </CardContent>
-                 <CardFooter className="flex justify-center text-sm">
-                    <p>Sudah punya akun?</p>
+                             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Daftar
+                            </Button>
+                        </CardContent>
+                    </form>
+                </Form>
+                <CardFooter className="flex justify-center text-sm">
+                    <p className="text-muted-foreground">Sudah punya akun?</p>
                     <Link href="/login" className="ml-1 font-semibold text-primary hover:underline">
                         Login
                     </Link>
