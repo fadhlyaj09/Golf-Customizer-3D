@@ -60,10 +60,9 @@ function BallDecal({ decal, isActive, onClick }: {
     isActive: boolean;
     onClick: () => void;
 }) {
-    // useTexture must be called conditionally inside a component that has Suspense
-    const DecalContent = () => {
-        const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
-        
+    const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
+
+    if (decal.type === 'text' && decal.content) {
         return (
             <DreiDecal
                 position={decal.position}
@@ -71,39 +70,45 @@ function BallDecal({ decal, isActive, onClick }: {
                 scale={decal.scale}
                 onPointerDown={(e) => { e.stopPropagation(); onClick();}}
             >
-                {decal.type === 'logo' && texture && (
-                     <meshStandardMaterial
-                        map={texture}
-                        polygonOffset
-                        polygonOffsetFactor={-10}
-                        transparent
-                        depthTest={true}
-                        depthWrite={false}
-                        toneMapped={false}
-                        opacity={1}
-                        color={isActive ? '#000000' : 'white'} 
-                      />
-                )}
-                {decal.type === 'text' && decal.content && (
-                     <Text
-                        fontSize={0.25}
-                        color={decal.color}
-                        anchorX="center"
-                        anchorY="middle"
-                      >
-                          {decal.content}
-                          <meshStandardMaterial 
-                            polygonOffset 
-                            polygonOffsetFactor={-10} 
-                            color={decal.color}
-                          />
-                      </Text>
-                )}
+                <Text
+                    fontSize={0.25}
+                    color={decal.color}
+                    anchorX="center"
+                    anchorY="middle"
+                    polygonOffset
+                    polygonOffsetFactor={-20} // Increased offset to prevent z-fighting
+                >
+                    {decal.content}
+                </Text>
+            </DreiDecal>
+        );
+    }
+
+    if (decal.type === 'logo' && texture) {
+        return (
+            <DreiDecal
+                position={decal.position}
+                rotation={decal.rotation}
+                scale={decal.scale}
+                onPointerDown={(e) => { e.stopPropagation(); onClick();}}
+            >
+                <meshStandardMaterial
+                    map={texture}
+                    polygonOffset
+                    polygonOffsetFactor={-10}
+                    transparent
+                    depthTest={true}
+                    depthWrite={false}
+                    toneMapped={false}
+                    opacity={1}
+                    // Optional: highlight active logo
+                    // color={isActive ? '#cccccc' : 'white'} 
+                />
             </DreiDecal>
         );
     }
     
-    return <DecalContent />;
+    return null;
 }
 
 
