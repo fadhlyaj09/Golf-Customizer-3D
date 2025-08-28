@@ -1,8 +1,5 @@
 'use server';
 
-// NOTE: Shipping functionality is temporarily disabled to resolve API key errors.
-// Re-implement with valid RajaOngkir API key when ready.
-
 import type { City, Province, ShippingCost, GetShippingCostInput } from '@/lib/types';
 
 export async function getProvinces(): Promise<Province[]> {
@@ -30,3 +27,5 @@ export async function getShippingCost(input: GetShippingCostInput): Promise<any>
         ]
     }];
 }
+
+    
