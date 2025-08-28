@@ -148,18 +148,21 @@ export default function CheckoutPage() {
         }
     }
     fetchShippingCost();
-  }, [selectedCityId, totalWeight, selectedItems])
+  }, [selectedCityId, totalWeight]);
 
 
   const useAddress = useCallback(async (addr: Address) => {
     const provinceOption = provinces.find(p => p.label === addr.province) || null;
     
+    // Reset form with new address data
     form.reset({
         name: addr.name,
         phone: addr.phone,
         address: addr.fullAddress,
         zip: addr.zip,
         province: provinceOption,
+        // We will set the city separately after fetching
+        city: null, 
         saveAddress: false, // Don't re-save an existing address
     });
 
@@ -169,10 +172,15 @@ export default function CheckoutPage() {
         const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
         setCities(cityOptions);
         
+        // Find the city option that matches the saved address
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
+        
+        // IMPORTANT: Set the city value and trigger validation
         form.setValue('city', cityOption, { shouldValidate: true });
+        
         setIsCitiesLoading(false);
     } else {
+        // If province is not found, clear city as well
         form.setValue('city', null, { shouldValidate: true });
     }
   }, [provinces, form]);
@@ -206,7 +214,7 @@ export default function CheckoutPage() {
   
 
   const subtotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = selectedShipping?.cost[0].value || 0;
+  const shippingCost = selectedShipping?.cost?.[0]?.value || 0;
   const total = subtotal + shippingCost;
 
 
@@ -297,7 +305,6 @@ export default function CheckoutPage() {
     
     try {
         await setDoc(doc(db, 'orders', orderId), orderData);
-        console.log('Order created:', orderData);
         setOrderDetails(orderData);
         setOrderComplete(true);
         clearCart(); // Clear selected items from cart
@@ -409,8 +416,6 @@ export default function CheckoutPage() {
                                             placeholder="Pilih Provinsi"
                                             options={provinces}
                                             isClearable
-                                            value={field.value}
-                                            onChange={field.onChange}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -431,8 +436,6 @@ export default function CheckoutPage() {
                                             isClearable
                                             isLoading={isCitiesLoading}
                                             isDisabled={!selectedProvinceId || isCitiesLoading}
-                                            value={field.value}
-                                            onChange={field.onChange}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -578,5 +581,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    

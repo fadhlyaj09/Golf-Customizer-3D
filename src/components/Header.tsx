@@ -84,20 +84,6 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* --- DEBUGGING CODE START --- */}
-            <DropdownMenuItem disabled>
-              <span className='text-xs text-muted-foreground'>User: {user?.email || 'Not logged in'}</span>
-            </DropdownMenuItem>
-             <DropdownMenuItem disabled>
-              <span className='text-xs text-muted-foreground'>Admin: {adminEmail || 'Not set'}</span>
-            </DropdownMenuItem>
-             {/* --- DEBUGGING CODE END --- */}
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => router.push('/admin')}>
-                <UserCog className="mr-2 h-4 w-4" />
-                <span>Admin</span>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
@@ -107,11 +93,8 @@ export function Header() {
       );
     }
     return (
-      <Button variant="ghost" size="icon" asChild>
-        <Link href="/login">
-          <UserIcon className="h-5 w-5" />
-          <span className="sr-only">Login</span>
-        </Link>
+      <Button asChild>
+        <Link href="/login">Login</Link>
       </Button>
     );
   }
@@ -139,6 +122,15 @@ export function Header() {
                 </Link>
             </Button>
             
+            {isAdmin && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/admin">
+                  <UserCog className="h-5 w-5" />
+                   <span className="sr-only">Admin Dashboard</span>
+                </Link>
+              </Button>
+            )}
+
             {renderUserMenu()}
 
           <div className="md:hidden">
