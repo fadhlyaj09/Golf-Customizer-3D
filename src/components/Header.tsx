@@ -28,7 +28,6 @@ export function Header() {
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Explicitly get the admin email from environment variables
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isAdmin = user?.email === adminEmail;
 
@@ -100,7 +99,7 @@ export function Header() {
       );
     }
     return (
-      <Button variant="ghost" size="icon" asChild className='hidden md:inline-flex'>
+      <Button variant="ghost" size="icon" asChild>
         <Link href="/login">
           <UserIcon className="h-5 w-5" />
           <span className="sr-only">Login</span>
