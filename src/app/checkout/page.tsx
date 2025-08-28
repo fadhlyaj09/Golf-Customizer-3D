@@ -14,27 +14,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useEffect, useState, useCallback } from 'react';
-import { getShippingCost, getCities, getProvinces, City, Province, ShippingCost } from '@/actions/shippingActions';
-import Select from 'react-select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Address } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import type { ShippingCost } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const checkoutSchema = z.object({
   name: z.string().min(2, 'Name is too short'),
   phone: z.string().min(10, 'Invalid phone number'),
   address: z.string().min(10, 'Address is too short'),
-  province: z.object({ value: z.string(), label: z.string() }).nullable(),
-  city: z.object({ value: z.string(), label: z.string() }).nullable(),
   zip: z.string().min(5, 'Invalid ZIP code'),
-  courier: z.object({ value: z.string(), label: z.string() }).nullable(),
   saveAddress: z.boolean().default(false),
 });
 
@@ -59,20 +56,18 @@ export default function CheckoutPage() {
   const selectedItems = cart.filter(item => item.selected);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [shippingCosts, setShippingCosts] = useState<ShippingCost[] | null>([]);
-  const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
-  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isLoadingShipping, setIsLoadingShipping] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>({
+      service: 'REG',
+      description: 'Layanan Reguler',
+      cost: [{ value: 20000, etd: '2-3', note: '' }]
+  });
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       name: '', phone: '', address: '', zip: '',
-      province: null, city: null, courier: null, saveAddress: true,
+      saveAddress: true,
     }
   });
   
@@ -101,10 +96,7 @@ export default function CheckoutPage() {
             name: defaultAddress.name,
             phone: defaultAddress.phone,
             address: defaultAddress.fullAddress,
-            province: { value: defaultAddress.province.split('|')[0], label: defaultAddress.province.split('|')[1] },
-            city: { value: defaultAddress.city.split('|')[0], label: defaultAddress.city.split('|')[1] },
             zip: defaultAddress.zip,
-            courier: null,
             saveAddress: false,
         });
       }
@@ -129,80 +121,8 @@ export default function CheckoutPage() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   }
 
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      setIsLoadingProvinces(true);
-      try {
-        const provinceData = await getProvinces();
-        setProvinces(provinceData);
-      } catch (error) {
-        toast({ title: 'Error', description: 'Failed to load provinces.', variant: 'destructive' });
-      } finally {
-        setIsLoadingProvinces(false);
-      }
-    };
-    fetchProvinces();
-  }, [toast]);
-
-  const selectedProvince = form.watch('province');
-  const selectedCity = form.watch('city');
-  const selectedCourier = form.watch('courier');
-
-  useEffect(() => {
-    const fetchCities = async () => {
-        if (selectedProvince?.value) {
-            setIsLoadingCities(true);
-            form.setValue('city', null);
-            setCities([]);
-            try {
-                const cityData = await getCities(selectedProvince.value);
-                setCities(cityData);
-            } catch (error) {
-                toast({ title: 'Error', description: 'Failed to load cities.', variant: 'destructive' });
-            } finally {
-                setIsLoadingCities(false);
-            }
-        } else {
-            setCities([]);
-            form.setValue('city', null);
-        }
-    };
-    fetchCities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProvince?.value]);
-
-  useEffect(() => {
-      const fetchShipping = async () => {
-          if(selectedCity?.value && selectedCourier?.value && totalWeight > 0) {
-              setIsLoadingShipping(true);
-              setShippingCosts(null);
-              setSelectedShipping(null);
-              try {
-                  const shippingData = await getShippingCost({
-                      destination: selectedCity.value,
-                      weight: totalWeight,
-                      courier: selectedCourier.value,
-                  });
-                  // Check if the API returns costs, sometimes it might be empty
-                  setShippingCosts(shippingData[0]?.costs || []);
-              } catch(error) {
-                  toast({ title: 'Error', description: 'Gagal memuat opsi pengiriman.', variant: 'destructive' });
-                  setShippingCosts([]);
-              } finally {
-                  setIsLoadingShipping(false);
-              }
-          } else {
-              setShippingCosts(null);
-              setSelectedShipping(null);
-          }
-      }
-      fetchShipping();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCity?.value, selectedCourier?.value, totalWeight]);
-
-
   const onSubmit = async (data: CheckoutFormValues) => {
-    if (!user || !selectedShipping || !data.province || !data.city) {
+    if (!user || !selectedShipping) {
         toast({ title: 'Error', description: 'Informasi tidak lengkap.', variant: 'destructive' });
         return;
     }
@@ -210,13 +130,11 @@ export default function CheckoutPage() {
     if(data.saveAddress) {
         const addressId = doc(collection(db, 'users', user.uid, 'addresses')).id;
         const addressRef = doc(db, 'users', user.uid, 'addresses', addressId);
-        const newAddress: Address = {
+        const newAddress: Omit<Address, 'province' | 'city'> = { // Province and city are removed
             id: addressId,
             name: data.name,
             phone: data.phone,
             fullAddress: data.address,
-            province: `${data.province.value}|${data.province.label}`,
-            city: `${data.city.value}|${data.city.label}`,
             zip: data.zip,
             isDefault: savedAddresses.length === 0,
         };
@@ -242,12 +160,6 @@ export default function CheckoutPage() {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
 
-  const courierOptions = [
-      { value: 'jne', label: 'JNE' },
-      { value: 'pos', label: 'POS Indonesia' },
-      { value: 'tiki', label: 'TIKI' },
-  ];
-
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Link href="/cart" className='mb-4 inline-flex items-center text-sm font-medium text-primary hover:underline'><ArrowLeft className="mr-2 h-4 w-4" />Kembali ke Keranjang</Link>
@@ -268,14 +180,11 @@ export default function CheckoutPage() {
                           name: addr.name,
                           phone: addr.phone,
                           address: addr.fullAddress,
-                          province: { value: addr.province.split('|')[0], label: addr.province.split('|')[1] },
-                          city: { value: addr.city.split('|')[0], label: addr.city.split('|')[1] },
                           zip: addr.zip,
-                          courier: null,
                           saveAddress: false,
                       })}>
                         <p className='font-bold'>{addr.name} {addr.isDefault && <span className='text-xs text-primary'>(Utama)</span>}</p>
-                        <p className='text-sm text-muted-foreground'>{addr.fullAddress}, {addr.city.split('|')[1]}</p>
+                        <p className='text-sm text-muted-foreground'>{addr.fullAddress}</p>
                       </Card>
                     ))}
                     </div>
@@ -295,37 +204,6 @@ export default function CheckoutPage() {
                 <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem><FormLabel>Alamat Lengkap</FormLabel><FormControl><Textarea {...field} placeholder="Nama jalan, nomor rumah, kelurahan, kecamatan..." /></FormControl><FormMessage /></FormItem>
                 )} />
-                <div className="grid grid-cols-2 gap-4">
-                     <FormField control={form.control} name="province" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Provinsi</FormLabel>
-                            <FormControl>
-                            <Select
-                                {...field}
-                                options={provinces.map(p => ({ value: p.province_id, label: p.province }))}
-                                isLoading={isLoadingProvinces}
-                                placeholder="Pilih Provinsi"
-                            />
-                            </FormControl><FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField control={form.control} name="city" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Kota/Kabupaten</FormLabel>
-                            <FormControl>
-                            <Select
-                                {...field}
-                                options={cities.map(c => ({ value: c.city_id, label: `${c.type} ${c.city_name}`}))}
-                                isLoading={isLoadingCities}
-                                isDisabled={!selectedProvince?.value || isLoadingCities}
-                                placeholder="Pilih Kota/Kab."
-                            />
-                            </FormControl><FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                </div>
                 
                  <FormField
                     control={form.control}
@@ -348,40 +226,18 @@ export default function CheckoutPage() {
                   />
                 
                 <h3 className="text-lg font-semibold pt-4 border-t">Opsi Pengiriman</h3>
-                 <FormField control={form.control} name="courier" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Kurir</FormLabel>
-                        <FormControl>
-                           <Select {...field} options={courierOptions} isDisabled={!selectedCity?.value} placeholder="Pilih Kurir" />
-                        </FormControl><FormMessage />
-                    </FormItem>
-                    )}
-                />
-                 {isLoadingShipping && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Mencari opsi pengiriman...</span>
+                 <div className="flex flex-col gap-2">
+                    <div className={cn(
+                        "flex justify-between items-center p-3 border rounded-lg",
+                        "border-primary ring-2 ring-primary"
+                    )}>
+                        <div>
+                            <p className="font-semibold">{selectedShipping?.service} ({selectedShipping?.description})</p>
+                            <p className="text-sm text-muted-foreground">Estimasi {selectedShipping?.cost[0].etd} hari</p>
+                        </div>
+                        <p className="font-bold">{formatRupiah(selectedShipping?.cost[0].value || 0)}</p>
                     </div>
-                 )}
-                 {shippingCosts && shippingCosts.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                        {shippingCosts.map(cost => (
-                            <label key={cost.service} className={cn(
-                                "flex justify-between items-center p-3 border rounded-lg cursor-pointer",
-                                selectedShipping?.service === cost.service && "border-primary ring-2 ring-primary"
-                            )} onClick={() => setSelectedShipping(cost)}>
-                                <div>
-                                    <p className="font-semibold">{cost.service} ({cost.description})</p>
-                                    <p className="text-sm text-muted-foreground">Estimasi {cost.cost[0].etd} hari</p>
-                                </div>
-                                <p className="font-bold">{formatRupiah(cost.cost[0].value)}</p>
-                            </label>
-                        ))}
-                    </div>
-                 )}
-                 {shippingCosts?.length === 0 && selectedCourier && !isLoadingShipping && (
-                    <p className="text-sm text-muted-foreground">Kurir tidak tersedia untuk tujuan ini.</p>
-                 )}
+                </div>
             </CardContent>
           </Card>
           

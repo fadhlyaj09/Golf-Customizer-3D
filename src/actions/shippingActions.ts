@@ -1,17 +1,32 @@
 'use server';
 
-import { getProvincesFlow, getCitiesFlow, getShippingCostFlow, GetShippingCostInput, City, Province, ShippingCost } from '@/ai/flows/shipping-flow';
+// NOTE: Shipping functionality is temporarily disabled to resolve API key errors.
+// Re-implement with valid RajaOngkir API key when ready.
+
+import type { City, Province, ShippingCost, GetShippingCostInput } from '@/lib/types';
 
 export async function getProvinces(): Promise<Province[]> {
-    return await getProvincesFlow();
+    console.warn("getProvinces is disabled.");
+    return [];
 }
 
 export async function getCities(provinceId: string): Promise<City[]> {
-    return await getCitiesFlow(provinceId);
+    console.warn("getCities is disabled.");
+    return [];
 }
 
 export async function getShippingCost(input: GetShippingCostInput): Promise<any> {
-    return await getShippingCostFlow(input);
+    console.warn("getShippingCost is disabled.");
+    // Return a fixed shipping cost as a placeholder
+    return [{
+        code: 'jne',
+        name: 'Jalur Nugraha Ekakurir (JNE)',
+        costs: [
+            {
+                service: 'REG',
+                description: 'Layanan Reguler',
+                cost: [{ value: 20000, etd: '2-3', note: '' }]
+            }
+        ]
+    }];
 }
-
-export type { City, Province, ShippingCost };

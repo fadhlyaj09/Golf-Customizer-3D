@@ -41,8 +41,8 @@ export interface Address {
     name: string;
     phone: string;
     fullAddress: string;
-    province: string;
-    city: string;
+    province?: string; // Made optional
+    city?: string; // Made optional
     zip: string;
     isDefault?: boolean;
 }
@@ -62,4 +62,24 @@ export interface Decal {
   scale: number;
   font?: string;
   color?: string;
+}
+
+// Types for disabled shipping flow
+export interface Province {
+    province_id: string;
+    province: string;
+}
+export interface City {
+    city_id: string;
+    city_name: string;
+}
+export interface ShippingCost {
+    service: string;
+    description: string;
+    cost: { value: number; etd: string; note: string }[];
+}
+export interface GetShippingCostInput {
+    destination: string;
+    weight: number;
+    courier: string;
 }
