@@ -14,7 +14,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useEffect, useState, useCallback, useTransition } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -59,8 +59,8 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const router = useRouter();
   
-  const selectedItems = cart.filter(item => item.selected);
-  const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const selectedItems = useMemo(() => cart.filter(item => item.selected), [cart]);
+  const totalQuantity = useMemo(() => selectedItems.reduce((sum, item) => sum + item.quantity, 0), [selectedItems]);
 
   const [provinces, setProvinces] = useState<{value: string, label: string}[]>([]);
   const [cities, setCities] = useState<{value: string, label: string}[]>([]);
@@ -150,23 +150,21 @@ export default function CheckoutPage() {
         }
     }
     fetchShippingCost();
-  }, [selectedCityId, totalWeight])
+  }, [selectedCityId, totalWeight, selectedItems])
 
 
   const useAddress = useCallback(async (addr: Address) => {
     const provinceOption = provinces.find(p => p.label === addr.province) || null;
     
-    // Set basic fields first
-    form.reset({
-        name: addr.name,
-        phone: addr.phone,
-        address: addr.fullAddress,
-        zip: addr.zip,
-        province: provinceOption,
-        city: null, // Reset city initially
-        saveAddress: false,
-    });
+    // Set province and basic fields first
+    form.setValue('province', provinceOption, { shouldValidate: true });
+    form.setValue('name', addr.name);
+    form.setValue('phone', addr.phone);
+    form.setValue('address', addr.fullAddress);
+    form.setValue('zip', addr.zip);
+    form.setValue('saveAddress', false);
 
+    // After setting the province, fetch and set the city
     if (provinceOption) {
         setIsCitiesLoading(true);
         const cityData = await getCities(provinceOption.value);
@@ -175,8 +173,9 @@ export default function CheckoutPage() {
         setIsCitiesLoading(false);
         
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
-        // Set the city value after the options have been loaded
         form.setValue('city', cityOption, { shouldValidate: true });
+    } else {
+        form.setValue('city', null, { shouldValidate: true });
     }
   }, [provinces, form]);
 
