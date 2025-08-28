@@ -43,8 +43,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   const [quantity, setQuantity] = useState(1);
   const [decals, setDecals] = useState<Decal[]>([]);
   const [activeDecalId, setActiveDecalId] = useState<string | null>(null);
-
-  // SAFE INITIALIZATION: Initialize with safe, empty defaults.
   const [customization, setCustomization] = useState<Customization>({
     printSides: 0,
     side1: { type: 'none', content: '' },
@@ -52,7 +50,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   });
   const [totalPrice, setTotalPrice] = useState(0);
   
-  // ROBUST STATE HYDRATION: Use useEffect to safely set state from props.
   useEffect(() => {
     if (product) {
       setCustomization(prev => ({
@@ -68,13 +65,12 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   useEffect(() => {
-    if (!product) return; 
+    if (!product || !decals) return; 
 
     let finalPrice = product.basePrice || 0;
-    const currentDecals = decals || [];
     
-    if (!product.isFloater && currentDecals.length > 0) {
-        const pricePerSide = currentDecals.length === 1 ? 25000 : (25000 + 15000);
+    if (!product.isFloater && decals.length > 0) {
+        const pricePerSide = 25000 + (decals.length - 1) * 15000;
         finalPrice += pricePerSide;
     }
 
@@ -228,8 +224,8 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
                      <div className="grid grid-cols-2 gap-4">
                         <Button onClick={() => handleAddDecal('text')} variant="outline"><Type className='mr-2'/> Tambah Teks</Button>
                         <Button onClick={() => handleAddDecal('logo')} variant="outline"><ImageIcon className='mr-2'/> Tambah Logo</Button>
-                        <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
-                    </div>
+                     </div>
+                     <Input id="logo-upload" type="file" className="hidden" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} />
                 </div>
 
                 {decals.length > 0 && (

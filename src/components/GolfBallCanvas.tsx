@@ -41,7 +41,7 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
          />
 
         {decals.map((decal) => (
-          <Sticker
+          <BallDecal
             key={decal.id}
             decal={decal}
             isActive={activeDecalId === decal.id}
@@ -53,12 +53,11 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
   );
 }
 
-function Sticker({ decal, isActive, onClick }: { 
+function BallDecal({ decal, isActive, onClick }: { 
     decal: Decal; 
     isActive: boolean;
     onClick: () => void;
 }) {
-    // Correctly handle conditional hook usage. Only call useTexture if it's a logo with content.
     const texture = (decal.type === 'logo' && decal.content) ? useTexture(decal.content) : null;
 
     return (
