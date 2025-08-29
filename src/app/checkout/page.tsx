@@ -72,7 +72,6 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [isAddressLoading, setIsAddressLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
@@ -153,6 +152,9 @@ export default function CheckoutPage() {
 
 
   const useAddress = useCallback(async (addr: Address) => {
+    const provinceOption = provinces.find(p => p.label === addr.province) || null;
+    
+    // Reset form first
     form.reset({
         name: addr.name,
         phone: addr.phone,
@@ -160,12 +162,9 @@ export default function CheckoutPage() {
         zip: addr.zip,
         saveAddress: false,
         paymentMethod: form.getValues('paymentMethod'),
-        province: null,
-        city: null,
+        province: provinceOption, // Set province object here
+        city: null, // Reset city
     });
-
-    const provinceOption = provinces.find(p => p.label === addr.province) || null;
-    form.setValue('province', provinceOption, { shouldValidate: true });
 
     if (provinceOption) {
         setIsCitiesLoading(true);
@@ -176,7 +175,7 @@ export default function CheckoutPage() {
         
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
         if (cityOption) {
-             form.setValue('city', cityOption, { shouldValidate: true });
+             form.setValue('city', cityOption, { shouldValidate: true }); // Then set city object
         }
     }
   }, [provinces, form]);
@@ -215,10 +214,8 @@ export default function CheckoutPage() {
 
 
   const onSubmit = async (data: CheckoutFormValues) => {
-    setIsSubmitting(true);
     if (!user || !selectedShipping || !data.city) {
         toast({ title: 'Error', description: 'Harap lengkapi alamat dan pilih opsi pengiriman.', variant: 'destructive' });
-        setIsSubmitting(false);
         return;
     }
 
@@ -260,6 +257,7 @@ export default function CheckoutPage() {
     try {
         await setDoc(doc(db, 'orders', orderId), orderData);
 
+        // Run this in the background, don't wait for it
         saveOrderToSheet(orderData).catch(error => {
           console.error('Error in background task: Failed to save order to Google Sheet:', error);
         });
@@ -304,8 +302,6 @@ export default function CheckoutPage() {
     } catch(e) {
         console.error("Error during checkout process:", e);
         toast({ title: 'Error', description: 'Gagal memproses pesanan. Silakan coba lagi.', variant: 'destructive' });
-    } finally {
-        setIsSubmitting(false);
     }
   };
   
@@ -563,8 +559,8 @@ export default function CheckoutPage() {
                     <b>Same Day Shipping:</b> Pesanan 1–5 box yang dikonfirmasi sebelum 15:00 WIB dikirim hari ini (Senin-Sabtu). Pesanan >5 box diproses 1-2 hari kerja.
                 </AlertDescription>
             </Alert>
-             <Button type="submit" size="lg" className="w-full" disabled={!selectedShipping || form.formState.isSubmitting || isSubmitting}>
-                {(isSubmitting || form.formState.isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+             <Button type="submit" size="lg" className="w-full" disabled={!selectedShipping || form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Bayar Sekarang
              </Button>
           </div>
@@ -573,3 +569,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
