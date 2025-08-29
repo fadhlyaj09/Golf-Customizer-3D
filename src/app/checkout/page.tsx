@@ -72,9 +72,6 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [isAddressLoading, setIsAddressLoading] = useState(true);
-  const [orderComplete, setOrderComplete] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
-
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -175,7 +172,8 @@ export default function CheckoutPage() {
         
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
         if (cityOption) {
-             form.setValue('city', cityOption, { shouldValidate: true }); // Then set city object
+             // This is the key fix: setValue and then trigger validation
+             form.setValue('city', cityOption, { shouldValidate: true });
         }
     }
   }, [provinces, form]);
@@ -214,47 +212,47 @@ export default function CheckoutPage() {
 
 
   const onSubmit = async (data: CheckoutFormValues) => {
-    if (!user || !selectedShipping || !data.city) {
-        toast({ title: 'Error', description: 'Harap lengkapi alamat dan pilih opsi pengiriman.', variant: 'destructive' });
-        return;
-    }
-
-    const orderId = `AG-${Date.now()}`;
-    
-    const orderData = {
-        orderId,
-        userId: user.uid,
-        customerDetails: {
-            name: data.name,
-            phone: data.phone,
-            address: data.address,
-            city: data.city.label,
-            province: data.province!.label,
-            zip: data.zip,
-        },
-        items: selectedItems,
-        summary: {
-            subtotal,
-            shippingCost,
-            total,
-            totalWeight,
-        },
-        shippingDetails: {
-            courier: 'JNE',
-            service: selectedShipping.service,
-            description: selectedShipping.description,
-            etd: selectedShipping.cost[0].etd,
-        },
-        paymentDetails: {
-            method: 'BCA Virtual Account',
-            vaNumber: `12345${Math.floor(Math.random() * 10000000)}`,
-            status: 'PENDING'
-        },
-        orderStatus: 'PENDING_PAYMENT',
-        createdAt: new Date().toISOString(),
-    };
-    
     try {
+        if (!user || !selectedShipping || !data.city) {
+            toast({ title: 'Error', description: 'Harap lengkapi alamat dan pilih opsi pengiriman.', variant: 'destructive' });
+            return;
+        }
+
+        const orderId = `AG-${Date.now()}`;
+        
+        const orderData = {
+            orderId,
+            userId: user.uid,
+            customerDetails: {
+                name: data.name,
+                phone: data.phone,
+                address: data.address,
+                city: data.city.label,
+                province: data.province!.label,
+                zip: data.zip,
+            },
+            items: selectedItems,
+            summary: {
+                subtotal,
+                shippingCost,
+                total,
+                totalWeight,
+            },
+            shippingDetails: {
+                courier: 'JNE',
+                service: selectedShipping.service,
+                description: selectedShipping.description,
+                etd: selectedShipping.cost[0].etd,
+            },
+            paymentDetails: {
+                method: 'BCA Virtual Account',
+                vaNumber: `12345${Math.floor(Math.random() * 10000000)}`,
+                status: 'PENDING'
+            },
+            orderStatus: 'PENDING_PAYMENT',
+            createdAt: new Date().toISOString(),
+        };
+        
         await setDoc(doc(db, 'orders', orderId), orderData);
 
         // Run this in the background, don't wait for it
@@ -296,9 +294,9 @@ export default function CheckoutPage() {
             setSavedAddresses(prev => [...prev, newAddress]);
         }
 
-        setOrderDetails(orderData);
-        setOrderComplete(true);
         clearCart();
+        router.push(`/invoice/${orderId}`);
+
     } catch(e) {
         console.error("Error during checkout process:", e);
         toast({ title: 'Error', description: 'Gagal memproses pesanan. Silakan coba lagi.', variant: 'destructive' });
@@ -309,49 +307,6 @@ export default function CheckoutPage() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
   
-   if (orderComplete) {
-    return (
-      <div className="container mx-auto max-w-2xl py-16 text-center">
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-2xl">Pembayaran Tertunda</CardTitle>
-                <CardDescription>
-                    Pesanan Anda ({orderDetails.orderId}) telah kami terima. Segera selesaikan pembayaran.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 text-left">
-                <div className="border rounded-lg p-4 grid gap-2">
-                    <h3 className="font-semibold text-lg">BCA Virtual Account</h3>
-                    <p className="text-sm text-muted-foreground">Nomor Virtual Account</p>
-                    <p className="text-2xl font-bold tracking-wider">{orderDetails.paymentDetails.vaNumber}</p>
-                </div>
-                 <div className="border rounded-lg p-4 grid gap-2">
-                    <p className="text-sm text-muted-foreground flex justify-between">
-                        <span>Total Pembayaran</span>
-                        <span className="font-bold text-lg text-foreground">{formatRupiah(orderDetails.summary.total)}</span>
-                    </p>
-                </div>
-                <Alert>
-                    <AlertTitle>Cara Pembayaran</AlertTitle>
-                    <AlertDescription>
-                        <ul className="list-decimal list-inside text-xs mt-2">
-                            <li>Login ke myBCA, m-BCA, atau KlikBCA.</li>
-                            <li>Pilih menu "m-Transfer" > "BCA Virtual Account".</li>
-                            <li>Masukkan nomor Virtual Account di atas.</li>
-                            <li>Konfirmasi detail pembayaran Anda dan selesaikan transaksi.</li>
-                            <li>Pembayaran akan terverifikasi secara otomatis.</li>
-                        </ul>
-                    </AlertDescription>
-                </Alert>
-            </CardContent>
-        </Card>
-        <Button asChild className="mt-8">
-          <Link href="/">Kembali ke Beranda</Link>
-        </Button>
-      </div>
-    );
-  }
-
   if (userLoading || isAddressLoading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
