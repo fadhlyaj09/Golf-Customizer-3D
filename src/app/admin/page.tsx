@@ -31,7 +31,7 @@ export default async function AdminPage() {
 
     return (
         <div className="container mx-auto py-10">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                     <p className="text-muted-foreground">Manage your website's content, products, and orders.</p>
@@ -57,7 +57,7 @@ export default async function AdminPage() {
 
                 <Card>
                     <CardHeader>
-                        <div className='flex justify-between items-start'>
+                        <div className='flex flex-col sm:flex-row justify-between items-start gap-4'>
                             <div>
                                 <CardTitle>Product Management</CardTitle>
                                 <CardDescription>Add, edit, or delete your products.</CardDescription>
@@ -74,7 +74,7 @@ export default async function AdminPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="hidden w-[100px] sm:table-cell">Image</TableHead>
+                                    <TableHead className="w-[100px]">Image</TableHead>
                                     <TableHead>Product Name</TableHead>
                                     <TableHead>Price</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
@@ -83,7 +83,7 @@ export default async function AdminPage() {
                             <TableBody>
                                 {products.map((product) => (
                                     <TableRow key={product.id}>
-                                        <TableCell className="hidden sm:table-cell">
+                                        <TableCell>
                                             <Image
                                                 src={product.imageUrl || 'https://placehold.co/64x64'}
                                                 alt={product.name}

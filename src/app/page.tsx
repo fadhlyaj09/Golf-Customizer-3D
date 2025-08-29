@@ -135,7 +135,7 @@ export default async function Home() {
                                 priority={index === 0}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-                            <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 text-center container mx-auto px-4 md:px-6">
+                            <div className="relative z-10 flex h-full flex-col items-center justify-end pb-16 sm:pb-20 text-center container mx-auto px-4 md:px-6">
                                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl max-w-3xl text-foreground">
                                     {slide.title}
                                 </h1>
@@ -240,7 +240,7 @@ export default async function Home() {
                           <p className="text-base font-semibold text-foreground">
                             {product.isFloater ? "Contact Us" : formatRupiah(product.basePrice)}
                           </p>
-                          <div className="text-muted-foreground transition-opacity group-hover:opacity-100 md:opacity-0 flex items-center gap-1">
+                          <div className="text-muted-foreground flex items-center gap-1">
                             Details <ArrowRight className="h-4 w-4" />
                           </div>
                        </div>
@@ -257,7 +257,7 @@ export default async function Home() {
                 <div className="mb-12 text-center">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Support</h2>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-8 items-center justify-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-x-4 gap-y-8 items-center justify-center">
                     {supportLogos.map((logo, index) => (
                         <div key={index} className="flex justify-center items-center">
                             <Image
@@ -278,7 +278,7 @@ export default async function Home() {
                 <div className="mb-12 text-center">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Our Client</h2>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-8 items-center justify-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-x-4 gap-y-8 items-center justify-center">
                     {clientLogos.map((logo, index) => (
                         <div key={index} className="flex justify-center items-center">
                             <Image

@@ -16,9 +16,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     notFound();
   }
 
+  // Pass startWithCustom as a prop to the customizer
+  const startWithCustom = searchParams?.custom === 'true';
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <ProductCustomizer product={product} />
+      <ProductCustomizer product={product} startWithCustom={startWithCustom} />
     </div>
   );
 }

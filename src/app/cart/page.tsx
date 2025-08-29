@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Minus, Plus, Trash2, XCircle, Truck, Package } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, XCircle, Truck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Customization } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -73,73 +73,76 @@ export default function CartPage() {
           <h1 className="text-3xl font-bold tracking-tight">Shopping Cart</h1>
           <p className="text-muted-foreground mt-1">Review your items and proceed to checkout.</p>
         </div>
-        <Button onClick={clearCartSelection} variant="link" className="text-muted-foreground">Clear All Selections</Button>
+        <Button onClick={clearCartSelection} variant="link" className="text-muted-foreground p-0 h-auto">Clear All Selections</Button>
       </div>
       <div className="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-12">
         <div className="lg:col-span-8">
             <Card className='shadow-none border-0'>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[20px]"></TableHead>
-                            <TableHead colSpan={2}>Product</TableHead>
-                            <TableHead className="text-center">Quantity</TableHead>
-                            <TableHead className="text-right">Total Price</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {cart.map((item) => (
-                            <TableRow key={item.id} data-state={item.selected ? 'selected' : ''} className='border-b'>
-                             <TableCell>
-                                <Checkbox
-                                    checked={item.selected}
-                                    onCheckedChange={() => toggleItemSelected(item.id)}
-                                />
-                             </TableCell>
-                            <TableCell className="w-[100px] p-2">
-                                <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                                <Image
-                                    src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl}
-                                    alt={item.product.name}
-                                    fill
-                                    className="object-cover"
-                                />
-                                </div>
-                            </TableCell>
-                            <TableCell className="font-medium align-top py-4">
-                                <p className="font-bold text-base">{item.product.name}</p>
-                                <div className="mt-1">
-                                    {renderCustomizationDetails(item.customization)}
-                                </div>
-                            </TableCell>
-                            <TableCell className="align-top py-4">
-                                <div className="flex items-center justify-center gap-1 sm:gap-2">
-                                    <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity - 1)}>
-                                        <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <Input
-                                        type="number"
-                                        value={item.quantity}
-                                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
-                                        className="h-8 w-14 text-center"
-                                    />
-                                    <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-right font-medium align-top py-4">{formatRupiah(item.price * item.quantity)}</TableCell>
-                            <TableCell className="align-top py-4">
-                                <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
-                                    <Trash2 className="h-5 w-5 text-muted-foreground hover:text-destructive" />
-                                </Button>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[20px]"></TableHead>
+                                <TableHead colSpan={2}>Product</TableHead>
+                                <TableHead className="text-center">Quantity</TableHead>
+                                <TableHead className="text-right">Total Price</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                            {cart.map((item) => (
+                                <TableRow key={item.id} data-state={item.selected ? 'selected' : ''} className='border-b'>
+                                <TableCell>
+                                    <Checkbox
+                                        checked={item.selected}
+                                        onCheckedChange={() => toggleItemSelected(item.id)}
+                                    />
+                                </TableCell>
+                                <TableCell className="w-[100px] p-2">
+                                    <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
+                                    <Image
+                                        src={(item.customization.side1?.type === 'logo' && item.customization.side1.content) || item.product.imageUrl}
+                                        alt={item.product.name}
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 96px"
+                                        className="object-cover"
+                                    />
+                                    </div>
+                                </TableCell>
+                                <TableCell className="font-medium align-top py-4 min-w-[200px]">
+                                    <p className="font-bold text-base">{item.product.name}</p>
+                                    <div className="mt-1">
+                                        {renderCustomizationDetails(item.customization)}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="align-top py-4">
+                                    <div className="flex items-center justify-center gap-1 sm:gap-2">
+                                        <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                        <Input
+                                            type="number"
+                                            value={item.quantity}
+                                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
+                                            className="h-8 w-14 text-center"
+                                        />
+                                        <Button variant="outline" size="icon" className='h-8 w-8' onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-right font-medium align-top py-4">{formatRupiah(item.price * item.quantity)}</TableCell>
+                                <TableCell className="align-top py-4">
+                                    <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                                        <Trash2 className="h-5 w-5 text-muted-foreground hover:text-destructive" />
+                                    </Button>
+                                </TableCell>
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
             <Alert className="mt-8 bg-muted/50 border-dashed">

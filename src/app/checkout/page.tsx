@@ -87,6 +87,10 @@ export default function CheckoutPage() {
     }
   });
   
+  const selectedProvinceId = form.watch('province')?.value;
+  const selectedCityId = form.watch('city')?.value;
+  const totalWeight = selectedItems.reduce((sum, item) => sum + (item.quantity * 600), 0);
+
   useEffect(() => {
     if (!userLoading && !user) {
       toast({title: "Harap Login", description: "Anda harus login untuk melanjutkan ke checkout.", variant: "destructive"});
@@ -102,7 +106,6 @@ export default function CheckoutPage() {
     getProvinces().then(p => setProvinces(p.map(prov => ({value: prov.province_id, label: prov.province}))));
   }, [])
   
-  const selectedProvinceId = form.watch('province')?.value;
   useEffect(() => {
       const fetchCities = async () => {
         if (selectedProvinceId) {
@@ -119,9 +122,6 @@ export default function CheckoutPage() {
       }
       fetchCities();
   }, [selectedProvinceId, form]);
-
-  const selectedCityId = form.watch('city')?.value;
-  const totalWeight = selectedItems.reduce((sum, item) => sum + (item.quantity * 600), 0);
   
   useEffect(() => {
     const fetchShippingCost = async () => {
@@ -132,7 +132,7 @@ export default function CheckoutPage() {
             const costs = await getShippingCost({
                 destination: selectedCityId,
                 weight: totalWeight,
-                courier: 'jne' // Currently hardcoded to JNE
+                courier: 'jne'
             });
 
             const availableCosts = costs[0]?.costs || [];
@@ -153,34 +153,31 @@ export default function CheckoutPage() {
 
 
   const useAddress = useCallback(async (addr: Address) => {
-    const provinceOption = provinces.find(p => p.label === addr.province) || null;
-    
-    // Reset form values to reflect the chosen address
     form.reset({
         name: addr.name,
         phone: addr.phone,
         address: addr.fullAddress,
         zip: addr.zip,
-        province: provinceOption,
-        city: null,
         saveAddress: false,
         paymentMethod: form.getValues('paymentMethod'),
+        province: null,
+        city: null,
     });
+
+    const provinceOption = provinces.find(p => p.label === addr.province) || null;
+    form.setValue('province', provinceOption, { shouldValidate: true });
 
     if (provinceOption) {
         setIsCitiesLoading(true);
         const cityData = await getCities(provinceOption.value);
         const cityOptions = cityData.map(c => ({ value: c.city_id, label: c.city_name }));
         setCities(cityOptions);
+        setIsCitiesLoading(false);
         
         const cityOption = cityOptions.find(c => c.label === addr.city) || null;
-        
-        // This is the key fix: set value and trigger validation
         if (cityOption) {
              form.setValue('city', cityOption, { shouldValidate: true });
         }
-        
-        setIsCitiesLoading(false);
     }
   }, [provinces, form]);
 
@@ -193,8 +190,8 @@ export default function CheckoutPage() {
       const addressSnapshot = await getDocs(addressesCol);
       const addressesList = addressSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Address));
       setSavedAddresses(addressesList);
-      const defaultAddress = addressesList.find(addr => addr.isDefault);
-      if (defaultAddress) {
+      if (addressesList.length > 0) {
+        const defaultAddress = addressesList.find(addr => addr.isDefault) || addressesList[0];
         await useAddress(defaultAddress);
       }
     } catch (error) {
@@ -227,7 +224,6 @@ export default function CheckoutPage() {
 
     const orderId = `AG-${Date.now()}`;
     
-    // --- Save Order Logic ---
     const orderData = {
         orderId,
         userId: user.uid,
@@ -264,18 +260,10 @@ export default function CheckoutPage() {
     try {
         await setDoc(doc(db, 'orders', orderId), orderData);
 
-        // Call Genkit flow to save to Google Sheets (fire-and-forget)
-        saveOrderToSheet(orderData).then(result => {
-          if (result.success) {
-            console.log('Order successfully saved to Google Sheet');
-          } else {
-            console.error('Failed to save order to Google Sheet:', result.error);
-          }
-        }).catch(error => {
-          console.error('Error calling saveOrderToSheet flow:', error);
+        saveOrderToSheet(orderData).catch(error => {
+          console.error('Error in background task: Failed to save order to Google Sheet:', error);
         });
 
-        // --- Save Address Logic (only after order is successful) ---
         if(data.saveAddress) {
             const addressesRef = collection(db, 'users', user.uid, 'addresses');
             const batch = writeBatch(db);
@@ -377,7 +365,7 @@ export default function CheckoutPage() {
       <Link href="/cart" className='mb-4 inline-flex items-center text-sm font-medium text-primary hover:underline'><ArrowLeft className="mr-2 h-4 w-4" />Kembali ke Keranjang</Link>
       <h1 className="mb-8 text-3xl font-bold tracking-tight">Checkout</h1>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 gap-y-8 lg:grid-cols-2 lg:gap-x-12">
           <div className="flex flex-col gap-8">
             <Card>
                 <CardHeader>
@@ -400,7 +388,7 @@ export default function CheckoutPage() {
                     <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem><FormLabel>Nama Penerima</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField control={form.control} name="phone" render={({ field }) => (
                             <FormItem><FormLabel>Nomor Telepon</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
@@ -408,7 +396,7 @@ export default function CheckoutPage() {
                             <FormItem><FormLabel>Kode Pos</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                             name="province"
                             control={form.control}
@@ -504,9 +492,8 @@ export default function CheckoutPage() {
                 </CardContent>
             </Card>
           </div>
-
           
-          <div className="space-y-8 sticky top-24 h-min">
+          <div className="space-y-8 lg:sticky lg:top-24 h-min">
             <Card>
               <CardHeader>
                 <CardTitle>Ringkasan Pesanan</CardTitle>

@@ -22,6 +22,7 @@ import { realisticLightingSimulation } from '@/ai/flows/realistic-lighting-simul
 
 interface ProductCustomizerProps {
   product: Product;
+  startWithCustom?: boolean;
 }
 
 const textColors = [
@@ -38,7 +39,7 @@ const initialDecalPositions = [
     { position: new Vector3(0, 0, -0.5), rotation: new Euler(0, Math.PI, 0) } // Back
 ];
 
-export default function ProductCustomizer({ product }: ProductCustomizerProps) {
+export default function ProductCustomizer({ product, startWithCustom = false }: ProductCustomizerProps) {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
   const [customization, setCustomization] = useState<Customization>({
     packaging: 'box',
-    printSides: 0,
+    printSides: startWithCustom ? 1 : 0,
     side1: { type: 'none', content: '' },
     side2: { type: 'none', content: '' },
     color: undefined,
@@ -204,16 +205,13 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
       setIsGeneratingRender(true);
       try {
-          // Temporarily set active decal to null to remove outline
           const currentActiveId = activeDecalId;
           setActiveDecalId(null);
           
-          // Allow canvas to re-render without outline
           await new Promise(resolve => setTimeout(resolve, 50)); 
           
           const imageUri = canvas.toDataURL('image/png');
           
-          // Restore active decal
           setActiveDecalId(currentActiveId);
           
           const result = await realisticLightingSimulation({ productImageUri: imageUri });
@@ -221,7 +219,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
       } catch (error) {
           console.error("Failed to generate realistic render:", error);
-          // Optionally show a toast message to the user
       } finally {
           setIsGeneratingRender(false);
       }
@@ -244,7 +241,6 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
 
     const handlePositionChange = (axis: 'x' | 'y', value: number) => {
       const currentPos = activeDecalData.position;
-      // We need to keep the z-position from the original side placement
       const originalDecal = initialDecalPositions.find(p => p.position.z === currentPos.z) || { position: currentPos };
 
       const newPos = new Vector3(
@@ -295,7 +291,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-x-12 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-y-8 lg:grid-cols-2 lg:gap-x-12">
       <div className="h-[50vh] lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24 flex flex-col gap-4">
          <div ref={canvasRef} className="w-full h-full border rounded-lg overflow-hidden relative bg-gray-100">
             {realisticRender ? (
@@ -318,7 +314,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
          </Button>
       </div>
 
-      <div className="flex flex-col gap-6 mt-8 lg:mt-0">
+      <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.description}</p>
@@ -456,7 +452,7 @@ export default function ProductCustomizer({ product }: ProductCustomizerProps) {
         {!product.isFloater && <Separator />}
         
         {!product.isFloater && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" onClick={() => setQuantity(q => Math.max(1, q-1))}><Minus className="h-4 w-4" /></Button>
                     <span className="w-10 text-center text-lg font-bold">{quantity}</span>
