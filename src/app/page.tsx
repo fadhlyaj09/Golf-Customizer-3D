@@ -240,9 +240,9 @@ export default async function Home() {
                           <p className="text-base font-semibold text-foreground">
                             {product.isFloater ? "Contact Us" : formatRupiah(product.basePrice)}
                           </p>
-                          <div className="text-muted-foreground flex items-center gap-1">
-                            Details <ArrowRight className="h-4 w-4" />
-                          </div>
+                          <Button variant="link" className="p-0 h-auto text-muted-foreground">
+                            Details <ArrowRight className="ml-1 h-4 w-4" />
+                          </Button>
                        </div>
                     </div>
                 </Card>
@@ -296,3 +296,5 @@ export default async function Home() {
     </div>
   );
 }
+
+    

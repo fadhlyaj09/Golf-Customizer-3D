@@ -15,6 +15,8 @@ interface GolfBallCanvasProps {
   setActiveDecalId: (id: string | null) => void;
 }
 
+// Separate component for the GolfBall mesh and its logic
+// This prevents re-rendering the entire canvas when only ball props change.
 function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBallCanvasProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   
@@ -31,22 +33,7 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
   };
 
   return (
-    <>
-      <ambientLight intensity={1.2} />
-      <directionalLight 
-        position={[5, 5, 5]} 
-        intensity={2.0}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-      />
-       <directionalLight 
-        position={[-5, -5, -5]} 
-        intensity={1.0}
-      />
-      
       <mesh ref={meshRef} onPointerDown={handlePointerDown} castShadow receiveShadow>
-        {/* Using a standard sphere geometry for maximum stability */}
         <sphereGeometry args={[0.5, 64, 64]} />
         <meshStandardMaterial 
             color={ballColor} 
@@ -65,7 +52,6 @@ function GolfBall({ ballColor, decals, activeDecalId, setActiveDecalId }: GolfBa
           ))}
         </Suspense>
       </mesh>
-    </>
   );
 }
 
@@ -93,7 +79,6 @@ function TextDecal({ decal, isActive, onClick }: { decal: Decal; isActive: boole
             scale={decal.scale}
             onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
-            {/* This material is overlaid on the main golf ball */}
             <meshStandardMaterial
                 polygonOffset
                 polygonOffsetFactor={-10}
@@ -122,7 +107,6 @@ function TextDecal({ decal, isActive, onClick }: { decal: Decal; isActive: boole
 function LogoDecal({ decal, isActive, onClick }: { decal: Decal; isActive: boolean; onClick: () => void; }) {
     if (!decal.content) return null;
 
-    // IMPORTANT: useLoader can be used here because it's always called.
     const texture = new THREE.TextureLoader().load(decal.content);
     texture.colorSpace = THREE.SRGBColorSpace;
 
@@ -159,11 +143,24 @@ export function GolfBallCanvas(props: GolfBallCanvasProps) {
         preserveDrawingBuffer: true 
       }}
       camera={{ position: [0, 0, 1.5], fov: 50 }}
-      // This is a key optimization: prevent re-renders unless props change.
       frameloop="demand"
     >
+      <ambientLight intensity={1.2} />
+      <directionalLight 
+        position={[5, 5, 5]} 
+        intensity={2.0}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+       <directionalLight 
+        position={[-5, -5, -5]} 
+        intensity={1.0}
+      />
       <GolfBall {...props} />
       <OrbitControls minDistance={1.2} maxDistance={3} enablePan={false} />
     </Canvas>
   );
 }
+
+    
