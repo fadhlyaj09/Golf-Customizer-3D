@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 
 
@@ -27,6 +27,11 @@ export function Header() {
   const { cart } = useCart();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isAdmin = user?.email === adminEmail;
@@ -98,6 +103,72 @@ export function Header() {
       </Button>
     );
   }
+  
+  const renderActionButtons = () => {
+    return (
+       <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" asChild>
+              <Link href="/cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  {totalCartItems > 0 && (
+                      <span className="absolute top-2 right-2 flex h-2 w-2 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      </span>
+                  )}
+                  <span className="sr-only">Shopping Cart</span>
+              </Link>
+          </Button>
+          
+          {isAdmin && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/admin">
+                <UserCog className="h-5 w-5" />
+                 <span className="sr-only">Admin Dashboard</span>
+              </Link>
+            </Button>
+          )}
+
+          {renderUserMenu()}
+
+        <div className="md:hidden">
+          <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon"><Menu className="h-5 w-5"/></Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <div className='flex justify-between items-center mb-8'>
+                  <Link href="/" onClick={() => setMobileMenuOpen(false)}><Logo /></Link>
+                  <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}><X className="h-5 w-5"/></Button>
+              </div>
+               {renderNavLinks(true)}
+               <div className='flex flex-col gap-2 mt-8 border-t pt-6'>
+                  {user ? (
+                    <div className='text-center'>
+                      <p>Welcome, {user.displayName}</p>
+                       {isAdmin && (
+                          <Button onClick={() => { router.push('/admin'); setMobileMenuOpen(false); }} className='w-full mt-2' variant="secondary">
+                              Admin
+                          </Button>
+                       )}
+                      <Button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className='w-full mt-2'>Logout</Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Button asChild variant="outline" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                        <Link href="/login">Login</Link>
+                      </Button>
+                      <Button asChild variant="default" className='w-full' onClick={() => setMobileMenuOpen(false)}>
+                        <Link href="/register">Sign Up</Link>
+                      </Button>
+                    </>
+                  )}
+               </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+      </div>
+    )
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -111,65 +182,12 @@ export function Header() {
 
 
         <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-                <Link href="/cart">
-                    <ShoppingCart className="h-5 w-5" />
-                    {totalCartItems > 0 && (
-                        <span className="absolute top-2 right-2 flex h-2 w-2 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                        </span>
-                    )}
-                    <span className="sr-only">Shopping Cart</span>
-                </Link>
-            </Button>
-            
-            {isAdmin && (
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/admin">
-                  <UserCog className="h-5 w-5" />
-                   <span className="sr-only">Admin Dashboard</span>
-                </Link>
-              </Button>
-            )}
-
-            {renderUserMenu()}
-
-          <div className="md:hidden">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon"><Menu className="h-5 w-5"/></Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <div className='flex justify-between items-center mb-8'>
-                    <Link href="/" onClick={() => setMobileMenuOpen(false)}><Logo /></Link>
-                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}><X className="h-5 w-5"/></Button>
-                </div>
-                 {renderNavLinks(true)}
-                 <div className='flex flex-col gap-2 mt-8 border-t pt-6'>
-                    {user ? (
-                      <div className='text-center'>
-                        <p>Welcome, {user.displayName}</p>
-                         {isAdmin && (
-                            <Button onClick={() => { router.push('/admin'); setMobileMenuOpen(false); }} className='w-full mt-2' variant="secondary">
-                                Admin
-                            </Button>
-                         )}
-                        <Button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className='w-full mt-2'>Logout</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <Button asChild variant="outline" className='w-full' onClick={() => setMobileMenuOpen(false)}>
-                          <Link href="/login">Login</Link>
-                        </Button>
-                        <Button asChild variant="default" className='w-full' onClick={() => setMobileMenuOpen(false)}>
-                          <Link href="/register">Sign Up</Link>
-                        </Button>
-                      </>
-                    )}
-                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          
+          {isClient ? renderActionButtons() : (
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            </div>
+          )}
         </div>
       </div>
     </header>
