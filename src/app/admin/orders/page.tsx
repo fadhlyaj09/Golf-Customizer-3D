@@ -1,29 +1,21 @@
 
+'use client';
+
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
-async function getOrders() {
-    try {
-        const ordersCol = collection(db, 'orders');
-        // Order by creation date, descending
-        const q = query(ordersCol, orderBy('createdAt', 'desc'));
-        const orderSnapshot = await getDocs(q);
-        const orderList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return orderList;
-    } catch (error) {
-        console.error("Error fetching orders:", error);
-        return [];
-    }
-}
 
 const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 }
 
 const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('id-ID', {
         day: '2-digit',
         month: 'long',
@@ -51,8 +43,31 @@ const getStatusVariant = (status: string) => {
 }
 
 
-export default async function OrdersPage() {
-    const orders = await getOrders();
+export default function OrdersPage() {
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function getOrders() {
+            try {
+                const ordersCol = collection(db, 'orders');
+                const q = query(ordersCol, orderBy('createdAt', 'desc'));
+                const orderSnapshot = await getDocs(q);
+                const orderList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setOrders(orderList);
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                setOrders([]);
+            } finally {
+                setLoading(false);
+            }
+        }
+        getOrders();
+    }, []);
+
+    if (loading) {
+        return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+    }
 
     return (
         <div className="container mx-auto py-10">
