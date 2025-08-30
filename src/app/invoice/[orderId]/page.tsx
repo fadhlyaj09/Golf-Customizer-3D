@@ -1,7 +1,9 @@
 
+'use client';
+
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 
 type InvoicePageProps = {
@@ -17,21 +21,6 @@ type InvoicePageProps = {
     orderId: string;
   };
 };
-
-async function getOrderDetails(orderId: string) {
-    try {
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await getDoc(orderRef);
-
-        if (orderSnap.exists()) {
-            return orderSnap.data();
-        }
-        return null;
-    } catch (error) {
-        console.error("Error fetching order:", error);
-        return null;
-    }
-}
 
 const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -63,11 +52,43 @@ const getStatusVariant = (status: string) => {
     }
 }
 
-export default async function InvoicePage({ params }: InvoicePageProps) {
-    const order = await getOrderDetails(params.orderId);
+export default function InvoicePage({ params }: InvoicePageProps) {
+    const [order, setOrder] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [isClient, setIsClient] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        setIsClient(true);
+        
+        async function getOrderDetails(orderId: string) {
+            try {
+                const orderRef = doc(db, 'orders', orderId);
+                const orderSnap = await getDoc(orderRef);
+        
+                if (orderSnap.exists()) {
+                    setOrder(orderSnap.data());
+                } else {
+                    notFound();
+                }
+            } catch (error) {
+                console.error("Error fetching order:", error);
+                // Maybe show a toast or error message
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        getOrderDetails(params.orderId);
+
+    }, [params.orderId]);
+
+    if (loading) {
+       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
 
     if (!order) {
-        notFound();
+        return notFound();
     }
 
     return (
@@ -166,7 +187,7 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
                         </Alert>
                        )}
                         <div className="flex w-full justify-end gap-2 print:hidden">
-                            <Button variant="outline" onClick={() => window.print()}>Cetak</Button>
+                            {isClient && <Button variant="outline" onClick={() => window.print()}>Cetak</Button>}
                             <Button asChild>
                                 <Link href="/">Kembali ke Beranda</Link>
                             </Button>
@@ -177,5 +198,3 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
         </div>
     );
 }
-
-    

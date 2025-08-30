@@ -72,6 +72,7 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingCost | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [isAddressLoading, setIsAddressLoading] = useState(true);
+  const [showSameDayBadge, setShowSameDayBadge] = useState(false);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -86,6 +87,14 @@ export default function CheckoutPage() {
   const selectedProvinceId = form.watch('province')?.value;
   const selectedCityId = form.watch('city')?.value;
   const totalWeight = selectedItems.reduce((sum, item) => sum + (item.quantity * 600), 0);
+
+  useEffect(() => {
+    // This logic depends on the current time, so we run it on the client after hydration.
+    if (isSameDayEligible(totalQuantity)) {
+        setShowSameDayBadge(true);
+    }
+  }, [totalQuantity]);
+
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -450,7 +459,7 @@ export default function CheckoutPage() {
                 <CardTitle>Ringkasan Pesanan</CardTitle>
               </CardHeader>
               <CardContent>
-                {isSameDayEligible(totalQuantity) && (
+                {showSameDayBadge && (
                     <Badge variant="secondary" className="mb-4 bg-green-100 text-green-800 border-green-300">
                         <Sparkles className="mr-1 h-3 w-3"/>
                         Berpotensi dikirim hari ini!
@@ -523,5 +532,4 @@ export default function CheckoutPage() {
       </Form>
     </div>
   );
-
-    
+}
